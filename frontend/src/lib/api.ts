@@ -20,6 +20,7 @@ export type Collection = {
   icon: string;
   header_image_url: string | null;
   header_color?: string | null;
+  is_favorite?: boolean;
   archived: boolean;
   list_for_day: string | null;
   created_at: string;
@@ -140,14 +141,21 @@ export const api = {
       requestJson<{ collection: Collection }>(
         `/api/collections/today${day ? `?day=${day}` : ''}`
       ),
-    create: (input: { title: string; icon?: string; header_image_url?: string; header_color?: string }) =>
+    create: (input: { title: string; icon?: string; header_image_url?: string; header_color?: string; is_favorite?: boolean }) =>
       requestJson<{ collection: Collection }>('/api/collections', {
         method: 'POST',
         body: JSON.stringify(input),
       }),
     update: (
       id: string,
-      input: { title?: string; icon?: string; header_image_url?: string; header_color?: string; archived?: boolean }
+      input: {
+        title?: string;
+        icon?: string;
+        header_image_url?: string;
+        header_color?: string;
+        archived?: boolean;
+        is_favorite?: boolean;
+      }
     ) =>
       requestJson<{ collection: Collection }>(`/api/collections/${id}`, {
         method: 'PATCH',

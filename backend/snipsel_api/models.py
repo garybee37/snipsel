@@ -54,6 +54,8 @@ class Collection(db.Model):
     header_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     header_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
+    is_favorite: Mapped[bool] = mapped_column(default=False, nullable=False)
+
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     list_for_day: Mapped[date | None] = mapped_column(Date, nullable=True)
 

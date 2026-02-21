@@ -7,6 +7,25 @@
   let newIcon = '🗒';
   let busy = false;
 
+  type Filter = 'all' | 'favorites' | 'day' | 'normal';
+  let filter: Filter = 'all';
+  let titleFilter = '';
+
+  function matchesFilter(c: Collection): boolean {
+    if (filter === 'favorites') return Boolean(c.is_favorite);
+    if (filter === 'day') return Boolean(c.list_for_day);
+    if (filter === 'normal') return !c.list_for_day;
+    return true;
+  }
+
+  function matchesTitle(c: Collection): boolean {
+    const q = titleFilter.trim().toLowerCase();
+    if (!q) return true;
+    return c.title.toLowerCase().includes(q);
+  }
+
+  $: filtered = $collections.filter((c) => matchesFilter(c) && matchesTitle(c));
+
   async function loadCollections() {
     isLoading.set(true);
     try {
@@ -54,15 +73,57 @@
 </script>
 
 <div class="space-y-2">
-  <div class="flex items-center justify-between">
-    <h2 class="text-2xl font-semibold">Collections</h2>
-    <button
-      class="rounded-md bg-slate-900 px-4 py-3 text-lg font-medium text-white"
-      type="button"
-      onclick={() => (showCreate = true)}
-    >
-      + New
-    </button>
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-semibold">Collections</h2>
+      <button
+        class="rounded-md bg-slate-900 px-4 py-3 text-lg font-medium text-white"
+        type="button"
+        onclick={() => (showCreate = true)}
+      >
+        + New
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-3 rounded-lg border bg-white p-3">
+      <div class="flex flex-wrap gap-2">
+        <button
+          class="rounded-md border px-4 py-2 text-base {filter === 'all' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+          type="button"
+          onclick={() => (filter = 'all')}
+        >
+          All
+        </button>
+        <button
+          class="rounded-md border px-4 py-2 text-base {filter === 'favorites' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+          type="button"
+          onclick={() => (filter = 'favorites')}
+        >
+          Favorites
+        </button>
+        <button
+          class="rounded-md border px-4 py-2 text-base {filter === 'day' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+          type="button"
+          onclick={() => (filter = 'day')}
+        >
+          Days
+        </button>
+        <button
+          class="rounded-md border px-4 py-2 text-base {filter === 'normal' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+          type="button"
+          onclick={() => (filter = 'normal')}
+        >
+          Lists
+        </button>
+      </div>
+
+      <input
+        class="w-full rounded-md border px-4 py-3 text-lg"
+        type="search"
+        placeholder="Filter by title"
+        bind:value={titleFilter}
+      />
+    </div>
   </div>
 
   {#if showCreate}
@@ -107,15 +168,18 @@
 
   {#if $isLoading}
     <div class="py-8 text-center text-sm text-slate-500">Loading...</div>
-  {:else if $collections.length === 0}
+  {:else if filtered.length === 0}
     <div class="py-8 text-center text-sm text-slate-500">No collections yet</div>
   {:else}
     <div class="space-y-3">
-      {#each $collections as c}
+      {#each filtered as c}
         <div class="flex w-full items-center gap-4 rounded-lg border bg-white px-4 py-4">
           <button class="flex flex-1 items-center gap-3 text-left" type="button" onclick={() => openCollection(c)}>
             <span class="text-3xl">{c.icon}</span>
             <span class="flex-1 text-lg font-medium">{c.title}</span>
+            {#if c.is_favorite}
+              <span class="text-xl" aria-hidden="true">♥</span>
+            {/if}
             {#if c.archived}
               <span class="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">archived</span>
             {/if}
