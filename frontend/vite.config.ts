@@ -3,7 +3,6 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     svelte(),
@@ -23,6 +22,8 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: '0.0.0.0',
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
