@@ -54,7 +54,7 @@
     await load();
   }
 
-  async function setType(nextType: 'text' | 'image' | 'attachment') {
+  async function setType(nextType: 'text' | 'image' | 'attachment' | 'task') {
     if (!snipsel) return;
     if (snipsel.type === nextType) return;
     changingType = true;
@@ -68,6 +68,12 @@
 
   function isImageAttachment(a: Attachment): boolean {
     return Boolean(a.mime_type?.startsWith('image/') || a.has_thumbnail);
+  }
+
+  function formatWhen(iso: string | null): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleString();
   }
 
   async function onUpload(e: Event) {
@@ -132,7 +138,44 @@
           >
             File
           </button>
+          <button
+            class="border-l px-2 py-1 text-sm {snipsel.type === 'task' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+            type="button"
+            onclick={() => setType('task')}
+            disabled={changingType}
+          >
+            Task
+          </button>
         </div>
+      </div>
+
+      <div class="mt-3 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        <div class="flex flex-wrap gap-x-4 gap-y-1">
+          <div>
+            <span class="font-medium">Created:</span>
+            <span class="ml-1">{formatWhen(snipsel.created_at)}</span>
+            {#if snipsel.created_by_username}
+              <span class="ml-1 text-slate-500">by {snipsel.created_by_username}</span>
+            {/if}
+          </div>
+          <div>
+            <span class="font-medium">Modified:</span>
+            <span class="ml-1">{formatWhen(snipsel.modified_at)}</span>
+            {#if snipsel.modified_by_username}
+              <span class="ml-1 text-slate-500">by {snipsel.modified_by_username}</span>
+            {/if}
+          </div>
+        </div>
+
+        {#if snipsel.type === 'task' && snipsel.done_at}
+          <div class="mt-1">
+            <span class="font-medium">Done:</span>
+            <span class="ml-1">{formatWhen(snipsel.done_at)}</span>
+            {#if snipsel.done_by_username}
+              <span class="ml-1 text-slate-500">by {snipsel.done_by_username}</span>
+            {/if}
+          </div>
+        {/if}
       </div>
 
       <div class="mt-2 whitespace-pre-wrap text-sm text-slate-700">{snipsel.content_markdown ?? ''}</div>

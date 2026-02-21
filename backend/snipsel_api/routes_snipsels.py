@@ -17,6 +17,8 @@ from snipsel_api.models import (
     SnipselTag,
     Tag,
 )
+
+from sqlalchemy.orm import joinedload
 from snipsel_api.utils_text import extract_mentions, extract_tags
 
 snipsels_bp = Blueprint("snipsels", __name__)
@@ -30,6 +32,11 @@ def list_collection_snipsels(collection_id: str):
         db.session.execute(
             db.select(CollectionSnipsel)
             .join(Snipsel, Snipsel.id == CollectionSnipsel.snipsel_id)
+            .options(
+                joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.created_by),
+                joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.modified_by),
+                joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.done_by),
+            )
             .where(
                 CollectionSnipsel.collection_id == collection_id,
                 Snipsel.owner_user_id == user.id,
@@ -146,7 +153,17 @@ def copy_snipsel(collection_id: str, snipsel_id: str):
 @require_auth
 def get_snipsel(snipsel_id: str):
     user = current_user()
-    s = _get_owned_snipsel(user.id, snipsel_id)
+    s = (
+        db.session.execute(
+            db.select(Snipsel)
+            .options(joinedload(Snipsel.created_by), joinedload(Snipsel.modified_by), joinedload(Snipsel.done_by))
+            .where(Snipsel.id == snipsel_id)
+        )
+        .scalars()
+        .first()
+    )
+    if not s or s.deleted_at is not None or s.owner_user_id != user.id:
+        raise api_error(404, "not_found", "Snipsel not found")
     placements = (
         db.session.execute(
             db.select(CollectionSnipsel)
@@ -373,11 +390,16 @@ def _snipsel_json(s: Snipsel) -> dict:
         "task_done": s.task_done,
         "done_at": s.done_at.isoformat() + "Z" if s.done_at else None,
         "done_by_id": s.done_by_id,
+        "done_by_username": s.done_by.username if s.done_by else None,
         "external_url": s.external_url,
         "external_label": s.external_label,
         "internal_target_snipsel_id": s.internal_target_snipsel_id,
         "created_at": s.created_at.isoformat() + "Z",
+        "created_by_id": s.created_by_id,
+        "created_by_username": s.created_by.username if s.created_by else None,
         "modified_at": s.modified_at.isoformat() + "Z",
+        "modified_by_id": s.modified_by_id,
+        "modified_by_username": s.modified_by.username if s.modified_by else None,
         "attachments": [
             {
                 "id": a.id,

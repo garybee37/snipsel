@@ -99,6 +99,8 @@ class Snipsel(db.Model):
 
     owner = relationship("User", foreign_keys=[owner_user_id])
     done_by = relationship("User", foreign_keys=[done_by_id])
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    modified_by = relationship("User", foreign_keys=[modified_by_id])
 
     attachments: Mapped[list["Attachment"]] = relationship(
         "Attachment", back_populates="snipsel", cascade="all, delete-orphan"

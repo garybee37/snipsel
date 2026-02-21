@@ -31,11 +31,16 @@ export type Snipsel = {
   task_done: boolean;
   done_at: string | null;
   done_by_id: string | null;
+  done_by_username?: string | null;
   external_url: string | null;
   external_label: string | null;
   internal_target_snipsel_id: string | null;
   created_at: string;
+  created_by_id?: string;
+  created_by_username?: string | null;
   modified_at: string;
+  modified_by_id?: string;
+  modified_by_username?: string | null;
   attachments: Array<{
     id: string;
     filename: string;

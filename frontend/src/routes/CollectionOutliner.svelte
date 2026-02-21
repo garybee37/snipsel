@@ -54,6 +54,17 @@
     currentView.set({ type: 'snipsel', id });
   }
 
+  async function toggleTaskDone(item: CollectionItem) {
+    if (!$currentCollection) return;
+    if (item.snipsel.type !== 'task') return;
+
+    const nextDone = !item.snipsel.task_done;
+    await api.snipsels.update(item.snipsel_id, { task_done: nextDone });
+    collectionItems.update((items) =>
+      items.map((i) => (i.snipsel_id === item.snipsel_id ? { ...i, snipsel: { ...i.snipsel, task_done: nextDone } } : i))
+    );
+  }
+
   function openDetailSelected() {
     if (selectedIds.size === 0) return;
     const id = Array.from(selectedIds)[0];
@@ -188,7 +199,7 @@
     }
   }
 
-  async function setTypeSelected(nextType: 'text' | 'image' | 'attachment') {
+  async function setTypeSelected(nextType: 'text' | 'image' | 'attachment' | 'task') {
     if (selectedIds.size === 0) return;
 
     isLoading.set(true);
@@ -346,7 +357,7 @@
   {:else}
     <div class="flex flex-col">
       {#each $sortedItems as item (item.snipsel_id)}
-        <div class="group relative pl-6 pr-2" style="margin-left: {item.indent * 1.25}rem">
+        <div class="group relative pl-6 pr-8" style="margin-left: {item.indent * 1.25}rem">
           {#if item.snipsel_id === $editingSnipselId}
             <div
               bind:this={editContainerRef}
@@ -363,15 +374,57 @@
               ></textarea>
             </div>
           {:else}
-            <button
-              type="button"
-              aria-label="Select snipsel"
-              class="absolute left-1 top-1/2 -translate-y-1/2 h-4 w-4 rounded border border-slate-200 bg-white opacity-0 transition-opacity group-hover:opacity-100"
-              onclick={(e) => {
-                e.stopPropagation();
-                toggleSelection(item.snipsel_id);
-              }}
-            ></button>
+            {#if item.snipsel.type === 'task'}
+              <button
+                type="button"
+                aria-label={item.snipsel.task_done ? 'Mark task not done' : 'Mark task done'}
+                class="absolute left-1 top-1/2 -translate-y-1/2 h-4 w-4 rounded border border-slate-300 bg-white"
+                onclick={(e) => {
+                  e.stopPropagation();
+                  toggleTaskDone(item);
+                }}
+              >
+                {#if item.snipsel.task_done}
+                  <span class="block h-full w-full rounded bg-indigo-600"></span>
+                {/if}
+              </button>
+
+              <button
+                type="button"
+                aria-label="Select snipsel"
+                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-4 w-4 place-items-center rounded border border-slate-200 bg-white text-[10px] leading-none transition-opacity {selectedIds.has(
+                  item.snipsel_id
+                )
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover:opacity-100'}"
+                onclick={(e) => {
+                  e.stopPropagation();
+                  toggleSelection(item.snipsel_id);
+                }}
+              >
+                {#if selectedIds.has(item.snipsel_id)}
+                  ✓
+                {/if}
+              </button>
+            {:else}
+              <button
+                type="button"
+                aria-label="Select snipsel"
+                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-4 w-4 place-items-center rounded border border-slate-200 bg-white text-[10px] leading-none transition-opacity {selectedIds.has(
+                  item.snipsel_id
+                )
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover:opacity-100'}"
+                onclick={(e) => {
+                  e.stopPropagation();
+                  toggleSelection(item.snipsel_id);
+                }}
+              >
+                {#if selectedIds.has(item.snipsel_id)}
+                  ✓
+                {/if}
+              </button>
+            {/if}
 
             <div
               class="rounded px-3 py-1.5 {selectedIds.has(item.snipsel_id)
@@ -469,6 +522,19 @@
           {/if}
         </div>
       {/each}
+
+      <button
+        class="mt-6 h-24 w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-left text-sm text-slate-400 hover:bg-slate-50"
+        type="button"
+        aria-label="Add new snipsel"
+        onclick={() => {
+          if (selectedIds.size > 0) {
+            clearSelection();
+            return;
+          }
+          createSnipsel();
+        }}
+      ></button>
     </div>
   {/if}
 
@@ -539,6 +605,9 @@
               </button>
               <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('attachment')}>
                 File
+              </button>
+              <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('task')}>
+                Task
               </button>
               <button
                 class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
