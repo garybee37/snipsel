@@ -41,6 +41,9 @@
     if (pending) {
       for (const id of pending.snipselIds) {
         await api.snipsels.reference(c.id, id);
+        if (pending.mode === 'move' && pending.fromCollectionId) {
+          await api.snipsels.delete(pending.fromCollectionId, id);
+        }
       }
       pendingReference.set(null);
       currentView.set({ type: 'collection', id: c.id });

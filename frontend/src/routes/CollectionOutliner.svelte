@@ -250,9 +250,21 @@
     }
   }
 
+  function moveSelectedToCollection() {
+    if (!$currentCollection) return;
+    if (selectedIds.size === 0) return;
+    pendingReference.set({
+      snipselIds: Array.from(selectedIds),
+      mode: 'move',
+      fromCollectionId: $currentCollection.id,
+    });
+    clearSelection();
+    currentView.set({ type: 'collections' });
+  }
+
   function addSelectedToCollection() {
     if (selectedIds.size === 0) return;
-    pendingReference.set({ snipselIds: Array.from(selectedIds) });
+    pendingReference.set({ snipselIds: Array.from(selectedIds), mode: 'add' });
     clearSelection();
     currentView.set({ type: 'collections' });
   }
@@ -640,6 +652,15 @@
           onclick={copySelected}
         >
           ⧉
+        </button>
+        <button
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          type="button"
+          aria-label="Move"
+          title="Move"
+          onclick={moveSelectedToCollection}
+        >
+          ⇄
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"

@@ -21,7 +21,7 @@ export const editingSnipselId = writable<string | null>(null);
 export const isLoading = writable(false);
 export const newSnipselRequest = writable(0);
 
-export const pendingReference = writable<{ snipselIds: string[] } | null>(null);
+export const pendingReference = writable<{ snipselIds: string[]; mode?: 'add' | 'move'; fromCollectionId?: string } | null>(null);
 
 export const searchQuery = writable('');
 export const searchResults = writable<SearchResponse | null>(null);

@@ -268,7 +268,7 @@ def delete_from_collection(collection_id: str, snipsel_id: str):
         db.session.execute(db.select(db.func.count()).select_from(CollectionSnipsel).where(CollectionSnipsel.snipsel_id == snipsel_id)).scalar()
         or 0
     )
-    if remaining <= 1:
+    if remaining == 0:
         s = db.session.get(Snipsel, snipsel_id)
         if s and s.deleted_at is None:
             s.deleted_at = datetime.utcnow()
