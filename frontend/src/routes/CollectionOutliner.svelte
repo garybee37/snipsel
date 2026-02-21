@@ -17,6 +17,7 @@
 
   let textareaRef: HTMLTextAreaElement | undefined = $state();
   let editContainerRef: HTMLDivElement | undefined = $state();
+  let focusProxyRef: HTMLInputElement | undefined = $state();
   let editContent = $state('');
   let editIndent = $state(0);
   let saving = $state(false);
@@ -175,6 +176,12 @@
     }
   }
 
+  async function createSnipselFromUserGesture() {
+    focusProxyRef?.focus();
+    await createSnipsel();
+    focusProxyRef?.blur();
+  }
+
   $effect(() => {
     if ($newSnipselRequest > 0 && $currentCollection) {
       createSnipsel();
@@ -318,6 +325,13 @@
 </script>
 
 <div class="space-y-3">
+  <input
+    bind:this={focusProxyRef}
+    class="pointer-events-none absolute left-0 top-0 h-0 w-0 opacity-0"
+    tabindex="-1"
+    aria-hidden="true"
+  />
+
   {#if $currentCollection?.header_image_url}
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div
@@ -532,7 +546,7 @@
             clearSelection();
             return;
           }
-          createSnipsel();
+          createSnipselFromUserGesture();
         }}
       ></button>
     </div>
