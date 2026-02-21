@@ -462,11 +462,11 @@
                 {@const others = item.snipsel.attachments.filter((a) => !isImageAttachment(a))}
 
                 {#if images.length > 0}
-                  <div class="mt-2 flex gap-1 overflow-x-auto">
-                    {#each images.slice(0, 6) as a}
+                  <div class="mt-3 grid grid-cols-3 gap-2">
+                    {#each images.slice(0, 9) as a}
                       <button
                         type="button"
-                        class="block h-12 w-12 shrink-0 overflow-hidden rounded border bg-slate-50"
+                        class="aspect-square w-full overflow-hidden rounded-lg border bg-slate-50"
                         aria-label={`View ${a.filename}`}
                         onclick={(e) => {
                           e.stopPropagation();
@@ -481,12 +481,10 @@
                         />
                       </button>
                     {/each}
-                    {#if images.length > 6}
-                      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded border bg-white text-xs text-slate-500">
-                        +{images.length - 6}
-                      </div>
-                    {/if}
                   </div>
+                  {#if images.length > 9}
+                    <div class="mt-2 text-sm text-slate-400">+{images.length - 9} more</div>
+                  {/if}
                 {/if}
 
                 {#if others.length > 0}
