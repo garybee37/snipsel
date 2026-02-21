@@ -375,12 +375,12 @@
           {#if item.snipsel_id === $editingSnipselId}
             <div
               bind:this={editContainerRef}
-              class="rounded-lg bg-slate-50 px-3 py-2 ring-1 ring-indigo-200 shadow-sm"
+              class="rounded-lg bg-slate-50 px-4 py-3 ring-1 ring-indigo-200 shadow-sm"
               onfocusout={handleEditFocusOut}
             >
               <textarea
                 bind:this={textareaRef}
-                class="w-full resize-none bg-transparent text-base outline-none"
+                class="w-full resize-none bg-transparent text-lg outline-none"
                 rows="1"
                 bind:value={editContent}
                 oninput={autosizeTextarea}
@@ -392,7 +392,7 @@
               <button
                 type="button"
                 aria-label={item.snipsel.task_done ? 'Mark task not done' : 'Mark task done'}
-                class="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded border border-slate-300 bg-white"
+                class="absolute left-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded border border-slate-300 bg-white"
                 onclick={(e) => {
                   e.stopPropagation();
                   toggleTaskDone(item);
@@ -406,7 +406,7 @@
               <button
                 type="button"
                 aria-label="Select snipsel"
-                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded border border-slate-200 bg-white text-sm leading-none transition-opacity {selectedIds.has(
+                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded border border-slate-200 bg-white text-base leading-none transition-opacity {selectedIds.has(
                   item.snipsel_id
                 )
                   ? 'opacity-100'
@@ -424,7 +424,7 @@
               <button
                 type="button"
                 aria-label="Select snipsel"
-                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded border border-slate-200 bg-white text-sm leading-none transition-opacity {selectedIds.has(
+                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded border border-slate-200 bg-white text-base leading-none transition-opacity {selectedIds.has(
                   item.snipsel_id
                 )
                   ? 'opacity-100'
@@ -441,7 +441,7 @@
             {/if}
 
             <div
-              class="rounded px-3 py-2 {selectedIds.has(item.snipsel_id)
+              class="rounded px-4 py-3 {selectedIds.has(item.snipsel_id)
                 ? 'bg-slate-100'
                 : 'hover:bg-slate-50'}"
               role="button"
@@ -450,7 +450,7 @@
               onkeydown={(e) => e.key === 'Enter' && startEdit(item)}
             >
               {#if item.snipsel.content_markdown}
-                  <div class="prose prose-sm max-w-none text-base prose-p:my-0 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-h1:text-lg prose-h2:text-lg prose-h3:text-base">
+                  <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-headings:my-2 prose-h1:text-xl prose-h2:text-xl prose-h3:text-lg">
                     {@html renderMarkdown(item.snipsel.content_markdown)}
                   </div>
               {:else}
@@ -554,8 +554,7 @@
 
   {#if selectedIds.size > 0}
     <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pb-4">
-        <div class="mx-auto flex max-w-3xl items-center gap-1 rounded-xl bg-slate-900 px-2 py-2 text-white shadow-lg">
-          <div class="flex-1"></div>
+      <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-3 text-white shadow-lg">
 
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"

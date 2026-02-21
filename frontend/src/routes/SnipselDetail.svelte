@@ -97,7 +97,7 @@
   load();
 </script>
 
-<div class="space-y-4">
+<div class="space-y-5">
   <button class="text-sm text-slate-600 underline" type="button" onclick={() => currentView.set({ type: 'collections' })}>
     Back
   </button>
@@ -107,15 +107,15 @@
   {:else if !snipsel}
     <div class="text-sm text-slate-500">Not found</div>
   {:else}
-    <div class="rounded-lg border bg-white p-4">
+    <div class="rounded-lg border bg-white p-5">
       <div class="text-xs uppercase text-slate-500">Snipsel</div>
       <div class="mt-1 text-base font-medium">{snipsel.type}</div>
 
       <div class="mt-3 flex items-center gap-2">
-        <span class="text-sm text-slate-500">Type</span>
+        <span class="text-base text-slate-500">Type</span>
         <div class="inline-flex overflow-hidden rounded-md border">
           <button
-            class="px-3 py-2 text-base {snipsel.type === 'text' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+            class="px-4 py-3 text-lg {snipsel.type === 'text' ? 'bg-slate-100 font-medium' : 'bg-white'}"
             type="button"
             onclick={() => setType('text')}
             disabled={changingType}
@@ -123,7 +123,7 @@
             Note
           </button>
           <button
-            class="border-l px-3 py-2 text-base {snipsel.type === 'image' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+            class="border-l px-4 py-3 text-lg {snipsel.type === 'image' ? 'bg-slate-100 font-medium' : 'bg-white'}"
             type="button"
             onclick={() => setType('image')}
             disabled={changingType}
@@ -131,7 +131,7 @@
             Image
           </button>
           <button
-            class="border-l px-3 py-2 text-base {snipsel.type === 'attachment' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+            class="border-l px-4 py-3 text-lg {snipsel.type === 'attachment' ? 'bg-slate-100 font-medium' : 'bg-white'}"
             type="button"
             onclick={() => setType('attachment')}
             disabled={changingType}
@@ -139,7 +139,7 @@
             File
           </button>
           <button
-            class="border-l px-3 py-2 text-base {snipsel.type === 'task' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+            class="border-l px-4 py-3 text-lg {snipsel.type === 'task' ? 'bg-slate-100 font-medium' : 'bg-white'}"
             type="button"
             onclick={() => setType('task')}
             disabled={changingType}
@@ -149,7 +149,7 @@
         </div>
       </div>
 
-      <div class="mt-3 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
+      <div class="mt-3 rounded-md bg-slate-50 px-4 py-3 text-base text-slate-600">
         <div class="flex flex-wrap gap-x-4 gap-y-1">
           <div>
             <span class="font-medium">Created:</span>
@@ -178,7 +178,7 @@
         {/if}
       </div>
 
-      <div class="mt-3 whitespace-pre-wrap text-base text-slate-700">{snipsel.content_markdown ?? ''}</div>
+      <div class="mt-4 whitespace-pre-wrap text-lg text-slate-700">{snipsel.content_markdown ?? ''}</div>
     </div>
 
     <div class="rounded-lg border bg-white p-3">

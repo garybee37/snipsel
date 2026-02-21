@@ -178,14 +178,14 @@
   <header class="sticky top-0 z-10 border-b bg-white/95 backdrop-blur">
     <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
       <button
-        class="font-semibold hover:underline text-base"
+        class="font-semibold hover:underline text-lg"
         type="button"
         onclick={openToday}
       >
         snipsel
       </button>
       <input
-        class="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-100 px-3 py-2.5 text-base"
+        class="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-100 px-3 py-3 text-lg"
         placeholder="Search"
         type="search"
         bind:value={$searchQuery}
@@ -201,7 +201,7 @@
       />
       {#if $currentUser}
         <button
-          class="rounded-md bg-indigo-600 px-3 py-2.5 text-base font-medium text-white hover:bg-indigo-700"
+          class="rounded-md bg-indigo-600 px-3 py-3 text-lg font-medium text-white hover:bg-indigo-700"
           type="button"
           onclick={onNewSnipsel}
         >
@@ -240,33 +240,33 @@
 
   {#if $currentUser}
     <nav class="fixed bottom-0 left-0 right-0 border-t bg-white">
-      <div class="mx-auto grid max-w-3xl grid-cols-5 gap-1 px-2 py-2 text-sm text-slate-600">
+      <div class="mx-auto grid max-w-3xl grid-cols-5 gap-1 px-2 py-2 text-base text-slate-600">
         <button
-          class="rounded-md px-2 py-3 {$currentView.type === 'collections' ? 'bg-slate-100 font-medium' : ''}"
+          class="rounded-md px-2 py-4 {$currentView.type === 'collections' ? 'bg-slate-100 font-medium' : ''}"
           type="button"
           onclick={openCollections}
         >
           Lists
         </button>
-        <button class="rounded-md px-2 py-3" type="button" onclick={onNewSnipsel}>
+        <button class="rounded-md px-2 py-4" type="button" onclick={onNewSnipsel}>
           New
         </button>
         <button
-          class="rounded-md px-2 py-3 {$currentView.type === 'calendar' ? 'bg-slate-100 font-medium' : ''}"
+          class="rounded-md px-2 py-4 {$currentView.type === 'calendar' ? 'bg-slate-100 font-medium' : ''}"
           type="button"
           onclick={() => currentView.set({ type: 'calendar' })}
         >
           Calendar
         </button>
         <button
-          class="rounded-md px-2 py-3 {$currentView.type === 'todos' ? 'bg-slate-100 font-medium' : ''}"
+          class="rounded-md px-2 py-4 {$currentView.type === 'todos' ? 'bg-slate-100 font-medium' : ''}"
           type="button"
           onclick={() => currentView.set({ type: 'todos' })}
         >
           Todos
         </button>
         <button
-          class="rounded-md px-2 py-3 {$currentView.type === 'settings' ? 'bg-slate-100 font-medium' : ''}"
+          class="rounded-md px-2 py-4 {$currentView.type === 'settings' ? 'bg-slate-100 font-medium' : ''}"
           type="button"
           onclick={() => currentView.set({ type: 'settings' })}
         >

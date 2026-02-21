@@ -22,22 +22,22 @@
   load();
 </script>
 
-<div class="space-y-3">
-  <h2 class="text-lg font-semibold">Todos</h2>
+<div class="space-y-4">
+  <h2 class="text-2xl font-semibold">Todos</h2>
 
   {#if items.length === 0}
-    <div class="text-sm text-slate-500">No tasks found</div>
+    <div class="text-base text-slate-500">No tasks found</div>
   {:else}
-    <div class="space-y-2">
+    <div class="space-y-3">
       {#each items as t}
-        <div class="flex items-center gap-3 rounded-lg border bg-white px-3 py-2">
-          <input type="checkbox" checked={t.task_done} on:change={() => toggleDone(t.id, t.task_done)} />
+        <div class="flex items-center gap-4 rounded-lg border bg-white px-4 py-4">
+          <input class="h-6 w-6" type="checkbox" checked={t.task_done} on:change={() => toggleDone(t.id, t.task_done)} />
           <div class="flex-1">
-            <div class="text-sm {t.task_done ? 'line-through text-slate-400' : ''}">
+            <div class="text-lg {t.task_done ? 'line-through text-slate-400' : ''}">
               {t.content_markdown ?? ''}
             </div>
             {#if t.done_at}
-              <div class="text-xs text-slate-500">Done {new Date(t.done_at).toLocaleString()}</div>
+              <div class="mt-1 text-base text-slate-500">Done {new Date(t.done_at).toLocaleString()}</div>
             {/if}
           </div>
         </div>
