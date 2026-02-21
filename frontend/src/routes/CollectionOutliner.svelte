@@ -371,7 +371,7 @@
   {:else}
     <div class="flex flex-col">
       {#each $sortedItems as item (item.snipsel_id)}
-        <div class="group relative pl-6 pr-8" style="margin-left: {item.indent * 1.25}rem">
+        <div class="group relative pl-6 pr-10" style="margin-left: {item.indent * 1.25}rem">
           {#if item.snipsel_id === $editingSnipselId}
             <div
               bind:this={editContainerRef}
@@ -380,7 +380,7 @@
             >
               <textarea
                 bind:this={textareaRef}
-                class="w-full resize-none bg-transparent text-sm outline-none"
+                class="w-full resize-none bg-transparent text-base outline-none"
                 rows="1"
                 bind:value={editContent}
                 oninput={autosizeTextarea}
@@ -392,7 +392,7 @@
               <button
                 type="button"
                 aria-label={item.snipsel.task_done ? 'Mark task not done' : 'Mark task done'}
-                class="absolute left-1 top-1/2 -translate-y-1/2 h-4 w-4 rounded border border-slate-300 bg-white"
+                class="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded border border-slate-300 bg-white"
                 onclick={(e) => {
                   e.stopPropagation();
                   toggleTaskDone(item);
@@ -406,7 +406,7 @@
               <button
                 type="button"
                 aria-label="Select snipsel"
-                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-4 w-4 place-items-center rounded border border-slate-200 bg-white text-[10px] leading-none transition-opacity {selectedIds.has(
+                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded border border-slate-200 bg-white text-sm leading-none transition-opacity {selectedIds.has(
                   item.snipsel_id
                 )
                   ? 'opacity-100'
@@ -424,7 +424,7 @@
               <button
                 type="button"
                 aria-label="Select snipsel"
-                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-4 w-4 place-items-center rounded border border-slate-200 bg-white text-[10px] leading-none transition-opacity {selectedIds.has(
+                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center rounded border border-slate-200 bg-white text-sm leading-none transition-opacity {selectedIds.has(
                   item.snipsel_id
                 )
                   ? 'opacity-100'
@@ -441,7 +441,7 @@
             {/if}
 
             <div
-              class="rounded px-3 py-1.5 {selectedIds.has(item.snipsel_id)
+              class="rounded px-3 py-2 {selectedIds.has(item.snipsel_id)
                 ? 'bg-slate-100'
                 : 'hover:bg-slate-50'}"
               role="button"
@@ -450,9 +450,9 @@
               onkeydown={(e) => e.key === 'Enter' && startEdit(item)}
             >
               {#if item.snipsel.content_markdown}
-                <div class="prose prose-sm max-w-none text-sm prose-p:my-0 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-h1:text-base prose-h2:text-base prose-h3:text-base">
-                  {@html renderMarkdown(item.snipsel.content_markdown)}
-                </div>
+                  <div class="prose prose-sm max-w-none text-base prose-p:my-0 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-h1:text-lg prose-h2:text-lg prose-h3:text-base">
+                    {@html renderMarkdown(item.snipsel.content_markdown)}
+                  </div>
               {:else}
                 <span class="text-sm italic text-slate-400">Empty snipsel</span>
               {/if}
@@ -538,7 +538,7 @@
       {/each}
 
       <button
-        class="mt-6 h-24 w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-left text-sm text-slate-400 hover:bg-slate-50"
+        class="mt-6 h-24 w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-left text-base text-slate-400 hover:bg-slate-50"
         type="button"
         aria-label="Add new snipsel"
         onclick={() => {
@@ -554,15 +554,11 @@
 
   {#if selectedIds.size > 0}
     <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pb-4">
-      <div class="mx-auto flex max-w-3xl items-center gap-1 rounded-xl bg-slate-900 px-2 py-2 text-white shadow-lg">
-        <div class="flex min-w-0 items-center gap-2 pl-2">
-          <span class="text-sm">{selectedIds.size}</span>
-          <span class="text-xs text-white/70">selected</span>
-        </div>
-        <div class="flex-1"></div>
+        <div class="mx-auto flex max-w-3xl items-center gap-1 rounded-xl bg-slate-900 px-2 py-2 text-white shadow-lg">
+          <div class="flex-1"></div>
 
         <button
-          class="grid h-9 w-9 place-items-center rounded-md bg-white/10 hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
           type="button"
           aria-label="Move up"
           title="Move up"
@@ -571,7 +567,7 @@
           ↑
         </button>
         <button
-          class="grid h-9 w-9 place-items-center rounded-md bg-white/10 hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
           type="button"
           aria-label="Move down"
           title="Move down"
@@ -581,7 +577,7 @@
         </button>
 
         <button
-          class="grid h-9 w-9 place-items-center rounded-md bg-white/10 hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
           type="button"
           aria-label="Outdent"
           title="Outdent"
@@ -590,7 +586,7 @@
           ⇤
         </button>
         <button
-          class="grid h-9 w-9 place-items-center rounded-md bg-white/10 hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
           type="button"
           aria-label="Indent"
           title="Indent"
@@ -601,7 +597,7 @@
 
         <div class="relative">
           <button
-            class="grid h-9 w-9 place-items-center rounded-md bg-white/10 hover:bg-white/20"
+            class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
             type="button"
             aria-label="Change type"
             title="Change type"
@@ -635,7 +631,7 @@
         </div>
 
         <button
-          class="grid h-9 w-9 place-items-center rounded-md bg-white/10 hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
           type="button"
           aria-label="Copy"
           title="Copy"
@@ -644,7 +640,7 @@
           ⧉
         </button>
         <button
-          class="grid h-9 w-9 place-items-center rounded-md bg-white/10 hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
           type="button"
           aria-label="Add to collection"
           title="Add to collection"
@@ -653,7 +649,7 @@
           ＋
         </button>
         <button
-          class="grid h-9 w-9 place-items-center rounded-md bg-white/10 hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
           type="button"
           aria-label="Info"
           title="Info"
@@ -662,7 +658,7 @@
           ⓘ
         </button>
         <button
-          class="grid h-9 w-9 place-items-center rounded-md bg-red-500/80 hover:bg-red-500"
+          class="grid h-11 w-11 place-items-center rounded-md bg-red-500/80 text-lg hover:bg-red-500"
           type="button"
           aria-label="Delete"
           title="Delete"
@@ -671,7 +667,7 @@
           🗑
         </button>
         <button
-          class="grid h-9 w-9 place-items-center rounded-md text-white/80 hover:bg-white/10 hover:text-white"
+          class="grid h-11 w-11 place-items-center rounded-md text-lg text-white/80 hover:bg-white/10 hover:text-white"
           type="button"
           aria-label="Clear selection"
           title="Clear selection"

@@ -55,9 +55,9 @@
 
 <div class="space-y-2">
   <div class="flex items-center justify-between">
-    <h2 class="text-lg font-semibold">Collections</h2>
+    <h2 class="text-xl font-semibold">Collections</h2>
     <button
-      class="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
+      class="rounded-md bg-slate-900 px-3 py-2 text-base font-medium text-white"
       type="button"
       onclick={() => (showCreate = true)}
     >
@@ -66,7 +66,13 @@
   </div>
 
   {#if showCreate}
-    <form class="rounded-lg border bg-slate-50 p-3" onsubmit={(e) => { e.preventDefault(); createCollection(); }}>
+    <form
+      class="rounded-lg border bg-slate-50 p-3"
+      onsubmit={(e) => {
+        e.preventDefault();
+        createCollection();
+      }}
+    >
       <div class="mb-2 flex gap-2">
         <input
           class="w-16 rounded-md border px-2 py-1.5 text-center text-lg"
@@ -75,21 +81,21 @@
           placeholder="📋"
         />
         <input
-          class="flex-1 rounded-md border px-3 py-1.5 text-sm"
+          class="flex-1 rounded-md border px-3 py-2 text-base"
           bind:value={newTitle}
           placeholder="Collection title"
         />
       </div>
       <div class="flex gap-2">
         <button
-          class="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
+          class="rounded-md bg-slate-900 px-3 py-2 text-base font-medium text-white"
           type="submit"
           disabled={busy || !newTitle.trim()}
         >
           Create
         </button>
         <button
-          class="rounded-md border px-3 py-1.5 text-sm"
+          class="rounded-md border px-3 py-2 text-base"
           type="button"
           onclick={() => (showCreate = false)}
         >
@@ -104,18 +110,18 @@
   {:else if $collections.length === 0}
     <div class="py-8 text-center text-sm text-slate-500">No collections yet</div>
   {:else}
-    <div class="space-y-1">
+    <div class="space-y-2">
       {#each $collections as c}
-        <div class="flex w-full items-center gap-3 rounded-lg border bg-white px-3 py-2.5">
+        <div class="flex w-full items-center gap-3 rounded-lg border bg-white px-3 py-3">
           <button class="flex flex-1 items-center gap-3 text-left" type="button" onclick={() => openCollection(c)}>
-            <span class="text-xl">{c.icon}</span>
-            <span class="flex-1 font-medium">{c.title}</span>
+            <span class="text-2xl">{c.icon}</span>
+            <span class="flex-1 text-base font-medium">{c.title}</span>
             {#if c.archived}
               <span class="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">archived</span>
             {/if}
           </button>
           <button
-            class="grid h-8 w-8 place-items-center rounded-md border text-slate-700 hover:bg-slate-50"
+            class="grid h-10 w-10 place-items-center rounded-md border text-slate-700 hover:bg-slate-50"
             type="button"
             aria-label="Edit collection"
             title="Edit"
