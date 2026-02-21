@@ -76,6 +76,23 @@ def me():
     return json_response({"user": _user_json(user)})
 
 
+@auth_bp.patch("/me")
+@require_auth
+def update_me():
+    enforce_json()
+    user = current_user()
+    data = request.get_json() or {}
+
+    if "default_collection_header_color" in data:
+        user.default_collection_header_color = (
+            (data.get("default_collection_header_color") or "").strip() or None
+        )
+
+    user.modified_at = datetime.utcnow()
+    db.session.commit()
+    return json_response({"user": _user_json(user)})
+
+
 @auth_bp.post("/password-reset/request")
 def password_reset_request():
     enforce_json()
@@ -134,5 +151,6 @@ def _user_json(user: User) -> dict:
         "id": user.id,
         "username": user.username,
         "email": user.email,
+        "default_collection_header_color": user.default_collection_header_color,
         "created_at": user.created_at.isoformat() + "Z",
     }

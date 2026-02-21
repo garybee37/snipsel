@@ -12,6 +12,7 @@
     pendingReference,
     sortedItems,
   } from '../lib/stores';
+  import { currentUser } from '../lib/session';
 
   const md = new MarkdownIt({ html: false, linkify: true, breaks: true });
 
@@ -27,6 +28,16 @@
   let modalImage = $state<{ id: string; filename: string } | null>(null);
 
   let showTypeMenu = $state(false);
+
+  const DEFAULT_HEADER_COLOR = '#4f46e5';
+
+  function getHeaderColor(): string {
+    return (
+      $currentCollection?.header_color ??
+      $currentUser?.default_collection_header_color ??
+      DEFAULT_HEADER_COLOR
+    );
+  }
 
   function openImageModal(id: string, filename: string) {
     modalImage = { id, filename };
@@ -332,37 +343,26 @@
     aria-hidden="true"
   />
 
-  {#if $currentCollection?.header_image_url}
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <div
-        class="h-28 w-full bg-cover bg-center"
-        style="background-image: url('{$currentCollection.header_image_url}')"
-      ></div>
-      <div class="px-3 py-2">
-        <div class="flex items-center gap-2">
-          <span class="text-xl">{$currentCollection.icon}</span>
-          <button
-            class="text-lg font-semibold hover:underline"
-            type="button"
-            onclick={() => $currentCollection && currentView.set({ type: 'collection_settings', id: $currentCollection.id })}
-          >
-            {$currentCollection.title}
-          </button>
-        </div>
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div
+      class="h-28 w-full bg-cover bg-center"
+      style={$currentCollection?.header_image_url
+        ? `background-image: url('${$currentCollection.header_image_url}'); background-color: ${getHeaderColor()}`
+        : `background-color: ${getHeaderColor()}`}
+    ></div>
+    <div class="px-3 py-2">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">{$currentCollection?.icon}</span>
+        <button
+          class="text-lg font-semibold hover:underline"
+          type="button"
+          onclick={() => $currentCollection && currentView.set({ type: 'collection_settings', id: $currentCollection.id })}
+        >
+          {$currentCollection?.title}
+        </button>
       </div>
     </div>
-  {:else}
-    <div class="flex items-center gap-2">
-      <span class="text-xl">{$currentCollection?.icon}</span>
-      <button
-        class="text-lg font-semibold hover:underline"
-        type="button"
-        onclick={() => $currentCollection && currentView.set({ type: 'collection_settings', id: $currentCollection.id })}
-      >
-        {$currentCollection?.title}
-      </button>
-    </div>
-  {/if}
+  </div>
 
   {#if $isLoading && $sortedItems.length === 0}
     <div class="py-8 text-center text-sm text-slate-500">Loading...</div>

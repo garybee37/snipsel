@@ -11,6 +11,7 @@ export type User = {
   username: string;
   email: string;
   created_at: string;
+  default_collection_header_color?: string | null;
 };
 
 export type Collection = {
@@ -18,6 +19,7 @@ export type Collection = {
   title: string;
   icon: string;
   header_image_url: string | null;
+  header_color?: string | null;
   archived: boolean;
   list_for_day: string | null;
   created_at: string;
@@ -121,6 +123,11 @@ export const api = {
     }),
   logout: () => requestJson<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
   me: () => requestJson<{ user: User }>('/api/auth/me'),
+  updateMe: (input: { default_collection_header_color?: string | null }) =>
+    requestJson<{ user: User }>('/api/auth/me', {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
 
   collections: {
     list: (includeArchived = false) =>
@@ -133,14 +140,14 @@ export const api = {
       requestJson<{ collection: Collection }>(
         `/api/collections/today${day ? `?day=${day}` : ''}`
       ),
-    create: (input: { title: string; icon?: string; header_image_url?: string }) =>
+    create: (input: { title: string; icon?: string; header_image_url?: string; header_color?: string }) =>
       requestJson<{ collection: Collection }>('/api/collections', {
         method: 'POST',
         body: JSON.stringify(input),
       }),
     update: (
       id: string,
-      input: { title?: string; icon?: string; header_image_url?: string; archived?: boolean }
+      input: { title?: string; icon?: string; header_image_url?: string; header_color?: string; archived?: boolean }
     ) =>
       requestJson<{ collection: Collection }>(`/api/collections/${id}`, {
         method: 'PATCH',

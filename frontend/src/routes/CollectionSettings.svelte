@@ -8,6 +8,7 @@
   let title = '';
   let icon = '';
   let headerImageUrl = '';
+  let headerColor = '';
   let saving = false;
 
   async function load() {
@@ -18,6 +19,7 @@
       title = collection.title;
       icon = collection.icon;
       headerImageUrl = collection.header_image_url ?? '';
+      headerColor = collection.header_color ?? '';
     } finally {
       isLoading.set(false);
     }
@@ -31,6 +33,7 @@
         title: title.trim(),
         icon: icon.trim(),
         header_image_url: headerImageUrl.trim() || undefined,
+        header_color: headerColor.trim() || undefined,
       });
       collection = res.collection;
       collections.update((list) => list.map((c) => (c.id === res.collection.id ? res.collection : c)));
@@ -84,6 +87,14 @@
       <label class="block">
         <span class="mb-1 block text-xs font-medium text-slate-600">Header image URL</span>
         <input class="w-full rounded-md border px-3 py-2 text-sm" bind:value={headerImageUrl} />
+      </label>
+
+      <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-600">Header color</span>
+        <div class="flex items-center gap-3">
+          <input class="h-10 w-16 rounded-md border" type="color" bind:value={headerColor} />
+          <input class="flex-1 rounded-md border px-3 py-2 text-sm" bind:value={headerColor} placeholder="#4f46e5" />
+        </div>
       </label>
 
       <div class="flex gap-2">

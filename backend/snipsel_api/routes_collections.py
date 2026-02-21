@@ -47,6 +47,7 @@ def get_today_collection():
         title=day.isoformat(),
         icon="📅",
         list_for_day=day,
+        header_color=user.default_collection_header_color,
         created_by_id=user.id,
         modified_by_id=user.id,
     )
@@ -65,6 +66,7 @@ def create_collection():
     title = (data.get("title") or "").strip()
     icon = (data.get("icon") or "🗒").strip() or "🗒"
     header_image_url = (data.get("header_image_url") or "").strip() or None
+    header_color = (data.get("header_color") or "").strip() or user.default_collection_header_color or None
 
     if not title:
         raise api_error(400, "invalid_input", "title is required")
@@ -74,6 +76,7 @@ def create_collection():
         title=title,
         icon=icon,
         header_image_url=header_image_url,
+        header_color=header_color,
         created_by_id=user.id,
         modified_by_id=user.id,
     )
@@ -110,6 +113,8 @@ def update_collection(collection_id: str):
         c.icon = icon
     if "header_image_url" in data:
         c.header_image_url = (data.get("header_image_url") or "").strip() or None
+    if "header_color" in data:
+        c.header_color = (data.get("header_color") or "").strip() or None
     if "archived" in data:
         archived = bool(data.get("archived"))
         c.archived_at = datetime.utcnow() if archived else None
@@ -143,6 +148,7 @@ def _collection_json(c: Collection) -> dict:
         "title": c.title,
         "icon": c.icon,
         "header_image_url": c.header_image_url,
+        "header_color": c.header_color,
         "archived": c.archived_at is not None,
         "list_for_day": c.list_for_day.isoformat() if c.list_for_day else None,
         "created_at": c.created_at.isoformat() + "Z",

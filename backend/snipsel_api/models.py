@@ -40,6 +40,8 @@ class User(db.Model):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     anonymized_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
+    default_collection_header_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
+
 
 class Collection(db.Model):
     __tablename__ = "collections"
@@ -50,6 +52,7 @@ class Collection(db.Model):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     icon: Mapped[str] = mapped_column(String(8), nullable=False, default="🗒")
     header_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    header_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     list_for_day: Mapped[date | None] = mapped_column(Date, nullable=True)
