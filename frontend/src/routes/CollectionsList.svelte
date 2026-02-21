@@ -11,20 +11,20 @@
   let filter: Filter = 'all';
   let titleFilter = '';
 
-  function matchesFilter(c: Collection): boolean {
-    if (filter === 'favorites') return Boolean(c.is_favorite);
-    if (filter === 'day') return Boolean(c.list_for_day);
-    if (filter === 'normal') return !c.list_for_day;
+  function matchesFilter(c: Collection, f: Filter): boolean {
+    if (f === 'favorites') return Boolean(c.is_favorite);
+    if (f === 'day') return Boolean(c.list_for_day);
+    if (f === 'normal') return !c.list_for_day;
     return true;
   }
 
-  function matchesTitle(c: Collection): boolean {
-    const q = titleFilter.trim().toLowerCase();
+  function matchesTitle(c: Collection, qRaw: string): boolean {
+    const q = qRaw.trim().toLowerCase();
     if (!q) return true;
     return c.title.toLowerCase().includes(q);
   }
 
-  $: filtered = $collections.filter((c) => matchesFilter(c) && matchesTitle(c));
+  $: filtered = $collections.filter((c) => matchesFilter(c, filter) && matchesTitle(c, titleFilter));
 
   async function loadCollections() {
     isLoading.set(true);
