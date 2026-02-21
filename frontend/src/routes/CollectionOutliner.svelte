@@ -345,22 +345,27 @@
 
   <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
     <div
-      class="h-28 w-full bg-cover bg-center"
+      class="relative h-28 w-full bg-cover bg-center"
       style={$currentCollection?.header_image_url
         ? `background-image: url('${$currentCollection.header_image_url}'); background-color: ${getHeaderColor()}`
         : `background-color: ${getHeaderColor()}`}
     ></div>
-    <div class="px-3 py-2">
-      <div class="flex items-center gap-2">
-        <span class="text-xl">{$currentCollection?.icon}</span>
-        <button
-          class="text-lg font-semibold hover:underline"
-          type="button"
-          onclick={() => $currentCollection && currentView.set({ type: 'collection_settings', id: $currentCollection.id })}
-        >
-          {$currentCollection?.title}
-        </button>
+
+    <div class="relative px-4 py-3">
+      <div
+        class="absolute left-4 top-0 -translate-y-1/2 grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm"
+        aria-hidden="true"
+      >
+        <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
       </div>
+
+      <button
+        class="pl-20 text-lg font-semibold hover:underline"
+        type="button"
+        onclick={() => $currentCollection && currentView.set({ type: 'collection_settings', id: $currentCollection.id })}
+      >
+        {$currentCollection?.title}
+      </button>
     </div>
   </div>
 
