@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { api } from '../lib/api';
+  import { api, type Collection } from '../lib/api';
   import { currentUser } from '../lib/session';
   import { currentView } from '../lib/stores';
 
   const DEFAULT_HEADER_COLOR = '#4f46e5';
 
   let defaultHeaderColor = $state('');
+
+  let templateCollections = $state<Collection[]>([]);
+  let dayTemplateId = $state<string>('');
 
   async function logout() {
     await api.logout();
@@ -25,8 +28,24 @@
     currentUser.set(res.user);
   }
 
+  async function loadTemplates() {
+    const res = await api.collections.list();
+    templateCollections = res.collections.filter((c) => Boolean(c.is_template));
+  }
+
+  async function saveDayTemplate() {
+    const id = dayTemplateId.trim() || null;
+    const res = await api.updateMe({ day_collection_template_id: id });
+    currentUser.set(res.user);
+  }
+
   $effect(() => {
     defaultHeaderColor = $currentUser?.default_collection_header_color ?? DEFAULT_HEADER_COLOR;
+    dayTemplateId = $currentUser?.day_collection_template_id ?? '';
+  });
+
+  $effect(() => {
+    loadTemplates();
   });
 </script>
 
@@ -40,6 +59,35 @@
     <button class="mt-4 rounded-md bg-slate-900 px-4 py-3 text-lg font-medium text-white" type="button" onclick={logout}>
       Logout
     </button>
+  </div>
+
+  <div class="rounded-lg border bg-white p-5 text-base">
+    <div class="text-sm uppercase text-slate-500">Day template</div>
+    <div class="mt-3 space-y-3">
+      <select class="w-full rounded-md border px-4 py-3 text-lg" bind:value={dayTemplateId}>
+        <option value="">No template</option>
+        {#each templateCollections as c (c.id)}
+          <option value={c.id}>
+            {c.icon} {c.title}
+          </option>
+        {/each}
+      </select>
+      <div class="flex gap-2">
+        <button class="rounded-md bg-slate-900 px-4 py-3 text-lg font-medium text-white" type="button" onclick={saveDayTemplate}>
+          Save
+        </button>
+        <button
+          class="rounded-md border px-4 py-3 text-lg"
+          type="button"
+          onclick={() => {
+            dayTemplateId = '';
+            saveDayTemplate();
+          }}
+        >
+          Clear
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="rounded-lg border bg-white p-5 text-base">

@@ -7,7 +7,7 @@
   let newIcon = '🗒';
   let busy = false;
 
-  type Filter = 'all' | 'favorites' | 'day' | 'normal' | 'shared';
+  type Filter = 'all' | 'favorites' | 'day' | 'normal' | 'shared' | 'templates';
   let filter: Filter = 'all';
   let titleFilter = '';
 
@@ -16,6 +16,7 @@
     if (f === 'day') return Boolean(c.list_for_day);
     if (f === 'normal') return !c.list_for_day;
     if (f === 'shared') return c.access_level === 'read' || c.access_level === 'write';
+    if (f === 'templates') return Boolean(c.is_template);
     return true;
   }
 
@@ -125,6 +126,13 @@
           onclick={() => (filter = 'shared')}
         >
           Shared
+        </button>
+        <button
+          class="rounded-md border px-4 py-2 text-base {filter === 'templates' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+          type="button"
+          onclick={() => (filter = 'templates')}
+        >
+          Templates
         </button>
       </div>
 

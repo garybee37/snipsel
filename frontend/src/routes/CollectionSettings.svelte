@@ -86,6 +86,7 @@
         header_image_url: headerImageUrl.trim() || undefined,
         header_color: headerColor.trim() || undefined,
         is_favorite: isFavorite,
+        is_template: Boolean(collection.is_template),
         default_snipsel_type: defaultSnipselType.trim() || undefined,
       });
       collection = res.collection;
@@ -108,6 +109,16 @@
     const next = !isFavorite;
     isFavorite = next;
     const res = await api.collections.update(collection.id, { is_favorite: next });
+    collection = res.collection;
+    collections.update((list) => list.map((c) => (c.id === res.collection.id ? res.collection : c)));
+    currentCollection.update((c) => (c?.id === res.collection.id ? res.collection : c));
+  }
+
+  async function toggleTemplate() {
+    if (!collection) return;
+    const next = !Boolean(collection.is_template);
+    collection = { ...collection, is_template: next };
+    const res = await api.collections.update(collection.id, { is_template: next });
     collection = res.collection;
     collections.update((list) => list.map((c) => (c.id === res.collection.id ? res.collection : c)));
     currentCollection.update((c) => (c?.id === res.collection.id ? res.collection : c));
@@ -139,15 +150,26 @@
     <div class="rounded-lg border bg-white p-3 space-y-3">
       <div class="flex items-center justify-between">
         <div class="text-xs font-medium uppercase text-slate-500">Info</div>
-        <button
-          class="grid h-10 w-10 place-items-center rounded-md border text-xl hover:bg-slate-50"
-          type="button"
-          aria-label={isFavorite ? 'Unfavorite' : 'Favorite'}
-          title={isFavorite ? 'Unfavorite' : 'Favorite'}
-          onclick={toggleFavorite}
-        >
-          {isFavorite ? '♥' : '♡'}
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            class="grid h-10 w-10 place-items-center rounded-md border text-xl hover:bg-slate-50"
+            type="button"
+            aria-label={isFavorite ? 'Unfavorite' : 'Favorite'}
+            title={isFavorite ? 'Unfavorite' : 'Favorite'}
+            onclick={toggleFavorite}
+          >
+            {isFavorite ? '♥' : '♡'}
+          </button>
+          <button
+            class="grid h-10 w-10 place-items-center rounded-md border text-lg hover:bg-slate-50"
+            type="button"
+            aria-label={collection?.is_template ? 'Unset template' : 'Mark as template'}
+            title={collection?.is_template ? 'Template' : 'Not a template'}
+            onclick={toggleTemplate}
+          >
+            🧩
+          </button>
+        </div>
       </div>
 
       <label class="block">

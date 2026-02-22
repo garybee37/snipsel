@@ -13,6 +13,7 @@ export type User = {
   created_at: string;
   default_collection_header_color?: string | null;
   carry_over_open_tasks?: boolean;
+  day_collection_template_id?: string | null;
 };
 
 export type Collection = {
@@ -22,6 +23,7 @@ export type Collection = {
   header_image_url: string | null;
   header_color?: string | null;
   is_favorite?: boolean;
+  is_template?: boolean;
   default_snipsel_type?: string | null;
   archived: boolean;
   list_for_day: string | null;
@@ -145,7 +147,11 @@ export const api = {
     }),
   logout: () => requestJson<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
   me: () => requestJson<{ user: User }>('/api/auth/me'),
-  updateMe: (input: { default_collection_header_color?: string | null; carry_over_open_tasks?: boolean }) =>
+  updateMe: (input: {
+    default_collection_header_color?: string | null;
+    carry_over_open_tasks?: boolean;
+    day_collection_template_id?: string | null;
+  }) =>
     requestJson<{ user: User }>('/api/auth/me', {
       method: 'PATCH',
       body: JSON.stringify(input),

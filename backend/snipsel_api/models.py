@@ -42,6 +42,11 @@ class User(db.Model):
 
     default_collection_header_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
+    day_collection_template_id: Mapped[str | None] = mapped_column(
+        ForeignKey("collections.id"),
+        nullable=True,
+    )
+
     carry_over_open_tasks: Mapped[bool] = mapped_column(default=True, nullable=False)
 
 
@@ -57,6 +62,8 @@ class Collection(db.Model):
     header_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     is_favorite: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    is_template: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     default_snipsel_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
 

@@ -12,7 +12,7 @@ from snipsel_api.config import Settings
 from snipsel_api.emailer import send_password_reset_email
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import PasswordResetToken, User
+from snipsel_api.models import Collection, PasswordResetToken, User
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -93,6 +93,23 @@ def update_me():
     if "carry_over_open_tasks" in data:
         user.carry_over_open_tasks = bool(data.get("carry_over_open_tasks"))
 
+    if "day_collection_template_id" in data:
+        tpl_id_raw = (data.get("day_collection_template_id") or "").strip() or None
+        if tpl_id_raw is None:
+            user.day_collection_template_id = None
+        else:
+            tpl = db.session.execute(
+                db.select(Collection).where(
+                    Collection.id == tpl_id_raw,
+                    Collection.owner_user_id == user.id,
+                    Collection.deleted_at.is_(None),
+                    Collection.is_template == True,
+                )
+            ).scalars().first()
+            if not tpl:
+                raise api_error(400, "invalid_input", "template not found")
+            user.day_collection_template_id = tpl.id
+
     user.modified_at = datetime.utcnow()
     db.session.commit()
     return json_response({"user": _user_json(user)})
@@ -158,5 +175,6 @@ def _user_json(user: User) -> dict:
         "email": user.email,
         "default_collection_header_color": user.default_collection_header_color,
         "carry_over_open_tasks": user.carry_over_open_tasks,
+        "day_collection_template_id": getattr(user, "day_collection_template_id", None),
         "created_at": user.created_at.isoformat() + "Z",
     }

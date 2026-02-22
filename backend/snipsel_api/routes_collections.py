@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import date, datetime, timedelta
 
 from flask import Blueprint, request
@@ -9,8 +10,10 @@ from sqlalchemy.exc import IntegrityError
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Collection, CollectionShare, CollectionSnipsel, Snipsel, User
+from snipsel_api.models import Attachment, Collection, CollectionShare, CollectionSnipsel, Snipsel, User
 from snipsel_api.permissions import can_read_collection, can_write_collection, get_collection_access_level
+from snipsel_api.routes_attachments import _resolve_attachment_path, _resolve_thumbnail_path
+from snipsel_api.routes_snipsels import _sync_backlinks, _sync_tags_mentions
 
 collections_bp = Blueprint("collections", __name__)
 
@@ -127,6 +130,14 @@ def get_today_collection():
         created_by_id=user.id,
         modified_by_id=user.id,
     )
+
+    tpl_id = getattr(user, "day_collection_template_id", None)
+    if tpl_id:
+        tpl = db.session.get(Collection, tpl_id)
+        if tpl and tpl.deleted_at is None and tpl.owner_user_id == user.id and getattr(tpl, "is_template", False):
+            c.icon = tpl.icon
+            c.header_image_url = tpl.header_image_url
+            c.header_color = tpl.header_color
     db.session.add(c)
 
     try:
@@ -136,9 +147,141 @@ def get_today_collection():
         raise api_error(409, "conflict", "Day collection could not be created")
 
     _maybe_carry_over_open_tasks(user=user, today_collection=c, day=day)
+
+    if tpl_id:
+        _maybe_copy_template_contents(user=user, template_collection_id=tpl_id, target_collection=c)
     j = _collection_json(c)
     j["access_level"] = "owner"
     return json_response({"collection": j}, status=201)
+
+
+def _maybe_copy_template_contents(*, user: User, template_collection_id: str, target_collection: Collection) -> None:
+    tpl = db.session.get(Collection, template_collection_id)
+    if not tpl or tpl.deleted_at is not None or tpl.owner_user_id != user.id or not getattr(tpl, "is_template", False):
+        return
+
+    tpl_items = (
+        db.session.execute(
+            db.select(CollectionSnipsel)
+            .join(Snipsel, Snipsel.id == CollectionSnipsel.snipsel_id)
+            .where(CollectionSnipsel.collection_id == tpl.id, Snipsel.deleted_at.is_(None))
+            .order_by(CollectionSnipsel.position.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+    old_to_new: dict[str, str] = {}
+    new_items: list[tuple[str, int, int]] = []
+
+    for cs in tpl_items:
+        src = cs.snipsel
+        ns = Snipsel(
+            owner_user_id=user.id,
+            type=src.type,
+            content_markdown=src.content_markdown,
+            task_done=src.task_done,
+            done_at=src.done_at,
+            done_by_id=src.done_by_id,
+            external_url=src.external_url,
+            external_label=src.external_label,
+            internal_target_snipsel_id=None,
+            geo_lat=src.geo_lat,
+            geo_lng=src.geo_lng,
+            geo_accuracy_m=src.geo_accuracy_m,
+            created_by_id=user.id,
+            modified_by_id=user.id,
+        )
+        db.session.add(ns)
+        db.session.flush()
+        old_to_new[src.id] = ns.id
+        new_items.append((ns.id, cs.position, cs.indent))
+
+        for a in src.attachments:
+            src_path = _resolve_attachment_path(a)
+            if not src_path:
+                continue
+
+            upload_dir = src_path.parent
+            new_att_id = str(uuid.uuid4())
+            dst_path = upload_dir / f"{new_att_id}_{a.filename}"
+            try:
+                dst_path.write_bytes(src_path.read_bytes())
+            except OSError:
+                continue
+
+            thumb_path = None
+            src_thumb = _resolve_thumbnail_path(a)
+            if src_thumb:
+                thumb_path = upload_dir / f"{new_att_id}_thumb.jpg"
+                try:
+                    thumb_path.write_bytes(src_thumb.read_bytes())
+                except OSError:
+                    thumb_path = None
+
+            na = Attachment(
+                id=new_att_id,
+                snipsel_id=ns.id,
+                filename=a.filename,
+                mime_type=a.mime_type,
+                size_bytes=int(dst_path.stat().st_size),
+                storage_path=str(dst_path),
+                thumbnail_path=str(thumb_path) if thumb_path else None,
+                created_by_id=user.id,
+            )
+            db.session.add(na)
+
+    for old_id, new_id in old_to_new.items():
+        src = db.session.get(Snipsel, old_id)
+        if not src or not src.internal_target_snipsel_id:
+            continue
+        mapped = old_to_new.get(src.internal_target_snipsel_id)
+        if mapped:
+            ns = db.session.get(Snipsel, new_id)
+            if ns:
+                ns.internal_target_snipsel_id = mapped
+
+    for new_id in old_to_new.values():
+        ns = db.session.get(Snipsel, new_id)
+        if ns:
+            _sync_tags_mentions(user_id=user.id, snipsel=ns)
+            _sync_backlinks(user_id=user.id, snipsel=ns)
+
+    for snipsel_id, pos, indent in new_items:
+        db.session.add(
+            CollectionSnipsel(
+                collection_id=target_collection.id,
+                snipsel_id=snipsel_id,
+                position=pos,
+                indent=indent,
+            )
+        )
+
+    shares = (
+        db.session.execute(db.select(CollectionShare).where(CollectionShare.collection_id == tpl.id))
+        .scalars()
+        .all()
+    )
+    for s in shares:
+        existing = db.session.execute(
+            db.select(CollectionShare).where(
+                CollectionShare.collection_id == target_collection.id,
+                CollectionShare.shared_with_user_id == s.shared_with_user_id,
+            )
+        ).scalars().first()
+        if existing:
+            existing.permission = s.permission
+            continue
+        db.session.add(
+            CollectionShare(
+                collection_id=target_collection.id,
+                shared_with_user_id=s.shared_with_user_id,
+                permission=s.permission,
+                created_by_user_id=user.id,
+            )
+        )
+
+    db.session.commit()
 
 
 def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) -> None:
@@ -297,6 +440,8 @@ def update_collection(collection_id: str):
         c.archived_at = datetime.utcnow() if archived else None
     if "is_favorite" in data:
         c.is_favorite = bool(data.get("is_favorite"))
+    if "is_template" in data:
+        c.is_template = bool(data.get("is_template"))
     if "default_snipsel_type" in data:
         c.default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
 
@@ -335,6 +480,7 @@ def _collection_json(c: Collection) -> dict:
         "header_image_url": c.header_image_url,
         "header_color": c.header_color,
         "is_favorite": c.is_favorite,
+        "is_template": getattr(c, "is_template", False),
         "default_snipsel_type": c.default_snipsel_type,
         "archived": c.archived_at is not None,
         "list_for_day": c.list_for_day.isoformat() if c.list_for_day else None,
