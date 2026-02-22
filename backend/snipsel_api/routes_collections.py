@@ -9,9 +9,17 @@ from sqlalchemy.exc import IntegrityError
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Collection, CollectionSnipsel, Snipsel
+from snipsel_api.models import Collection, CollectionShare, CollectionSnipsel, Snipsel, User
+from snipsel_api.permissions import can_read_collection, can_write_collection, get_collection_access_level
 
 collections_bp = Blueprint("collections", __name__)
+
+
+def _get_share_permission(user_id: str, collection_id: str) -> str | None:
+    level = get_collection_access_level(user_id, collection_id)
+    if level in {"owner", "write", "read"}:
+        return "write" if level == "write" else ("read" if level == "read" else None)
+    return None
 
 
 @collections_bp.get("")
@@ -19,12 +27,35 @@ collections_bp = Blueprint("collections", __name__)
 def list_collections():
     user = current_user()
     include_archived = request.args.get("include_archived") == "1"
-    q = db.select(Collection).where(Collection.owner_user_id == user.id, Collection.deleted_at.is_(None))
+    owned = db.select(Collection).where(Collection.owner_user_id == user.id, Collection.deleted_at.is_(None))
     if not include_archived:
-        q = q.where(Collection.archived_at.is_(None))
-    q = q.order_by(Collection.list_for_day.desc().nullslast(), Collection.created_at.desc())
-    items = db.session.execute(q).scalars().all()
-    return json_response({"collections": [_collection_json(c) for c in items]})
+        owned = owned.where(Collection.archived_at.is_(None))
+
+    shared = (
+        db.select(Collection)
+        .join(CollectionShare, CollectionShare.collection_id == Collection.id)
+        .where(
+            Collection.deleted_at.is_(None),
+            CollectionShare.shared_with_user_id == user.id,
+        )
+    )
+    if not include_archived:
+        shared = shared.where(Collection.archived_at.is_(None))
+
+    items = db.session.execute(owned.union(shared).order_by(Collection.list_for_day.desc().nullslast(), Collection.created_at.desc())).scalars().all()
+
+    out = []
+    for c in items:
+        j = _collection_json(c)
+        level = get_collection_access_level(user.id, c.id)
+        j["access_level"] = level or "read"
+        if c.owner_user_id != user.id:
+            j["shared_by_username"] = (
+                db.session.execute(db.select(User.username).where(User.id == c.owner_user_id)).scalars().first()
+            )
+        out.append(j)
+
+    return json_response({"collections": out})
 
 
 @collections_bp.get("/today")
@@ -187,7 +218,11 @@ def create_collection():
 @require_auth
 def get_collection(collection_id: str):
     user = current_user()
-    c = _get_owned_collection(user.id, collection_id)
+    if not can_read_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
+    c = db.session.get(Collection, collection_id)
+    if not c or c.deleted_at is not None:
+        raise api_error(404, "not_found", "Collection not found")
     return json_response({"collection": _collection_json(c)})
 
 
@@ -260,3 +295,99 @@ def _collection_json(c: Collection) -> dict:
         "created_at": c.created_at.isoformat() + "Z",
         "modified_at": c.modified_at.isoformat() + "Z",
     }
+
+
+@collections_bp.get("/<collection_id>/shares")
+@require_auth
+def list_shares(collection_id: str):
+    user = current_user()
+    c = _get_owned_collection(user.id, collection_id)
+    _ = c
+    rows = (
+        db.session.execute(
+            db.select(CollectionShare)
+            .where(CollectionShare.collection_id == collection_id)
+            .order_by(CollectionShare.created_at.asc())
+        )
+        .scalars()
+        .all()
+    )
+    user_ids = [r.shared_with_user_id for r in rows]
+    users_by_id = {
+        u.id: u.username
+        for u in (
+            db.session.execute(db.select(User).where(User.id.in_(user_ids))).scalars().all()
+            if user_ids
+            else []
+        )
+    }
+    return json_response(
+        {
+            "shares": [
+                {
+                    "id": r.id,
+                    "shared_with_user_id": r.shared_with_user_id,
+                    "shared_with_username": users_by_id.get(r.shared_with_user_id),
+                    "permission": r.permission,
+                    "created_at": r.created_at.isoformat() + "Z",
+                }
+                for r in rows
+            ]
+        }
+    )
+
+
+@collections_bp.post("/<collection_id>/shares")
+@require_auth
+def create_share(collection_id: str):
+    enforce_json()
+    user = current_user()
+    c = _get_owned_collection(user.id, collection_id)
+    data = request.get_json() or {}
+
+    shared_with_user_id = (data.get("shared_with_user_id") or "").strip()
+    permission = (data.get("permission") or "").strip()
+    if permission not in {"read", "write"}:
+        raise api_error(400, "invalid_input", "permission must be read or write")
+    if not shared_with_user_id:
+        raise api_error(400, "invalid_input", "shared_with_user_id is required")
+    if shared_with_user_id == c.owner_user_id:
+        raise api_error(400, "invalid_input", "cannot share with owner")
+
+    target = db.session.get(User, shared_with_user_id)
+    if not target or target.deleted_at is not None or not target.is_active:
+        raise api_error(400, "invalid_input", "user not found")
+
+    existing = db.session.execute(
+        db.select(CollectionShare).where(
+            CollectionShare.collection_id == collection_id,
+            CollectionShare.shared_with_user_id == shared_with_user_id,
+        )
+    ).scalars().first()
+    if existing:
+        existing.permission = permission
+        db.session.commit()
+        return json_response({"share": {"id": existing.id}})
+
+    s = CollectionShare(
+        collection_id=collection_id,
+        shared_with_user_id=shared_with_user_id,
+        permission=permission,
+        created_by_user_id=user.id,
+    )
+    db.session.add(s)
+    db.session.commit()
+    return json_response({"share": {"id": s.id}}, status=201)
+
+
+@collections_bp.delete("/<collection_id>/shares/<share_id>")
+@require_auth
+def delete_share(collection_id: str, share_id: str):
+    user = current_user()
+    _get_owned_collection(user.id, collection_id)
+    s = db.session.get(CollectionShare, share_id)
+    if not s or s.collection_id != collection_id:
+        raise api_error(404, "not_found", "Share not found")
+    db.session.delete(s)
+    db.session.commit()
+    return json_response({"ok": True})

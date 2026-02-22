@@ -25,6 +25,10 @@
 
   let selectedIds = $state<Set<string>>(new Set());
 
+  function canWrite(): boolean {
+    return $currentCollection?.access_level !== 'read';
+  }
+
   let attachmentsInputRef: HTMLInputElement | undefined = $state();
   let uploadingAttachments = $state(false);
 
@@ -110,6 +114,7 @@
 
   async function toggleTaskDone(item: CollectionItem) {
     if (!$currentCollection) return;
+    if (!canWrite()) return;
     if (item.snipsel.type !== 'task') return;
 
     const nextDone = !item.snipsel.task_done;
@@ -164,6 +169,7 @@
   }
 
   function startEdit(item: CollectionItem) {
+    if (!canWrite()) return;
     if (selectedIds.size > 0) {
       toggleSelection(item.snipsel_id);
       return;
@@ -246,6 +252,7 @@
 
   async function createSnipsel() {
     if (!$currentCollection) return;
+    if (!canWrite()) return;
     isLoading.set(true);
     try {
       let geo:
@@ -294,6 +301,7 @@
 
   async function deleteSelected() {
     if (!$currentCollection) return;
+    if (!canWrite()) return;
     if (selectedIds.size === 0) return;
     if (!confirm(`Delete ${selectedIds.size} snipsel(s)?`)) return;
 
@@ -311,6 +319,7 @@
   }
 
   async function setTypeSelected(nextType: 'text' | 'image' | 'attachment' | 'task') {
+    if (!canWrite()) return;
     if (selectedIds.size === 0) return;
 
     isLoading.set(true);
@@ -328,6 +337,7 @@
 
   async function copySelected() {
     if (!$currentCollection) return;
+    if (!canWrite()) return;
     if (selectedIds.size === 0) return;
 
     isLoading.set(true);
@@ -345,6 +355,7 @@
 
   function moveSelectedToCollection() {
     if (!$currentCollection) return;
+    if (!canWrite()) return;
     if (selectedIds.size === 0) return;
     pendingReference.set({
       snipselIds: Array.from(selectedIds),
@@ -356,6 +367,7 @@
   }
 
   function addSelectedToCollection() {
+    if (!canWrite()) return;
     if (selectedIds.size === 0) return;
     pendingReference.set({ snipselIds: Array.from(selectedIds), mode: 'add' });
     clearSelection();
@@ -364,6 +376,7 @@
 
   async function adjustIndentSelected(delta: number) {
     if (!$currentCollection) return;
+    if (!canWrite()) return;
     if (selectedIds.size === 0) return;
 
     const current = $sortedItems;
@@ -385,6 +398,7 @@
 
   async function moveSelected(dir: -1 | 1) {
     if (!$currentCollection) return;
+    if (!canWrite()) return;
     if (selectedIds.size === 0) return;
     const list = [...$sortedItems];
 
@@ -674,6 +688,7 @@
           }
           createSnipselFromUserGesture();
         }}
+        disabled={!canWrite()}
       ></button>
     </div>
   {/if}
@@ -700,6 +715,7 @@
           aria-label="Move up"
           title="Move up"
           onclick={() => moveSelected(-1)}
+          disabled={!canWrite()}
         >
           ↑
         </button>
@@ -709,6 +725,7 @@
           aria-label="Move down"
           title="Move down"
           onclick={() => moveSelected(1)}
+          disabled={!canWrite()}
         >
           ↓
         </button>
@@ -719,6 +736,7 @@
           aria-label="Outdent"
           title="Outdent"
           onclick={() => adjustIndentSelected(-1)}
+          disabled={!canWrite()}
         >
           ⇤
         </button>
@@ -728,6 +746,7 @@
           aria-label="Indent"
           title="Indent"
           onclick={() => adjustIndentSelected(1)}
+          disabled={!canWrite()}
         >
           ⇥
         </button>
@@ -739,6 +758,7 @@
             aria-label="Change type"
             title="Change type"
             onclick={() => (showTypeMenu = !showTypeMenu)}
+            disabled={!canWrite()}
           >
             T
           </button>
@@ -773,6 +793,7 @@
           aria-label="Copy"
           title="Copy"
           onclick={copySelected}
+          disabled={!canWrite()}
         >
           ⧉
         </button>
@@ -783,7 +804,7 @@
           aria-label="Add attachments"
           title="Add attachments"
           onclick={() => attachmentsInputRef?.click()}
-          disabled={uploadingAttachments}
+          disabled={uploadingAttachments || !canWrite()}
         >
           📎
         </button>
@@ -793,6 +814,7 @@
           aria-label="Move"
           title="Move"
           onclick={moveSelectedToCollection}
+          disabled={!canWrite()}
         >
           ⇄
         </button>
@@ -802,6 +824,7 @@
           aria-label="Add to collection"
           title="Add to collection"
           onclick={addSelectedToCollection}
+          disabled={!canWrite()}
         >
           ＋
         </button>
@@ -820,6 +843,7 @@
           aria-label="Delete"
           title="Delete"
           onclick={deleteSelected}
+          disabled={!canWrite()}
         >
           🗑
         </button>

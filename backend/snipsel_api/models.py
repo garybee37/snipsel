@@ -79,6 +79,27 @@ class Collection(db.Model):
     )
 
 
+class CollectionShare(db.Model):
+    __tablename__ = "collection_shares"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    collection_id: Mapped[str] = mapped_column(ForeignKey("collections.id"), nullable=False, index=True)
+    shared_with_user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    permission: Mapped[str] = mapped_column(String(16), nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+    created_by_user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+
+    collection = relationship("Collection")
+    shared_with = relationship("User", foreign_keys=[shared_with_user_id])
+    created_by = relationship("User", foreign_keys=[created_by_user_id])
+
+    __table_args__ = (
+        UniqueConstraint("collection_id", "shared_with_user_id", name="uq_collection_share_collection_user"),
+        CheckConstraint("permission in ('read','write')", name="ck_collection_shares_permission"),
+    )
+
+
 class Snipsel(db.Model):
     __tablename__ = "snipsels"
 

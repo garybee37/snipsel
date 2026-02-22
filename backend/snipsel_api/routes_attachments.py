@@ -11,6 +11,7 @@ from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
 from snipsel_api.models import Attachment, Snipsel
+from snipsel_api.permissions import can_read_snipsel_via_collections, can_write_snipsel_via_collections
 
 attachments_bp = Blueprint("attachments", __name__)
 
@@ -20,7 +21,11 @@ attachments_bp = Blueprint("attachments", __name__)
 def upload_attachment(snipsel_id: str):
     user = current_user()
     snipsel = db.session.get(Snipsel, snipsel_id)
-    if not snipsel or snipsel.owner_user_id != user.id or snipsel.deleted_at is not None:
+    if (
+        not snipsel
+        or snipsel.deleted_at is not None
+        or (snipsel.owner_user_id != user.id and not can_write_snipsel_via_collections(user.id, snipsel_id))
+    ):
         raise api_error(404, "not_found", "Snipsel not found")
 
     if "file" not in request.files:
@@ -82,7 +87,11 @@ def download_attachment(attachment_id: str):
         raise api_error(404, "not_found", "Attachment not found")
 
     snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if not snipsel or snipsel.owner_user_id != user.id or snipsel.deleted_at is not None:
+    if (
+        not snipsel
+        or snipsel.deleted_at is not None
+        or (snipsel.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel.id))
+    ):
         raise api_error(404, "not_found", "Attachment not found")
 
     path = _resolve_attachment_path(att)
@@ -104,7 +113,11 @@ def download_thumbnail(attachment_id: str):
         raise api_error(404, "not_found", "Thumbnail not found")
 
     snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if not snipsel or snipsel.owner_user_id != user.id or snipsel.deleted_at is not None:
+    if (
+        not snipsel
+        or snipsel.deleted_at is not None
+        or (snipsel.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel.id))
+    ):
         raise api_error(404, "not_found", "Thumbnail not found")
 
     path = _resolve_thumbnail_path(att)
@@ -126,7 +139,11 @@ def delete_attachment(attachment_id: str):
         raise api_error(404, "not_found", "Attachment not found")
 
     snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if not snipsel or snipsel.owner_user_id != user.id or snipsel.deleted_at is not None:
+    if (
+        not snipsel
+        or snipsel.deleted_at is not None
+        or (snipsel.owner_user_id != user.id and not can_write_snipsel_via_collections(user.id, snipsel.id))
+    ):
         raise api_error(404, "not_found", "Attachment not found")
 
     file_path = _resolve_attachment_path(att)

@@ -1,17 +1,27 @@
 <script lang="ts">
-  import { api, type Collection } from '../lib/api';
+  import { api, type Collection, type CollectionShare, type UserLite } from '../lib/api';
   import { collections, currentCollection, currentView, isLoading } from '../lib/stores';
 
-  export let collectionId: string;
+  interface Props {
+    collectionId: string;
+  }
 
-  let collection: Collection | null = null;
-  let title = '';
-  let icon = '';
-  let headerImageUrl = '';
-  let headerColor = '';
-  let isFavorite = false;
-  let defaultSnipselType = '';
-  let saving = false;
+  let { collectionId }: Props = $props();
+
+  let collection = $state<Collection | null>(null);
+  let title = $state('');
+  let icon = $state('');
+  let headerImageUrl = $state('');
+  let headerColor = $state('');
+  let isFavorite = $state(false);
+  let defaultSnipselType = $state('');
+  let saving = $state(false);
+
+  let users = $state<UserLite[]>([]);
+  let shares = $state<CollectionShare[]>([]);
+  let shareUserId = $state('');
+  let sharePermission = $state<'read' | 'write'>('read');
+  let sharingBusy = $state(false);
 
   async function load() {
     isLoading.set(true);
@@ -24,8 +34,45 @@
       headerColor = collection.header_color ?? '';
       isFavorite = Boolean(collection.is_favorite);
       defaultSnipselType = collection.default_snipsel_type ?? '';
+
+      const [uRes, sRes] = await Promise.all([
+        api.users.list(),
+        api.collections.listShares(collectionId),
+      ]);
+      users = uRes.users;
+      shares = sRes.shares;
     } finally {
       isLoading.set(false);
+    }
+  }
+
+  async function addShare() {
+    if (!collection) return;
+    if (!shareUserId) return;
+    sharingBusy = true;
+    try {
+      await api.collections.createShare(collection.id, {
+        shared_with_user_id: shareUserId,
+        permission: sharePermission,
+      });
+      const sRes = await api.collections.listShares(collection.id);
+      shares = sRes.shares;
+      shareUserId = '';
+      sharePermission = 'read';
+    } finally {
+      sharingBusy = false;
+    }
+  }
+
+  async function revokeShare(shareId: string) {
+    if (!collection) return;
+    if (!confirm('Remove access?')) return;
+    sharingBusy = true;
+    try {
+      await api.collections.deleteShare(collection.id, shareId);
+      shares = shares.filter((s) => s.id !== shareId);
+    } finally {
+      sharingBusy = false;
     }
   }
 
@@ -153,6 +200,71 @@
           </button>
         </div>
       </label>
+
+      <div class="rounded-lg border bg-slate-50 p-3 space-y-3">
+        <div class="text-xs font-medium uppercase text-slate-500">Sharing</div>
+
+        <div class="flex flex-col gap-2">
+          <select class="w-full rounded-md border px-3 py-2 text-sm" bind:value={shareUserId} disabled={sharingBusy}>
+            <option value="">Select user…</option>
+            {#each users as u (u.id)}
+              <option value={u.id}>{u.username}</option>
+            {/each}
+          </select>
+          <div class="flex gap-2">
+            <button
+              class="flex-1 rounded-md border px-3 py-2 text-sm {sharePermission === 'read' ? 'bg-white font-medium' : 'bg-slate-50'}"
+              type="button"
+              onclick={() => (sharePermission = 'read')}
+              disabled={sharingBusy}
+            >
+              Read
+            </button>
+            <button
+              class="flex-1 rounded-md border px-3 py-2 text-sm {sharePermission === 'write' ? 'bg-white font-medium' : 'bg-slate-50'}"
+              type="button"
+              onclick={() => (sharePermission = 'write')}
+              disabled={sharingBusy}
+            >
+              Write
+            </button>
+            <button
+              class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+              type="button"
+              onclick={addShare}
+              disabled={sharingBusy || !shareUserId}
+              aria-label="Share collection"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        {#if shares.length === 0}
+          <div class="text-sm text-slate-500">Not shared yet</div>
+        {:else}
+          <div class="space-y-2">
+            {#each shares as s (s.id)}
+              <div class="flex items-center justify-between gap-3 rounded-md border bg-white px-3 py-2">
+                <div class="min-w-0">
+                  <div class="truncate text-sm font-medium">{s.shared_with_username ?? s.shared_with_user_id}</div>
+                  <div class="text-xs text-slate-500">{s.permission}</div>
+                </div>
+                <button
+                  class="grid h-10 w-10 place-items-center rounded-md border text-base text-slate-700 hover:bg-slate-50"
+                  type="button"
+                  aria-label="Remove share"
+                  title="Remove"
+                  onclick={() => revokeShare(s.id)}
+                  disabled={sharingBusy}
+                >
+                  ✕
+                </button>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
 
       <div class="flex gap-2">
         <button class="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white" type="button" onclick={save} disabled={saving}>

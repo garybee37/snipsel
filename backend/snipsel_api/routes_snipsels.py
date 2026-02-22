@@ -7,6 +7,7 @@ from flask import Blueprint, request
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
+from snipsel_api.permissions import can_read_collection, can_write_collection, can_read_snipsel_via_collections, can_write_snipsel_via_collections
 from snipsel_api.models import (
     CollectionSnipsel,
     Collection,
@@ -29,6 +30,8 @@ snipsels_bp = Blueprint("snipsels", __name__)
 @require_auth
 def list_collection_snipsels(collection_id: str):
     user = current_user()
+    if not can_read_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
     items = (
         db.session.execute(
             db.select(CollectionSnipsel)
@@ -40,7 +43,6 @@ def list_collection_snipsels(collection_id: str):
             )
             .where(
                 CollectionSnipsel.collection_id == collection_id,
-                Snipsel.owner_user_id == user.id,
                 Snipsel.deleted_at.is_(None),
             )
             .order_by(CollectionSnipsel.position.asc())
@@ -56,6 +58,8 @@ def list_collection_snipsels(collection_id: str):
 def create_snipsel(collection_id: str):
     enforce_json()
     user = current_user()
+    if not can_write_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
     data = request.get_json() or {}
 
     snipsel_type = data.get("type")
@@ -108,6 +112,8 @@ def create_snipsel(collection_id: str):
 def reference_snipsel(collection_id: str, snipsel_id: str):
     user = current_user()
     s = _get_owned_snipsel(user.id, snipsel_id)
+    if not can_write_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
 
     exists = db.session.execute(
         db.select(CollectionSnipsel).where(
@@ -134,7 +140,14 @@ def reference_snipsel(collection_id: str, snipsel_id: str):
 @require_auth
 def copy_snipsel(collection_id: str, snipsel_id: str):
     user = current_user()
-    src = _get_owned_snipsel(user.id, snipsel_id)
+    if not can_write_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
+
+    src = db.session.get(Snipsel, snipsel_id)
+    if not src or src.deleted_at is not None:
+        raise api_error(404, "not_found", "Snipsel not found")
+    if src.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel_id):
+        raise api_error(404, "not_found", "Snipsel not found")
 
     s = Snipsel(
         owner_user_id=user.id,
@@ -179,7 +192,7 @@ def get_snipsel(snipsel_id: str):
         .scalars()
         .first()
     )
-    if not s or s.deleted_at is not None or s.owner_user_id != user.id:
+    if not s or s.deleted_at is not None or (s.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel_id)):
         raise api_error(404, "not_found", "Snipsel not found")
     placements = (
         db.session.execute(
@@ -256,7 +269,11 @@ def get_snipsel(snipsel_id: str):
 def update_snipsel(snipsel_id: str):
     enforce_json()
     user = current_user()
-    s = _get_owned_snipsel(user.id, snipsel_id)
+    s = db.session.get(Snipsel, snipsel_id)
+    if not s or s.deleted_at is not None:
+        raise api_error(404, "not_found", "Snipsel not found")
+    if s.owner_user_id != user.id and not can_write_snipsel_via_collections(user.id, snipsel_id):
+        raise api_error(404, "not_found", "Snipsel not found")
     data = request.get_json() or {}
 
     if "type" in data:
@@ -282,7 +299,7 @@ def update_snipsel(snipsel_id: str):
         s.internal_target_snipsel_id = data.get("internal_target_snipsel_id")
 
     s.modified_by_id = user.id
-    _sync_tags_mentions(user_id=user.id, snipsel=s)
+    _sync_tags_mentions(user_id=s.owner_user_id, snipsel=s)
     _sync_backlinks(user_id=user.id, snipsel=s)
     db.session.commit()
     return json_response({"snipsel": _snipsel_json(s)})
@@ -292,7 +309,14 @@ def update_snipsel(snipsel_id: str):
 @require_auth
 def delete_from_collection(collection_id: str, snipsel_id: str):
     user = current_user()
-    _get_owned_snipsel(user.id, snipsel_id)
+    if not can_write_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
+
+    s = db.session.get(Snipsel, snipsel_id)
+    if not s or s.deleted_at is not None:
+        raise api_error(404, "not_found", "Snipsel not found")
+    if s.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel_id):
+        raise api_error(404, "not_found", "Snipsel not found")
 
     cs = db.session.execute(
         db.select(CollectionSnipsel).where(
@@ -309,9 +333,8 @@ def delete_from_collection(collection_id: str, snipsel_id: str):
         db.session.execute(db.select(db.func.count()).select_from(CollectionSnipsel).where(CollectionSnipsel.snipsel_id == snipsel_id)).scalar()
         or 0
     )
-    if remaining == 0:
-        s = db.session.get(Snipsel, snipsel_id)
-        if s and s.deleted_at is None:
+    if remaining == 0 and s.owner_user_id == user.id:
+        if s.deleted_at is None:
             s.deleted_at = datetime.utcnow()
             s.deleted_by_id = user.id
 
@@ -324,6 +347,8 @@ def delete_from_collection(collection_id: str, snipsel_id: str):
 def reorder_collection(collection_id: str):
     enforce_json()
     user = current_user()
+    if not can_write_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
     data = request.get_json() or {}
     items = data.get("items")
     if not isinstance(items, list):
@@ -338,7 +363,11 @@ def reorder_collection(collection_id: str):
         if not snipsel_id:
             continue
 
-        _get_owned_snipsel(user.id, snipsel_id)
+        s = db.session.get(Snipsel, snipsel_id)
+        if not s or s.deleted_at is not None:
+            continue
+        if s.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel_id):
+            continue
 
         cs = db.session.execute(
             db.select(CollectionSnipsel).where(

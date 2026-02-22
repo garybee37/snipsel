@@ -7,7 +7,7 @@ from flask import Blueprint, request
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import ApiError
 from snipsel_api.extensions import db
-from snipsel_api.models import Collection, Mention, Snipsel, SnipselMention, SnipselTag, Tag
+from snipsel_api.models import Collection, CollectionShare, CollectionSnipsel, Mention, Snipsel, SnipselMention, SnipselTag, Tag
 
 search_bp = Blueprint("search", __name__)
 
@@ -84,7 +84,34 @@ def search():
     day = request.args.get("day")
     day_parsed = date.fromisoformat(day) if day else None
 
-    stmt = db.select(Snipsel).where(Snipsel.owner_user_id == user.id, Snipsel.deleted_at.is_(None))
+    accessible_collection_ids = (
+        db.session.execute(
+            db.select(Collection.id)
+            .outerjoin(
+                CollectionShare,
+                db.and_(
+                    CollectionShare.collection_id == Collection.id,
+                    CollectionShare.shared_with_user_id == user.id,
+                ),
+            )
+            .where(
+                Collection.deleted_at.is_(None),
+                db.or_(Collection.owner_user_id == user.id, CollectionShare.permission.in_(["read", "write"])),
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    stmt = (
+        db.select(Snipsel)
+        .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
+        .where(
+            Snipsel.deleted_at.is_(None),
+            CollectionSnipsel.collection_id.in_(accessible_collection_ids) if accessible_collection_ids else db.false(),
+        )
+        .distinct()
+    )
     if snipsel_type:
         stmt = stmt.where(Snipsel.type == snipsel_type)
     if q:

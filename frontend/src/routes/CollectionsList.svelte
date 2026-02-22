@@ -7,7 +7,7 @@
   let newIcon = '🗒';
   let busy = false;
 
-  type Filter = 'all' | 'favorites' | 'day' | 'normal';
+  type Filter = 'all' | 'favorites' | 'day' | 'normal' | 'shared';
   let filter: Filter = 'all';
   let titleFilter = '';
 
@@ -15,6 +15,7 @@
     if (f === 'favorites') return Boolean(c.is_favorite);
     if (f === 'day') return Boolean(c.list_for_day);
     if (f === 'normal') return !c.list_for_day;
+    if (f === 'shared') return c.access_level === 'read' || c.access_level === 'write';
     return true;
   }
 
@@ -118,6 +119,13 @@
         >
           Lists
         </button>
+        <button
+          class="rounded-md border px-4 py-2 text-base {filter === 'shared' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+          type="button"
+          onclick={() => (filter = 'shared')}
+        >
+          Shared
+        </button>
       </div>
 
       <input
@@ -182,6 +190,9 @@
             <span class="flex-1 text-lg font-medium">{c.title}</span>
             {#if c.is_favorite}
               <span class="text-xl" aria-hidden="true">♥</span>
+            {/if}
+            {#if c.access_level === 'read' || c.access_level === 'write'}
+              <span class="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">shared</span>
             {/if}
             {#if c.archived}
               <span class="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">archived</span>

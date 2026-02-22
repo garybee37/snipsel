@@ -27,6 +27,18 @@ export type Collection = {
   list_for_day: string | null;
   created_at: string;
   modified_at: string;
+  access_level?: 'owner' | 'write' | 'read';
+  shared_by_username?: string | null;
+};
+
+export type UserLite = { id: string; username: string };
+
+export type CollectionShare = {
+  id: string;
+  shared_with_user_id: string;
+  shared_with_username?: string | null;
+  permission: 'read' | 'write';
+  created_at: string;
 };
 
 export type Snipsel = {
@@ -180,6 +192,20 @@ export const api = {
       }),
     delete: (id: string) =>
       requestJson<{ ok: true }>(`/api/collections/${id}`, { method: 'DELETE' }),
+
+    listShares: (id: string) =>
+      requestJson<{ shares: CollectionShare[] }>(`/api/collections/${id}/shares`),
+    createShare: (id: string, input: { shared_with_user_id: string; permission: 'read' | 'write' }) =>
+      requestJson<{ share: { id: string } }>(`/api/collections/${id}/shares`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    deleteShare: (id: string, shareId: string) =>
+      requestJson<{ ok: true }>(`/api/collections/${id}/shares/${shareId}`, { method: 'DELETE' }),
+  },
+
+  users: {
+    list: () => requestJson<{ users: UserLite[] }>('/api/users'),
   },
 
   snipsels: {

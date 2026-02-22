@@ -15,6 +15,7 @@ from snipsel_api.routes_auth import auth_bp
 from snipsel_api.routes_collections import collections_bp
 from snipsel_api.routes_search import search_bp
 from snipsel_api.routes_snipsels import snipsels_bp
+from snipsel_api.routes_users import users_bp
 
 
 def create_app() -> Flask:
@@ -48,6 +49,7 @@ def create_app() -> Flask:
     app.register_blueprint(collections_bp, url_prefix="/api/collections")
     app.register_blueprint(snipsels_bp, url_prefix="/api")
     app.register_blueprint(search_bp, url_prefix="/api")
+    app.register_blueprint(users_bp, url_prefix="/api")
     app.register_blueprint(attachments_bp, url_prefix="/api")
     app.register_blueprint(errors_bp)
 
