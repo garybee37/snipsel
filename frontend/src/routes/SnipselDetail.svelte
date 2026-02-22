@@ -189,41 +189,41 @@
       <div class="mt-4 whitespace-pre-wrap text-lg text-slate-700">{snipsel.content_markdown ?? ''}</div>
     </div>
 
-    <div class="rounded-lg border bg-white p-3">
-      {#if (snipsel.tags?.length ?? 0) > 0 || (snipsel.mentions?.length ?? 0) > 0}
-        <div class="mb-4">
-          <div class="text-xs uppercase text-slate-500">Tags / Mentions</div>
-          <div class="mt-2 flex flex-wrap gap-2">
-            {#each snipsel.tags ?? [] as t (t)}
-              <button
-                type="button"
-                class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                onclick={() => {
-                  currentView.set({ type: 'search' });
-                  searchQuery.set('');
-                  api.search({ tag: t }).then(searchResults.set).catch(() => searchError.set('Search failed'));
-                }}
-              >
-                #{t}
-              </button>
-            {/each}
-            {#each snipsel.mentions ?? [] as m (m)}
-              <button
-                type="button"
-                class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                onclick={() => {
-                  currentView.set({ type: 'search' });
-                  searchQuery.set('');
-                  api.search({ mention: m }).then(searchResults.set).catch(() => searchError.set('Search failed'));
-                }}
-              >
-                @{m}
-              </button>
-            {/each}
-          </div>
+    {#if (snipsel.tags?.length ?? 0) > 0 || (snipsel.mentions?.length ?? 0) > 0}
+      <div class="rounded-lg border bg-white p-3">
+        <div class="text-xs uppercase text-slate-500">Tags / Mentions</div>
+        <div class="mt-2 flex flex-wrap gap-2">
+          {#each snipsel.tags ?? [] as t (t)}
+            <button
+              type="button"
+              class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              onclick={() => {
+                currentView.set({ type: 'search' });
+                searchQuery.set('');
+                api.search({ tag: t }).then(searchResults.set).catch(() => searchError.set('Search failed'));
+              }}
+            >
+              #{t}
+            </button>
+          {/each}
+          {#each snipsel.mentions ?? [] as m (m)}
+            <button
+              type="button"
+              class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              onclick={() => {
+                currentView.set({ type: 'search' });
+                searchQuery.set('');
+                api.search({ mention: m }).then(searchResults.set).catch(() => searchError.set('Search failed'));
+              }}
+            >
+              @{m}
+            </button>
+          {/each}
         </div>
-      {/if}
+      </div>
+    {/if}
 
+    <div class="rounded-lg border bg-white p-3">
       <div class="text-xs uppercase text-slate-500">Attachments</div>
 
       {#if snipsel.attachments.length === 0}
