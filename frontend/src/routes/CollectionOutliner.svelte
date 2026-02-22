@@ -33,6 +33,7 @@
   let showTypeMenu = $state(false);
 
   const DEFAULT_HEADER_COLOR = '#4f46e5';
+  const TOOLBOX_BASE_COLOR = '#ffffff';
 
   function getHeaderColor(): string {
     return (
@@ -40,6 +41,44 @@
       $currentUser?.default_collection_header_color ??
       DEFAULT_HEADER_COLOR
     );
+  }
+
+  type Rgb = { r: number; g: number; b: number };
+
+  function clampByte(n: number): number {
+    return Math.max(0, Math.min(255, Math.round(n)));
+  }
+
+  function hexToRgb(hex: string): Rgb | null {
+    const h = hex.trim();
+    const m = /^#([0-9a-fA-F]{6})$/.exec(h);
+    if (!m) return null;
+    const v = m[1];
+    const r = parseInt(v.slice(0, 2), 16);
+    const g = parseInt(v.slice(2, 4), 16);
+    const b = parseInt(v.slice(4, 6), 16);
+    return { r, g, b };
+  }
+
+  function mixRgb(a: Rgb, b: Rgb, t: number): Rgb {
+    const tt = Math.max(0, Math.min(1, t));
+    return {
+      r: clampByte(a.r + (b.r - a.r) * tt),
+      g: clampByte(a.g + (b.g - a.g) * tt),
+      b: clampByte(a.b + (b.b - a.b) * tt),
+    };
+  }
+
+  function rgba(c: Rgb, alpha: number): string {
+    const a = Math.max(0, Math.min(1, alpha));
+    return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`;
+  }
+
+  function getToolboxBg(): string {
+    const base = hexToRgb(TOOLBOX_BASE_COLOR) ?? { r: 255, g: 255, b: 255 };
+    const header = hexToRgb(getHeaderColor());
+    const mixed = header ? mixRgb(base, header, 0.14) : base;
+    return rgba(mixed, 0.96);
   }
 
   function openImageModal(id: string, filename: string) {
@@ -638,8 +677,8 @@
   {#if selectedIds.size > 0}
     <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pb-4">
       <div
-        class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl px-3 py-3 text-white shadow-lg"
-        style={`background-color: ${getHeaderColor()}`}
+        class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl px-3 py-3 text-slate-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md"
+        style={`background-color: ${getToolboxBg()}`}
       >
 
          <input
@@ -652,7 +691,7 @@
          />
 
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Move up"
           title="Move up"
@@ -661,7 +700,7 @@
           ↑
         </button>
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Move down"
           title="Move down"
@@ -671,7 +710,7 @@
         </button>
 
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Outdent"
           title="Outdent"
@@ -680,7 +719,7 @@
           ⇤
         </button>
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Indent"
           title="Indent"
@@ -691,7 +730,7 @@
 
         <div class="relative">
           <button
-            class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+            class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
             type="button"
             aria-label="Change type"
             title="Change type"
@@ -725,7 +764,7 @@
         </div>
 
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Copy"
           title="Copy"
@@ -735,7 +774,7 @@
         </button>
 
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Add attachments"
           title="Add attachments"
@@ -745,7 +784,7 @@
           📎
         </button>
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Move"
           title="Move"
@@ -754,7 +793,7 @@
           ⇄
         </button>
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Add to collection"
           title="Add to collection"
@@ -763,7 +802,7 @@
           ＋
         </button>
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
           aria-label="Info"
           title="Info"
@@ -772,7 +811,7 @@
           ⓘ
         </button>
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-red-500/80 text-lg hover:bg-red-500"
+          class="grid h-11 w-11 place-items-center rounded-md bg-red-600/90 text-lg text-white hover:bg-red-600"
           type="button"
           aria-label="Delete"
           title="Delete"
@@ -781,7 +820,7 @@
           🗑
         </button>
         <button
-          class="grid h-11 w-11 place-items-center rounded-md text-lg text-white/80 hover:bg-white/10 hover:text-white"
+          class="grid h-11 w-11 place-items-center rounded-md text-lg text-slate-600 hover:bg-black/5 hover:text-slate-900"
           type="button"
           aria-label="Clear selection"
           title="Clear selection"

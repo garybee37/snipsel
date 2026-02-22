@@ -85,6 +85,13 @@
     return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(marker)}`;
   }
 
+  function attachmentDownloadIcon() {
+    return {
+      __html:
+        '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>',
+    };
+  }
+
   async function deleteAttachment(attachmentId: string) {
     if (!confirm('Delete attachment?')) return;
     await api.attachments.delete(attachmentId);
@@ -219,7 +226,16 @@
                     <div class="text-sm font-medium">{a.filename}</div>
                     <div class="text-xs text-slate-500">{a.size_bytes} bytes</div>
                   </div>
-                  <a class="text-sm underline" href={api.attachments.downloadUrl(a.id)} target="_blank" rel="noreferrer">Download</a>
+                  <a
+                    class="grid h-9 w-9 place-items-center rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    href={api.attachments.downloadUrl(a.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Download attachment"
+                    title="Download"
+                  >
+                    {@html attachmentDownloadIcon().__html}
+                  </a>
                   <button class="ml-1 grid h-9 w-9 place-items-center rounded-md hover:bg-slate-50" type="button" aria-label="Delete attachment" onclick={() => deleteAttachment(a.id)}>
                     🗑
                   </button>
@@ -260,7 +276,16 @@
                     <div class="text-sm font-medium">{a.filename}</div>
                     <div class="text-xs text-slate-500">{a.size_bytes} bytes</div>
                   </div>
-                  <a class="text-sm underline" href={api.attachments.downloadUrl(a.id)} target="_blank" rel="noreferrer">Download</a>
+                  <a
+                    class="grid h-9 w-9 place-items-center rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    href={api.attachments.downloadUrl(a.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Download attachment"
+                    title="Download"
+                  >
+                    {@html attachmentDownloadIcon().__html}
+                  </a>
                   <button class="ml-1 grid h-9 w-9 place-items-center rounded-md hover:bg-slate-50" type="button" aria-label="Delete attachment" onclick={() => deleteAttachment(a.id)}>
                     🗑
                   </button>
@@ -281,7 +306,16 @@
                   <div class="text-sm font-medium">{a.filename}</div>
                   <div class="text-xs text-slate-500">{a.size_bytes} bytes</div>
                 </div>
-                <a class="text-sm underline" href={api.attachments.downloadUrl(a.id)} target="_blank" rel="noreferrer">Download</a>
+                <a
+                  class="grid h-9 w-9 place-items-center rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  href={api.attachments.downloadUrl(a.id)}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Download attachment"
+                  title="Download"
+                >
+                  {@html attachmentDownloadIcon().__html}
+                </a>
                 <button class="ml-1 grid h-9 w-9 place-items-center rounded-md hover:bg-slate-50" type="button" aria-label="Delete attachment" onclick={() => deleteAttachment(a.id)}>
                   🗑
                 </button>
