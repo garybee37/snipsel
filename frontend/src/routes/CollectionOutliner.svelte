@@ -519,57 +519,71 @@
     aria-hidden="true"
   />
 
-  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-    <div
-      class="relative h-28 w-full bg-cover bg-center"
-      style={$currentCollection?.header_image_url
-        ? `background-image: url('${$currentCollection.header_image_url}'); background-color: ${getHeaderColor()}`
-        : `background-color: ${getHeaderColor()}`}
-    ></div>
-
-    <div class="relative px-4 py-3">
+  <div class="relative">
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div
-        class="absolute left-4 top-0 -translate-y-1/2 grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm"
-        aria-hidden="true"
-      >
-        <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
-      </div>
+        class="relative h-28 w-full bg-cover bg-center"
+        style={$currentCollection?.header_image_url
+          ? `background-image: url('${$currentCollection.header_image_url}'); background-color: ${getHeaderColor()}`
+          : `background-color: ${getHeaderColor()}`}
+      ></div>
 
-      {#if $currentCollection}
+      <div class="relative px-4 py-3">
         <div
-          class="absolute right-4 top-0 -translate-y-1/2 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-lg text-slate-800 shadow-sm"
+          class="absolute left-4 top-0 -translate-y-1/2 grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm"
+          aria-hidden="true"
+        >
+          <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
+        </div>
+
+        <button
+          class="pl-20 text-lg font-semibold hover:underline"
+          type="button"
+          onclick={() => $currentCollection && currentView.set({ type: 'collection_settings', id: $currentCollection.id })}
+        >
+          {$currentCollection?.title}
+        </button>
+      </div>
+    </div>
+
+    {#if $currentCollection}
+      {@const level = $currentCollection.access_level}
+      {@const showSharedByYou = level === 'owner' && shareCount > 0}
+      {@const showSharedWithYou = level === 'read' || level === 'write'}
+      {@const showStatusPill = Boolean(
+        $currentCollection.is_favorite ||
+          showSharedByYou ||
+          showSharedWithYou ||
+          $currentCollection.is_template ||
+          $currentCollection.archived
+      )}
+
+      {#if showStatusPill}
+        <div
+          class="absolute right-4 top-0 z-10 -translate-y-1/2 flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-lg text-slate-800 shadow-sm"
           aria-label="Collection status"
         >
           {#if $currentCollection.is_favorite}
-            <span aria-label="Favorite" title="Favorite">♥</span>
+            <span class="leading-none" aria-label="Favorite" title="Favorite">♥</span>
           {/if}
 
-          {#if $currentCollection.access_level === 'owner'}
-            {#if shareCount > 0}
-              <span aria-label="Shared by you" title="Shared by you">⇱</span>
-            {/if}
-          {:else}
-            <span aria-label="Shared with you" title="Shared with you">⇲</span>
+          {#if showSharedByYou}
+            <span class="leading-none" aria-label="Shared by you" title="Shared by you">⇪</span>
+          {/if}
+          {#if showSharedWithYou}
+            <span class="leading-none" aria-label="Shared with you" title="Shared with you">⇩</span>
           {/if}
 
           {#if $currentCollection.is_template}
-            <span aria-label="Template" title="Template">▦</span>
+            <span class="leading-none" aria-label="Template" title="Template">▦</span>
           {/if}
 
           {#if $currentCollection.archived}
-            <span aria-label="Archived" title="Archived">⧗</span>
+            <span class="leading-none" aria-label="Archived" title="Archived">⧗</span>
           {/if}
         </div>
       {/if}
-
-      <button
-        class="pl-20 text-lg font-semibold hover:underline"
-        type="button"
-        onclick={() => $currentCollection && currentView.set({ type: 'collection_settings', id: $currentCollection.id })}
-      >
-        {$currentCollection?.title}
-      </button>
-    </div>
+    {/if}
   </div>
 
   {#if $isLoading && $sortedItems.length === 0}
