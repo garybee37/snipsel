@@ -27,12 +27,12 @@ def _get_share_permission(user_id: str, collection_id: str) -> str | None:
 def list_collections():
     user = current_user()
     include_archived = request.args.get("include_archived") == "1"
-    owned = db.select(Collection).where(Collection.owner_user_id == user.id, Collection.deleted_at.is_(None))
+    owned_ids = db.select(Collection.id).where(Collection.owner_user_id == user.id, Collection.deleted_at.is_(None))
     if not include_archived:
-        owned = owned.where(Collection.archived_at.is_(None))
+        owned_ids = owned_ids.where(Collection.archived_at.is_(None))
 
-    shared = (
-        db.select(Collection)
+    shared_ids = (
+        db.select(Collection.id)
         .join(CollectionShare, CollectionShare.collection_id == Collection.id)
         .where(
             Collection.deleted_at.is_(None),
@@ -40,19 +40,48 @@ def list_collections():
         )
     )
     if not include_archived:
-        shared = shared.where(Collection.archived_at.is_(None))
+        shared_ids = shared_ids.where(Collection.archived_at.is_(None))
 
-    items = db.session.execute(owned.union(shared).order_by(Collection.list_for_day.desc().nullslast(), Collection.created_at.desc())).scalars().all()
+    ids_subq = owned_ids.union(shared_ids).subquery()
+    ids_select = db.select(ids_subq.c.id)
+
+    q = db.select(Collection).where(Collection.id.in_(ids_select), Collection.deleted_at.is_(None))
+    if not include_archived:
+        q = q.where(Collection.archived_at.is_(None))
+    q = q.order_by(Collection.list_for_day.desc().nullslast(), Collection.created_at.desc())
+    items = db.session.execute(q).scalars().all()
+
+    shared_collection_ids = [c.id for c in items if c.owner_user_id != user.id]
+    perms = {
+        cid: perm
+        for cid, perm in (
+            db.session.execute(
+                db.select(CollectionShare.collection_id, CollectionShare.permission).where(
+                    CollectionShare.shared_with_user_id == user.id,
+                    CollectionShare.collection_id.in_(shared_collection_ids) if shared_collection_ids else db.false(),
+                )
+            ).all()
+        )
+    }
+    owner_ids = list({c.owner_user_id for c in items if c.owner_user_id != user.id})
+    owner_names = {
+        uid: uname
+        for uid, uname in (
+            db.session.execute(db.select(User.id, User.username).where(User.id.in_(owner_ids))).all()
+            if owner_ids
+            else []
+        )
+    }
 
     out = []
     for c in items:
         j = _collection_json(c)
-        level = get_collection_access_level(user.id, c.id)
-        j["access_level"] = level or "read"
-        if c.owner_user_id != user.id:
-            j["shared_by_username"] = (
-                db.session.execute(db.select(User.username).where(User.id == c.owner_user_id)).scalars().first()
-            )
+        if c.owner_user_id == user.id:
+            j["access_level"] = "owner"
+        else:
+            perm = perms.get(c.id)
+            j["access_level"] = "write" if perm == "write" else "read"
+            j["shared_by_username"] = owner_names.get(c.owner_user_id)
         out.append(j)
 
     return json_response({"collections": out})
@@ -74,7 +103,9 @@ def get_today_collection():
     ).scalars().first()
     if existing:
         _maybe_carry_over_open_tasks(user=user, today_collection=existing, day=day)
-        return json_response({"collection": _collection_json(existing)})
+        j = _collection_json(existing)
+        j["access_level"] = "owner"
+        return json_response({"collection": j})
 
     conflict_deleted = db.session.execute(
         db.select(Collection).where(
@@ -105,7 +136,9 @@ def get_today_collection():
         raise api_error(409, "conflict", "Day collection could not be created")
 
     _maybe_carry_over_open_tasks(user=user, today_collection=c, day=day)
-    return json_response({"collection": _collection_json(c)}, status=201)
+    j = _collection_json(c)
+    j["access_level"] = "owner"
+    return json_response({"collection": j}, status=201)
 
 
 def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) -> None:
@@ -211,7 +244,9 @@ def create_collection():
     )
     db.session.add(c)
     db.session.commit()
-    return json_response({"collection": _collection_json(c)}, status=201)
+    j = _collection_json(c)
+    j["access_level"] = "owner"
+    return json_response({"collection": j}, status=201)
 
 
 @collections_bp.get("/<collection_id>")
@@ -223,7 +258,16 @@ def get_collection(collection_id: str):
     c = db.session.get(Collection, collection_id)
     if not c or c.deleted_at is not None:
         raise api_error(404, "not_found", "Collection not found")
-    return json_response({"collection": _collection_json(c)})
+    j = _collection_json(c)
+    if c.owner_user_id == user.id:
+        j["access_level"] = "owner"
+    else:
+        level = get_collection_access_level(user.id, c.id)
+        j["access_level"] = "write" if level == "write" else "read"
+        j["shared_by_username"] = (
+            db.session.execute(db.select(User.username).where(User.id == c.owner_user_id)).scalars().first()
+        )
+    return json_response({"collection": j})
 
 
 @collections_bp.patch("/<collection_id>")
@@ -258,7 +302,9 @@ def update_collection(collection_id: str):
 
     c.modified_by_id = user.id
     db.session.commit()
-    return json_response({"collection": _collection_json(c)})
+    j = _collection_json(c)
+    j["access_level"] = "owner"
+    return json_response({"collection": j})
 
 
 @collections_bp.delete("/<collection_id>")
