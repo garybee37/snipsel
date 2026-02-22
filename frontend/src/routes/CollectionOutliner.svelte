@@ -35,6 +35,8 @@
   let templates = $state<Array<{ id: string; title: string; icon: string }>>([]);
   let showTemplateMenu = $state(false);
 
+  let shareCount = $state(0);
+
   let modalImage = $state<{ id: string; filename: string } | null>(null);
 
   let showTypeMenu = $state(false);
@@ -168,6 +170,23 @@
     templates = res.collections
       .filter((c) => Boolean(c.is_template) && c.access_level === 'owner')
       .map((c) => ({ id: c.id, title: c.title, icon: c.icon }));
+  }
+
+  async function loadShareCount() {
+    if (!$currentCollection) {
+      shareCount = 0;
+      return;
+    }
+    if ($currentCollection.access_level !== 'owner') {
+      shareCount = 0;
+      return;
+    }
+    try {
+      const res = await api.collections.listShares($currentCollection.id);
+      shareCount = res.shares.length;
+    } catch {
+      shareCount = 0;
+    }
   }
 
   async function insertTemplateSelected(templateCollectionId: string) {
@@ -327,6 +346,10 @@
 
   $effect(() => {
     loadTemplates();
+  });
+
+  $effect(() => {
+    loadShareCount();
   });
 
   async function deleteSelected() {
@@ -511,6 +534,33 @@
       >
         <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
       </div>
+
+      {#if $currentCollection}
+        <div
+          class="absolute right-4 top-0 -translate-y-1/2 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-lg text-slate-800 shadow-sm"
+          aria-label="Collection status"
+        >
+          {#if $currentCollection.is_favorite}
+            <span aria-label="Favorite" title="Favorite">♥</span>
+          {/if}
+
+          {#if $currentCollection.access_level === 'owner'}
+            {#if shareCount > 0}
+              <span aria-label="Shared by you" title="Shared by you">⇱</span>
+            {/if}
+          {:else}
+            <span aria-label="Shared with you" title="Shared with you">⇲</span>
+          {/if}
+
+          {#if $currentCollection.is_template}
+            <span aria-label="Template" title="Template">▦</span>
+          {/if}
+
+          {#if $currentCollection.archived}
+            <span aria-label="Archived" title="Archived">⧗</span>
+          {/if}
+        </div>
+      {/if}
 
       <button
         class="pl-20 text-lg font-semibold hover:underline"

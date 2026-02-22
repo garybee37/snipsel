@@ -167,7 +167,7 @@
             title={collection?.is_template ? 'Template' : 'Not a template'}
             onclick={toggleTemplate}
           >
-            {collection?.is_template ? '■' : '□'}
+            {collection?.is_template ? '▦' : '▢'}
           </button>
         </div>
       </div>
