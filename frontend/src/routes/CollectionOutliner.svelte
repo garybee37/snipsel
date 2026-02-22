@@ -405,7 +405,21 @@
   {#if $isLoading && $sortedItems.length === 0}
     <div class="py-8 text-center text-sm text-slate-500">Loading...</div>
   {:else if $sortedItems.length === 0}
-    <div class="py-8 text-center text-sm text-slate-500">No snipsels yet</div>
+    <div class="flex flex-col">
+      <div class="py-8 text-center text-base text-slate-500">No snipsels yet</div>
+      <button
+        class="mt-2 h-24 w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-left text-base text-slate-400 hover:bg-slate-50"
+        type="button"
+        aria-label="Add new snipsel"
+        onclick={() => {
+          if (selectedIds.size > 0) {
+            clearSelection();
+            return;
+          }
+          createSnipselFromUserGesture();
+        }}
+      ></button>
+    </div>
   {:else}
     <div class="flex flex-col">
       {#each $sortedItems as item (item.snipsel_id)}
