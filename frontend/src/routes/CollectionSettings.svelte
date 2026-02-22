@@ -10,6 +10,7 @@
   let headerImageUrl = '';
   let headerColor = '';
   let isFavorite = false;
+  let defaultSnipselType = '';
   let saving = false;
 
   async function load() {
@@ -22,6 +23,7 @@
       headerImageUrl = collection.header_image_url ?? '';
       headerColor = collection.header_color ?? '';
       isFavorite = Boolean(collection.is_favorite);
+      defaultSnipselType = collection.default_snipsel_type ?? '';
     } finally {
       isLoading.set(false);
     }
@@ -37,6 +39,7 @@
         header_image_url: headerImageUrl.trim() || undefined,
         header_color: headerColor.trim() || undefined,
         is_favorite: isFavorite,
+        default_snipsel_type: defaultSnipselType.trim() || undefined,
       });
       collection = res.collection;
       collections.update((list) => list.map((c) => (c.id === res.collection.id ? res.collection : c)));
@@ -125,6 +128,26 @@
             type="button"
             onclick={() => (headerColor = '')}
             disabled={!headerColor.trim()}
+          >
+            Clear
+          </button>
+        </div>
+      </label>
+
+      <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-600">Default snipsel type</span>
+        <div class="flex items-center gap-3">
+          <select class="flex-1 rounded-md border px-3 py-2 text-sm" bind:value={defaultSnipselType}>
+            <option value="">Text (default)</option>
+            <option value="task">Task</option>
+            <option value="image">Image</option>
+            <option value="attachment">File</option>
+          </select>
+          <button
+            class="rounded-md border px-3 py-2 text-sm"
+            type="button"
+            onclick={() => (defaultSnipselType = '')}
+            disabled={!defaultSnipselType.trim()}
           >
             Clear
           </button>

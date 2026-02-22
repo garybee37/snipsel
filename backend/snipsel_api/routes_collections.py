@@ -86,6 +86,7 @@ def create_collection():
     header_image_url = (data.get("header_image_url") or "").strip() or None
     header_color = (data.get("header_color") or "").strip() or user.default_collection_header_color or None
     is_favorite = bool(data.get("is_favorite"))
+    default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
 
     if not title:
         raise api_error(400, "invalid_input", "title is required")
@@ -97,6 +98,7 @@ def create_collection():
         header_image_url=header_image_url,
         header_color=header_color,
         is_favorite=is_favorite,
+        default_snipsel_type=default_snipsel_type,
         created_by_id=user.id,
         modified_by_id=user.id,
     )
@@ -140,6 +142,8 @@ def update_collection(collection_id: str):
         c.archived_at = datetime.utcnow() if archived else None
     if "is_favorite" in data:
         c.is_favorite = bool(data.get("is_favorite"))
+    if "default_snipsel_type" in data:
+        c.default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
 
     c.modified_by_id = user.id
     db.session.commit()
@@ -174,6 +178,7 @@ def _collection_json(c: Collection) -> dict:
         "header_image_url": c.header_image_url,
         "header_color": c.header_color,
         "is_favorite": c.is_favorite,
+        "default_snipsel_type": c.default_snipsel_type,
         "archived": c.archived_at is not None,
         "list_for_day": c.list_for_day.isoformat() if c.list_for_day else None,
         "created_at": c.created_at.isoformat() + "Z",

@@ -16,6 +16,7 @@ from snipsel_api.models import (
     SnipselMention,
     SnipselTag,
     Tag,
+    Collection,
 )
 
 from sqlalchemy.orm import joinedload
@@ -57,7 +58,16 @@ def create_snipsel(collection_id: str):
     user = current_user()
     data = request.get_json() or {}
 
-    snipsel_type = data.get("type") or "text"
+    snipsel_type = data.get("type")
+    if not snipsel_type:
+        col = db.session.execute(
+            db.select(Collection).where(
+                Collection.id == collection_id,
+                Collection.owner_user_id == user.id,
+                Collection.deleted_at.is_(None),
+            )
+        ).scalars().first()
+        snipsel_type = (col.default_snipsel_type if col and col.default_snipsel_type else "text")
     content_markdown = data.get("content_markdown")
 
     geo_lat = data.get("geo_lat")

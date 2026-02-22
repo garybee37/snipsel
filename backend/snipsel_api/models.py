@@ -56,6 +56,8 @@ class Collection(db.Model):
 
     is_favorite: Mapped[bool] = mapped_column(default=False, nullable=False)
 
+    default_snipsel_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     list_for_day: Mapped[date | None] = mapped_column(Date, nullable=True)
 

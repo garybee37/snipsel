@@ -200,7 +200,10 @@
         geo = null;
       }
 
-      const res = await api.snipsels.create($currentCollection.id, { type: 'text', ...(geo ?? {}) });
+      const res = await api.snipsels.create($currentCollection.id, {
+        type: $currentCollection.default_snipsel_type || 'text',
+        ...(geo ?? {}),
+      });
       collectionItems.update((items) => [...items, res.item]);
       startEdit(res.item);
     } finally {
