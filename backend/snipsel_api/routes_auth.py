@@ -90,6 +90,9 @@ def update_me():
             (data.get("default_collection_header_color") or "").strip() or None
         )
 
+    if "carry_over_open_tasks" in data:
+        user.carry_over_open_tasks = bool(data.get("carry_over_open_tasks"))
+
     user.modified_at = datetime.utcnow()
     db.session.commit()
     return json_response({"user": _user_json(user)})
@@ -154,5 +157,6 @@ def _user_json(user: User) -> dict:
         "username": user.username,
         "email": user.email,
         "default_collection_header_color": user.default_collection_header_color,
+        "carry_over_open_tasks": user.carry_over_open_tasks,
         "created_at": user.created_at.isoformat() + "Z",
     }

@@ -42,6 +42,8 @@ class User(db.Model):
 
     default_collection_header_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
+    carry_over_open_tasks: Mapped[bool] = mapped_column(default=True, nullable=False)
+
 
 class Collection(db.Model):
     __tablename__ = "collections"

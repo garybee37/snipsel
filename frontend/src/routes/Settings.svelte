@@ -19,6 +19,12 @@
     currentUser.set(res.user);
   }
 
+  async function toggleCarryOver() {
+    const next = !Boolean($currentUser?.carry_over_open_tasks ?? true);
+    const res = await api.updateMe({ carry_over_open_tasks: next });
+    currentUser.set(res.user);
+  }
+
   $effect(() => {
     defaultHeaderColor = $currentUser?.default_collection_header_color ?? DEFAULT_HEADER_COLOR;
   });
@@ -51,6 +57,23 @@
           Save
         </button>
       </div>
+    </div>
+  </div>
+
+  <div class="rounded-lg border bg-white p-5 text-base">
+    <div class="text-sm uppercase text-slate-500">Tasks</div>
+    <div class="mt-3 flex items-center justify-between gap-4">
+      <div>
+        <div class="text-base font-medium">Carry over open tasks</div>
+        <div class="text-sm text-slate-500">Move unfinished tasks from the last 30 day lists into today.</div>
+      </div>
+      <button
+        class="rounded-md border px-4 py-3 text-lg"
+        type="button"
+        onclick={toggleCarryOver}
+      >
+        {Boolean($currentUser?.carry_over_open_tasks ?? true) ? 'On' : 'Off'}
+      </button>
     </div>
   </div>
 

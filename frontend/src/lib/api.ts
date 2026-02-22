@@ -12,6 +12,7 @@ export type User = {
   email: string;
   created_at: string;
   default_collection_header_color?: string | null;
+  carry_over_open_tasks?: boolean;
 };
 
 export type Collection = {
@@ -128,7 +129,7 @@ export const api = {
     }),
   logout: () => requestJson<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
   me: () => requestJson<{ user: User }>('/api/auth/me'),
-  updateMe: (input: { default_collection_header_color?: string | null }) =>
+  updateMe: (input: { default_collection_header_color?: string | null; carry_over_open_tasks?: boolean }) =>
     requestJson<{ user: User }>('/api/auth/me', {
       method: 'PATCH',
       body: JSON.stringify(input),

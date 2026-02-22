@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from flask import Blueprint, request
 
@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Collection
+from snipsel_api.models import Collection, CollectionSnipsel, Snipsel
 
 collections_bp = Blueprint("collections", __name__)
 
@@ -42,6 +42,7 @@ def get_today_collection():
         )
     ).scalars().first()
     if existing:
+        _maybe_carry_over_open_tasks(user=user, today_collection=existing, day=day)
         return json_response({"collection": _collection_json(existing)})
 
     conflict_deleted = db.session.execute(
@@ -71,7 +72,82 @@ def get_today_collection():
     except IntegrityError:
         db.session.rollback()
         raise api_error(409, "conflict", "Day collection could not be created")
+
+    _maybe_carry_over_open_tasks(user=user, today_collection=c, day=day)
     return json_response({"collection": _collection_json(c)}, status=201)
+
+
+def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) -> None:
+    if day != date.today():
+        return
+    if not getattr(user, "carry_over_open_tasks", True):
+        return
+
+    start_day = day - timedelta(days=30)
+
+    past_collections = (
+        db.session.execute(
+            db.select(Collection)
+            .where(
+                Collection.owner_user_id == user.id,
+                Collection.deleted_at.is_(None),
+                Collection.list_for_day.is_not(None),
+                Collection.list_for_day >= start_day,
+                Collection.list_for_day < day,
+            )
+            .order_by(Collection.list_for_day.desc())
+        )
+        .scalars()
+        .all()
+    )
+
+    if not past_collections:
+        return
+
+    max_pos = (
+        db.session.execute(
+            db.select(db.func.max(CollectionSnipsel.position)).where(
+                CollectionSnipsel.collection_id == today_collection.id
+            )
+        ).scalar()
+        or 0
+    )
+
+    for src in past_collections:
+        items = (
+            db.session.execute(
+                db.select(CollectionSnipsel)
+                .join(Snipsel, Snipsel.id == CollectionSnipsel.snipsel_id)
+                .where(
+                    CollectionSnipsel.collection_id == src.id,
+                    Snipsel.owner_user_id == user.id,
+                    Snipsel.deleted_at.is_(None),
+                    Snipsel.type == "task",
+                    Snipsel.task_done == False,
+                )
+                .order_by(CollectionSnipsel.position.asc())
+            )
+            .scalars()
+            .all()
+        )
+
+        for cs in items:
+            already = db.session.execute(
+                db.select(CollectionSnipsel).where(
+                    CollectionSnipsel.collection_id == today_collection.id,
+                    CollectionSnipsel.snipsel_id == cs.snipsel_id,
+                )
+            ).scalars().first()
+            if already:
+                db.session.delete(cs)
+                continue
+
+            max_pos += 1
+            cs.collection_id = today_collection.id
+            cs.position = max_pos
+            cs.indent = 0
+
+    db.session.commit()
 
 
 @collections_bp.post("")
