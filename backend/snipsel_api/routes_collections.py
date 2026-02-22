@@ -4,6 +4,8 @@ from datetime import date, datetime
 
 from flask import Blueprint, request
 
+from sqlalchemy.exc import IntegrityError
+
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
@@ -42,6 +44,17 @@ def get_today_collection():
     if existing:
         return json_response({"collection": _collection_json(existing)})
 
+    conflict_deleted = db.session.execute(
+        db.select(Collection).where(
+            Collection.owner_user_id == user.id,
+            Collection.list_for_day == day,
+            Collection.deleted_at.is_not(None),
+        )
+    ).scalars().first()
+    if conflict_deleted:
+        conflict_deleted.list_for_day = None
+        db.session.commit()
+
     c = Collection(
         owner_user_id=user.id,
         title=day.isoformat(),
@@ -52,7 +65,12 @@ def get_today_collection():
         modified_by_id=user.id,
     )
     db.session.add(c)
-    db.session.commit()
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        raise api_error(409, "conflict", "Day collection could not be created")
     return json_response({"collection": _collection_json(c)}, status=201)
 
 
@@ -135,6 +153,8 @@ def delete_collection(collection_id: str):
     c = _get_owned_collection(user.id, collection_id)
     c.deleted_at = datetime.utcnow()
     c.deleted_by_id = user.id
+    if c.list_for_day is not None:
+        c.list_for_day = None
     db.session.commit()
     return json_response({"ok": True})
 
