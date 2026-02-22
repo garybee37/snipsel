@@ -117,6 +117,34 @@ def download_thumbnail(attachment_id: str):
         raise api_error(404, "not_found", "Thumbnail file missing")
 
 
+@attachments_bp.delete("/attachments/<attachment_id>")
+@require_auth
+def delete_attachment(attachment_id: str):
+    user = current_user()
+    att = db.session.get(Attachment, attachment_id)
+    if not att:
+        raise api_error(404, "not_found", "Attachment not found")
+
+    snipsel = db.session.get(Snipsel, att.snipsel_id)
+    if not snipsel or snipsel.owner_user_id != user.id or snipsel.deleted_at is not None:
+        raise api_error(404, "not_found", "Attachment not found")
+
+    file_path = _resolve_attachment_path(att)
+    thumb_path = _resolve_thumbnail_path(att)
+
+    for p in [thumb_path, file_path]:
+        if not p:
+            continue
+        try:
+            p.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    db.session.delete(att)
+    db.session.commit()
+    return json_response({"ok": True})
+
+
 def _resolve_attachment_path(att: Attachment) -> Path | None:
     upload_dir = Path(current_app.config.get("SNIPSEL_UPLOAD_DIR", "./uploads"))
     expected = f"{att.id}_{att.filename}"

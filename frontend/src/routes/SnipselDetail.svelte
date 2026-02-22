@@ -19,8 +19,6 @@
   }>>([]);
   let backlinks = $state<Array<{ from_snipsel_id: string; to_snipsel_id: string }>>([]);
   let loading = $state(true);
-  let uploading = $state(false);
-  let uploadError = $state<string | null>(null);
   let changingType = $state(false);
 
   let modalImage = $state<{ id: string; filename: string } | null>(null);
@@ -87,22 +85,10 @@
     return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(marker)}`;
   }
 
-  async function onUpload(e: Event) {
-    const input = e.currentTarget as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    uploadError = null;
-    uploading = true;
-    try {
-      await api.attachments.upload(snipselId, file);
-      await load();
-    } catch {
-      uploadError = 'Upload failed';
-    } finally {
-      uploading = false;
-      input.value = '';
-    }
+  async function deleteAttachment(attachmentId: string) {
+    if (!confirm('Delete attachment?')) return;
+    await api.attachments.delete(attachmentId);
+    await load();
   }
 
   load();
@@ -194,12 +180,6 @@
 
     <div class="rounded-lg border bg-white p-3">
       <div class="text-xs uppercase text-slate-500">Attachments</div>
-      <div class="mt-2">
-        <input type="file" onchange={onUpload} disabled={uploading} />
-        {#if uploadError}
-          <div class="mt-2 text-sm text-red-700">{uploadError}</div>
-        {/if}
-      </div>
 
       {#if snipsel.attachments.length === 0}
         <div class="mt-2 text-sm text-slate-500">No attachments</div>
@@ -240,6 +220,9 @@
                     <div class="text-xs text-slate-500">{a.size_bytes} bytes</div>
                   </div>
                   <a class="text-sm underline" href={api.attachments.downloadUrl(a.id)} target="_blank" rel="noreferrer">Download</a>
+                  <button class="ml-1 grid h-9 w-9 place-items-center rounded-md hover:bg-slate-50" type="button" aria-label="Delete attachment" onclick={() => deleteAttachment(a.id)}>
+                    🗑
+                  </button>
                 </div>
               {/each}
             </div>
@@ -278,6 +261,9 @@
                     <div class="text-xs text-slate-500">{a.size_bytes} bytes</div>
                   </div>
                   <a class="text-sm underline" href={api.attachments.downloadUrl(a.id)} target="_blank" rel="noreferrer">Download</a>
+                  <button class="ml-1 grid h-9 w-9 place-items-center rounded-md hover:bg-slate-50" type="button" aria-label="Delete attachment" onclick={() => deleteAttachment(a.id)}>
+                    🗑
+                  </button>
                 </div>
               {/each}
             </div>
@@ -296,6 +282,9 @@
                   <div class="text-xs text-slate-500">{a.size_bytes} bytes</div>
                 </div>
                 <a class="text-sm underline" href={api.attachments.downloadUrl(a.id)} target="_blank" rel="noreferrer">Download</a>
+                <button class="ml-1 grid h-9 w-9 place-items-center rounded-md hover:bg-slate-50" type="button" aria-label="Delete attachment" onclick={() => deleteAttachment(a.id)}>
+                  🗑
+                </button>
               </div>
             {/each}
           </div>

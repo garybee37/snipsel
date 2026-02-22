@@ -25,6 +25,9 @@
 
   let selectedIds = $state<Set<string>>(new Set());
 
+  let attachmentsInputRef: HTMLInputElement | undefined = $state();
+  let uploadingAttachments = $state(false);
+
   let modalImage = $state<{ id: string; filename: string } | null>(null);
 
   let showTypeMenu = $state(false);
@@ -81,6 +84,33 @@
     if (selectedIds.size === 0) return;
     const id = Array.from(selectedIds)[0];
     if (id) openDetail(id);
+  }
+
+  async function uploadAttachmentsSelected(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    const files = input.files;
+    if (!files || files.length === 0) return;
+    if (selectedIds.size === 0) {
+      input.value = '';
+      return;
+    }
+
+    uploadingAttachments = true;
+    isLoading.set(true);
+    try {
+      const ids = Array.from(selectedIds);
+      for (const snipselId of ids) {
+        for (const file of Array.from(files)) {
+          await api.attachments.upload(snipselId, file);
+        }
+      }
+      await loadItems();
+      clearSelection();
+    } finally {
+      uploadingAttachments = false;
+      isLoading.set(false);
+      input.value = '';
+    }
   }
 
   async function loadItems() {
@@ -607,7 +637,19 @@
 
   {#if selectedIds.size > 0}
     <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pb-4">
-      <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-3 text-white shadow-lg">
+      <div
+        class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl px-3 py-3 text-white shadow-lg"
+        style={`background-color: ${getHeaderColor()}`}
+      >
+
+         <input
+           bind:this={attachmentsInputRef}
+           class="hidden"
+           type="file"
+           multiple
+           onchange={uploadAttachmentsSelected}
+           disabled={uploadingAttachments}
+         />
 
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
@@ -690,6 +732,17 @@
           onclick={copySelected}
         >
           ⧉
+        </button>
+
+        <button
+          class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"
+          type="button"
+          aria-label="Add attachments"
+          title="Add attachments"
+          onclick={() => attachmentsInputRef?.click()}
+          disabled={uploadingAttachments}
+        >
+          📎
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-white/10 text-lg hover:bg-white/20"

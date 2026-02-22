@@ -258,6 +258,15 @@ export const api = {
       if (!res.ok) throw data;
       return data as { attachment: Attachment };
     },
+    delete: async (attachmentId: string) => {
+      const res = await fetch(`/api/attachments/${attachmentId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = (await res.json()) as { ok: true } | ApiError;
+      if (!res.ok) throw data;
+      return data as { ok: true };
+    },
     downloadUrl: (attachmentId: string) => `/api/attachments/${attachmentId}`,
     thumbnailUrl: (attachmentId: string) => `/api/attachments/${attachmentId}/thumbnail`,
   },
