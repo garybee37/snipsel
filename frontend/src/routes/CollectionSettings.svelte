@@ -161,13 +161,13 @@
             {isFavorite ? '♥' : '♡'}
           </button>
           <button
-            class="grid h-10 w-10 place-items-center rounded-md border text-lg hover:bg-slate-50"
+            class="grid h-10 w-10 place-items-center rounded-md border text-xl hover:bg-slate-50"
             type="button"
             aria-label={collection?.is_template ? 'Unset template' : 'Mark as template'}
             title={collection?.is_template ? 'Template' : 'Not a template'}
             onclick={toggleTemplate}
           >
-            🧩
+            {collection?.is_template ? '■' : '□'}
           </button>
         </div>
       </div>

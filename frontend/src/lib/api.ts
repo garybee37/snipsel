@@ -209,6 +209,12 @@ export const api = {
       }),
     deleteShare: (id: string, shareId: string) =>
       requestJson<{ ok: true }>(`/api/collections/${id}/shares/${shareId}`, { method: 'DELETE' }),
+
+    insertTemplate: (id: string, templateCollectionId: string) =>
+      requestJson<{ ok: true }>(`/api/collections/${id}/insert_template`, {
+        method: 'POST',
+        body: JSON.stringify({ template_collection_id: templateCollectionId }),
+      }),
   },
 
   users: {

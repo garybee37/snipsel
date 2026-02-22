@@ -32,9 +32,15 @@
   let attachmentsInputRef: HTMLInputElement | undefined = $state();
   let uploadingAttachments = $state(false);
 
+  let templates = $state<Array<{ id: string; title: string; icon: string }>>([]);
+  let showTemplateMenu = $state(false);
+
   let modalImage = $state<{ id: string; filename: string } | null>(null);
 
   let showTypeMenu = $state(false);
+  function closeTemplateMenu() {
+    showTemplateMenu = false;
+  }
 
   const DEFAULT_HEADER_COLOR = '#4f46e5';
   const TOOLBOX_BASE_COLOR = '#ffffff';
@@ -154,6 +160,26 @@
       uploadingAttachments = false;
       isLoading.set(false);
       input.value = '';
+    }
+  }
+
+  async function loadTemplates() {
+    const res = await api.collections.list();
+    templates = res.collections
+      .filter((c) => Boolean(c.is_template) && c.access_level === 'owner')
+      .map((c) => ({ id: c.id, title: c.title, icon: c.icon }));
+  }
+
+  async function insertTemplateSelected(templateCollectionId: string) {
+    if (!$currentCollection) return;
+    if (!canWrite()) return;
+    isLoading.set(true);
+    try {
+      await api.collections.insertTemplate($currentCollection.id, templateCollectionId);
+      await loadItems();
+      closeTemplateMenu();
+    } finally {
+      isLoading.set(false);
     }
   }
 
@@ -297,6 +323,10 @@
     if ($newSnipselRequest > 0 && $currentCollection) {
       createSnipsel();
     }
+  });
+
+  $effect(() => {
+    loadTemplates();
   });
 
   async function deleteSelected() {
@@ -798,6 +828,44 @@
           ⧉
         </button>
 
+        <div class="relative">
+          <button
+            class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+            type="button"
+            aria-label="Insert template"
+            title="Insert template"
+            onclick={() => (showTemplateMenu = !showTemplateMenu)}
+            disabled={!canWrite()}
+          >
+            □
+          </button>
+          {#if showTemplateMenu}
+            <div class="absolute bottom-12 right-0 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
+              {#if templates.length === 0}
+                <div class="px-3 py-2 text-sm text-slate-500">No templates</div>
+              {:else}
+                {#each templates as t (t.id)}
+                  <button
+                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    type="button"
+                    onclick={() => insertTemplateSelected(t.id)}
+                  >
+                    <span class="text-base" aria-hidden="true">{t.icon}</span>
+                    <span class="min-w-0 flex-1 truncate">{t.title}</span>
+                  </button>
+                {/each}
+              {/if}
+              <button
+                class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
+                type="button"
+                onclick={closeTemplateMenu}
+              >
+                Cancel
+              </button>
+            </div>
+          {/if}
+        </div>
+
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
           type="button"
@@ -855,6 +923,7 @@
           onclick={() => {
             clearSelection();
             closeTypeMenu();
+            closeTemplateMenu();
           }}
         >
           ✕

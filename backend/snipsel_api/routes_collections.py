@@ -156,6 +156,29 @@ def get_today_collection():
 
 
 def _maybe_copy_template_contents(*, user: User, template_collection_id: str, target_collection: Collection) -> None:
+    max_pos = (
+        db.session.execute(
+            db.select(db.func.max(CollectionSnipsel.position)).where(
+                CollectionSnipsel.collection_id == target_collection.id
+            )
+        ).scalar()
+        or 0
+    )
+    _insert_template_into_collection(
+        user=user,
+        template_collection_id=template_collection_id,
+        target_collection=target_collection,
+        position_offset=max_pos,
+    )
+
+
+def _insert_template_into_collection(
+    *,
+    user: User,
+    template_collection_id: str,
+    target_collection: Collection,
+    position_offset: int,
+) -> None:
     tpl = db.session.get(Collection, template_collection_id)
     if not tpl or tpl.deleted_at is not None or tpl.owner_user_id != user.id or not getattr(tpl, "is_template", False):
         return
@@ -195,7 +218,7 @@ def _maybe_copy_template_contents(*, user: User, template_collection_id: str, ta
         db.session.add(ns)
         db.session.flush()
         old_to_new[src.id] = ns.id
-        new_items.append((ns.id, cs.position, cs.indent))
+        new_items.append((ns.id, position_offset + cs.position, cs.indent))
 
         for a in src.attachments:
             src_path = _resolve_attachment_path(a)
@@ -282,6 +305,39 @@ def _maybe_copy_template_contents(*, user: User, template_collection_id: str, ta
         )
 
     db.session.commit()
+
+
+@collections_bp.post("/<collection_id>/insert_template")
+@require_auth
+def insert_template(collection_id: str):
+    enforce_json()
+    user = current_user()
+    if not can_write_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
+    target = db.session.get(Collection, collection_id)
+    if not target or target.deleted_at is not None:
+        raise api_error(404, "not_found", "Collection not found")
+
+    data = request.get_json() or {}
+    template_collection_id = (data.get("template_collection_id") or "").strip()
+    if not template_collection_id:
+        raise api_error(400, "invalid_input", "template_collection_id is required")
+
+    max_pos = (
+        db.session.execute(
+            db.select(db.func.max(CollectionSnipsel.position)).where(
+                CollectionSnipsel.collection_id == target.id
+            )
+        ).scalar()
+        or 0
+    )
+    _insert_template_into_collection(
+        user=user,
+        template_collection_id=template_collection_id,
+        target_collection=target,
+        position_offset=max_pos,
+    )
+    return json_response({"ok": True})
 
 
 def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) -> None:
