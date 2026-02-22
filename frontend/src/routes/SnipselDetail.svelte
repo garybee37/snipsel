@@ -76,6 +76,17 @@
     return d.toLocaleString();
   }
 
+  function hasGeo(s: Snipsel): boolean {
+    return typeof s.geo_lat === 'number' && typeof s.geo_lng === 'number';
+  }
+
+  function osmEmbedUrl(lat: number, lng: number): string {
+    const delta = 0.005;
+    const bbox = `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`;
+    const marker = `${lat},${lng}`;
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(marker)}`;
+  }
+
   async function onUpload(e: Event) {
     const input = e.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
@@ -310,6 +321,26 @@
         </div>
       {/if}
     </div>
+
+    {#if hasGeo(snipsel)}
+      <div class="rounded-lg border bg-white p-3">
+        <div class="text-xs uppercase text-slate-500">Location</div>
+        <div class="mt-2 overflow-hidden rounded-md border">
+          <iframe
+            class="h-64 w-full"
+            title="OpenStreetMap"
+            src={osmEmbedUrl(snipsel.geo_lat ?? 0, snipsel.geo_lng ?? 0)}
+            loading="lazy"
+          ></iframe>
+        </div>
+        <div class="mt-2 text-sm text-slate-500">
+          {snipsel.geo_lat?.toFixed(5)}, {snipsel.geo_lng?.toFixed(5)}
+          {#if typeof snipsel.geo_accuracy_m === 'number'}
+            · ±{Math.round(snipsel.geo_accuracy_m)}m
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <div class="rounded-lg border bg-white p-3">
       <div class="text-xs uppercase text-slate-500">Backlinks</div>

@@ -85,6 +85,10 @@ class Snipsel(db.Model):
 
     content_markdown: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    geo_lat: Mapped[float | None] = mapped_column(nullable=True)
+    geo_lng: Mapped[float | None] = mapped_column(nullable=True)
+    geo_accuracy_m: Mapped[float | None] = mapped_column(nullable=True)
+
     task_done: Mapped[bool] = mapped_column(default=False, nullable=False)
     done_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     done_by_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)

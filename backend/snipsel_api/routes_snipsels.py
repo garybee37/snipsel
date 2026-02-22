@@ -60,10 +60,17 @@ def create_snipsel(collection_id: str):
     snipsel_type = data.get("type") or "text"
     content_markdown = data.get("content_markdown")
 
+    geo_lat = data.get("geo_lat")
+    geo_lng = data.get("geo_lng")
+    geo_accuracy_m = data.get("geo_accuracy_m")
+
     s = Snipsel(
         owner_user_id=user.id,
         type=snipsel_type,
         content_markdown=content_markdown,
+        geo_lat=float(geo_lat) if geo_lat is not None else None,
+        geo_lng=float(geo_lng) if geo_lng is not None else None,
+        geo_accuracy_m=float(geo_accuracy_m) if geo_accuracy_m is not None else None,
         created_by_id=user.id,
         modified_by_id=user.id,
     )
@@ -394,6 +401,9 @@ def _snipsel_json(s: Snipsel) -> dict:
         "external_url": s.external_url,
         "external_label": s.external_label,
         "internal_target_snipsel_id": s.internal_target_snipsel_id,
+        "geo_lat": s.geo_lat,
+        "geo_lng": s.geo_lng,
+        "geo_accuracy_m": s.geo_accuracy_m,
         "created_at": s.created_at.isoformat() + "Z",
         "created_by_id": s.created_by_id,
         "created_by_username": s.created_by.username if s.created_by else None,

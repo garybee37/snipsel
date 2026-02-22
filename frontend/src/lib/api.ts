@@ -38,6 +38,9 @@ export type Snipsel = {
   external_url: string | null;
   external_label: string | null;
   internal_target_snipsel_id: string | null;
+  geo_lat?: number | null;
+  geo_lng?: number | null;
+  geo_accuracy_m?: number | null;
   created_at: string;
   created_by_id?: string;
   created_by_username?: string | null;
@@ -172,7 +175,16 @@ export const api = {
       ),
     get: (snipselId: string) =>
       requestJson<{ snipsel: Snipsel }>(`/api/snipsels/${snipselId}`),
-    create: (collectionId: string, input: { type?: string; content_markdown?: string }) =>
+    create: (
+      collectionId: string,
+      input: {
+        type?: string;
+        content_markdown?: string;
+        geo_lat?: number;
+        geo_lng?: number;
+        geo_accuracy_m?: number;
+      }
+    ) =>
       requestJson<{ item: CollectionItem }>(
         `/api/collections/${collectionId}/snipsels`,
         {

@@ -179,7 +179,28 @@
     if (!$currentCollection) return;
     isLoading.set(true);
     try {
-      const res = await api.snipsels.create($currentCollection.id, { type: 'text' });
+      let geo:
+        | { geo_lat: number; geo_lng: number; geo_accuracy_m?: number }
+        | null = null;
+      try {
+        geo = await new Promise((resolve) => {
+          if (!('geolocation' in navigator)) return resolve(null);
+          navigator.geolocation.getCurrentPosition(
+            (pos) =>
+              resolve({
+                geo_lat: pos.coords.latitude,
+                geo_lng: pos.coords.longitude,
+                geo_accuracy_m: pos.coords.accuracy,
+              }),
+            () => resolve(null),
+            { enableHighAccuracy: false, maximumAge: 60_000, timeout: 1500 }
+          );
+        });
+      } catch {
+        geo = null;
+      }
+
+      const res = await api.snipsels.create($currentCollection.id, { type: 'text', ...(geo ?? {}) });
       collectionItems.update((items) => [...items, res.item]);
       startEdit(res.item);
     } finally {
