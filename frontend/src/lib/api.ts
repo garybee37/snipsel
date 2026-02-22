@@ -189,6 +189,7 @@ export const api = {
         header_color?: string;
         archived?: boolean;
         is_favorite?: boolean;
+        is_template?: boolean;
         default_snipsel_type?: string;
       }
     ) =>
