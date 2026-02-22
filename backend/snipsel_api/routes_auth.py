@@ -38,6 +38,7 @@ def register():
     db.session.add(user)
     db.session.commit()
 
+    session.permanent = True
     session["user_id"] = user.id
     return json_response({"user": _user_json(user)}, status=201)
 
@@ -59,6 +60,7 @@ def login():
     if not check_password_hash(user.password_hash, password):
         raise api_error(401, "invalid_credentials", "Invalid credentials")
 
+    session.permanent = True
     session["user_id"] = user.id
     return json_response({"user": _user_json(user)})
 

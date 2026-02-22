@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from datetime import timedelta
+
 from flask import Flask
 
 from snipsel_api.config import Settings
@@ -24,6 +26,7 @@ def create_app() -> Flask:
         SQLALCHEMY_DATABASE_URI=settings.database_url,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         MAX_CONTENT_LENGTH=settings.max_upload_bytes,
+        PERMANENT_SESSION_LIFETIME=timedelta(days=30),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE=settings.session_cookie_samesite,
         SESSION_COOKIE_SECURE=settings.session_cookie_secure,
