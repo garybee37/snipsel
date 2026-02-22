@@ -56,6 +56,8 @@ export type Snipsel = {
     size_bytes: number;
     has_thumbnail: boolean;
   }>;
+  tags?: string[];
+  mentions?: string[];
 };
 
 export type Attachment = {
@@ -98,6 +100,8 @@ export type SearchResponse = {
   snipsels: SearchSnipselHit[];
   collections: SearchCollectionHit[];
 };
+
+export type TagCount = { name: string; count: number };
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -288,5 +292,13 @@ export const api = {
     if (params.day) sp.set('day', params.day);
     const qs = sp.toString();
     return requestJson<SearchResponse>(`/api/search${qs ? `?${qs}` : ''}`);
+  },
+
+  tags: {
+    list: () => requestJson<{ tags: TagCount[] }>('/api/tags'),
+  },
+
+  mentions: {
+    list: () => requestJson<{ mentions: TagCount[] }>('/api/mentions'),
   },
 };

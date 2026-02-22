@@ -12,6 +12,50 @@ from snipsel_api.models import Collection, Mention, Snipsel, SnipselMention, Sni
 search_bp = Blueprint("search", __name__)
 
 
+@search_bp.get("/tags")
+@require_auth
+def list_tags():
+    user = current_user()
+    rows = (
+        db.session.execute(
+            db.select(Tag.name, db.func.count(db.distinct(SnipselTag.snipsel_id)))
+            .join(SnipselTag, SnipselTag.tag_id == Tag.id)
+            .join(Snipsel, Snipsel.id == SnipselTag.snipsel_id)
+            .where(
+                Tag.owner_user_id == user.id,
+                Snipsel.owner_user_id == user.id,
+                Snipsel.deleted_at.is_(None),
+            )
+            .group_by(Tag.name)
+            .order_by(Tag.name.asc())
+        )
+        .all()
+    )
+    return json_response({"tags": [{"name": name, "count": int(count)} for name, count in rows]})
+
+
+@search_bp.get("/mentions")
+@require_auth
+def list_mentions():
+    user = current_user()
+    rows = (
+        db.session.execute(
+            db.select(Mention.name, db.func.count(db.distinct(SnipselMention.snipsel_id)))
+            .join(SnipselMention, SnipselMention.mention_id == Mention.id)
+            .join(Snipsel, Snipsel.id == SnipselMention.snipsel_id)
+            .where(
+                Mention.owner_user_id == user.id,
+                Snipsel.owner_user_id == user.id,
+                Snipsel.deleted_at.is_(None),
+            )
+            .group_by(Mention.name)
+            .order_by(Mention.name.asc())
+        )
+        .all()
+    )
+    return json_response({"mentions": [{"name": name, "count": int(count)} for name, count in rows]})
+
+
 @search_bp.get("/search")
 @require_auth
 def search():

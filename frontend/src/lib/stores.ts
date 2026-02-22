@@ -7,6 +7,7 @@ export type View =
   | { type: 'collections' }
   | { type: 'collection'; id: string }
   | { type: 'collection_settings'; id: string }
+  | { type: 'tags_mentions' }
   | { type: 'search' }
   | { type: 'todos' }
   | { type: 'calendar' }

@@ -21,6 +21,7 @@
   import Settings from './routes/Settings.svelte';
   import SnipselDetail from './routes/SnipselDetail.svelte';
   import CollectionSettings from './routes/CollectionSettings.svelte';
+  import TagsMentions from './routes/TagsMentions.svelte';
 
   let initialized = $state(false);
 
@@ -225,6 +226,8 @@
       <CollectionOutliner />
     {:else if $currentView.type === 'search'}
       <Search />
+    {:else if $currentView.type === 'tags_mentions'}
+      <TagsMentions />
     {:else if $currentView.type === 'todos'}
       <Todos />
     {:else if $currentView.type === 'calendar'}
@@ -248,8 +251,13 @@
         >
           Lists
         </button>
-        <button class="rounded-md px-2 py-4" type="button" onclick={onNewSnipsel}>
-          New
+        <button
+          class="rounded-md px-2 py-4 {$currentView.type === 'tags_mentions' ? 'bg-slate-100 font-medium' : ''}"
+          type="button"
+          onclick={() => currentView.set({ type: 'tags_mentions' })}
+          aria-label="Tags and mentions"
+        >
+          #/@
         </button>
         <button
           class="rounded-md px-2 py-4 {$currentView.type === 'calendar' ? 'bg-slate-100 font-medium' : ''}"

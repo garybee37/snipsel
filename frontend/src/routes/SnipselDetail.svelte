@@ -1,7 +1,7 @@
 <script lang="ts">
   import { api, type Attachment, type Snipsel } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
-  import { currentView } from '../lib/stores';
+  import { currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
 
   interface Props {
     snipselId: string;
@@ -36,10 +36,14 @@
     try {
       const res = (await fetch(`/api/snipsels/${snipselId}`, { credentials: 'include' }).then((r) => r.json())) as {
         snipsel: Snipsel;
+        tags?: string[];
+        mentions?: string[];
         placements?: Array<{ collection_id: string; position: number; indent: number }>;
         backlinks?: Array<{ from_snipsel_id: string; to_snipsel_id: string }>;
       };
       snipsel = res.snipsel;
+      snipsel.tags = res.tags ?? [];
+      snipsel.mentions = res.mentions ?? [];
       placements = res.placements ?? [];
       backlinks = res.backlinks ?? [];
     } finally {
@@ -186,6 +190,40 @@
     </div>
 
     <div class="rounded-lg border bg-white p-3">
+      {#if (snipsel.tags?.length ?? 0) > 0 || (snipsel.mentions?.length ?? 0) > 0}
+        <div class="mb-4">
+          <div class="text-xs uppercase text-slate-500">Tags / Mentions</div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            {#each snipsel.tags ?? [] as t (t)}
+              <button
+                type="button"
+                class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                onclick={() => {
+                  currentView.set({ type: 'search' });
+                  searchQuery.set('');
+                  api.search({ tag: t }).then(searchResults.set).catch(() => searchError.set('Search failed'));
+                }}
+              >
+                #{t}
+              </button>
+            {/each}
+            {#each snipsel.mentions ?? [] as m (m)}
+              <button
+                type="button"
+                class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                onclick={() => {
+                  currentView.set({ type: 'search' });
+                  searchQuery.set('');
+                  api.search({ mention: m }).then(searchResults.set).catch(() => searchError.set('Search failed'));
+                }}
+              >
+                @{m}
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
+
       <div class="text-xs uppercase text-slate-500">Attachments</div>
 
       {#if snipsel.attachments.length === 0}

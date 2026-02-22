@@ -203,9 +203,33 @@ def get_snipsel(snipsel_id: str):
         .all()
     )
 
+    tag_names = (
+        db.session.execute(
+            db.select(Tag.name)
+            .join(SnipselTag, SnipselTag.tag_id == Tag.id)
+            .where(Tag.owner_user_id == user.id, SnipselTag.snipsel_id == snipsel_id)
+            .order_by(Tag.name.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+    mention_names = (
+        db.session.execute(
+            db.select(Mention.name)
+            .join(SnipselMention, SnipselMention.mention_id == Mention.id)
+            .where(Mention.owner_user_id == user.id, SnipselMention.snipsel_id == snipsel_id)
+            .order_by(Mention.name.asc())
+        )
+        .scalars()
+        .all()
+    )
+
     return json_response(
         {
             "snipsel": _snipsel_json(s),
+            "tags": list(tag_names),
+            "mentions": list(mention_names),
             "placements": [
                 {
                     "collection_id": cs.collection_id,
