@@ -31,7 +31,15 @@ def list_tags():
         )
         .all()
     )
-    return json_response({"tags": [{"name": name, "count": int(count)} for name, count in rows]})
+    return json_response(
+        {
+            "tags": [
+                {"name": name, "count": int(count)}
+                for name, count in rows
+                if name and name[:1].isalpha()
+            ]
+        }
+    )
 
 
 @search_bp.get("/mentions")
@@ -53,7 +61,15 @@ def list_mentions():
         )
         .all()
     )
-    return json_response({"mentions": [{"name": name, "count": int(count)} for name, count in rows]})
+    return json_response(
+        {
+            "mentions": [
+                {"name": name, "count": int(count)}
+                for name, count in rows
+                if name and name[:1].isalpha()
+            ]
+        }
+    )
 
 
 @search_bp.get("/search")

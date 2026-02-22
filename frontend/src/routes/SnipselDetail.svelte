@@ -89,6 +89,18 @@
     return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(marker)}`;
   }
 
+  function highlightTokens(text: string | null): string {
+    if (!text) return '';
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return escaped.replace(
+      /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
+      (m, p1, token) => `${p1}<mark class="snip-token">${token}</mark>`
+    );
+  }
+
   function attachmentDownloadIcon() {
     return {
       __html:
@@ -186,7 +198,7 @@
         {/if}
       </div>
 
-      <div class="mt-4 whitespace-pre-wrap text-lg text-slate-700">{snipsel.content_markdown ?? ''}</div>
+      <div class="mt-4 whitespace-pre-wrap text-lg text-slate-700">{@html highlightTokens(snipsel.content_markdown)}</div>
     </div>
 
     {#if (snipsel.tags?.length ?? 0) > 0 || (snipsel.mentions?.length ?? 0) > 0}

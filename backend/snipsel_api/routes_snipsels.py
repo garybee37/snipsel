@@ -228,8 +228,8 @@ def get_snipsel(snipsel_id: str):
     return json_response(
         {
             "snipsel": _snipsel_json(s),
-            "tags": list(tag_names),
-            "mentions": list(mention_names),
+            "tags": [n for n in tag_names if n and n[:1].isalpha()],
+            "mentions": [n for n in mention_names if n and n[:1].isalpha()],
             "placements": [
                 {
                     "collection_id": cs.collection_id,

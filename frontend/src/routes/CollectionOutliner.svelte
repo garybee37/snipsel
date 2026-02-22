@@ -421,7 +421,11 @@
 
   function renderMarkdown(text: string | null): string {
     if (!text) return '';
-    return md.render(text);
+    const html = md.render(text);
+    return html.replace(
+      /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
+      (m, p1, token) => `${p1}<mark class="snip-token">${token}</mark>`
+    );
   }
 
   function isImageAttachment(a: Attachment): boolean {

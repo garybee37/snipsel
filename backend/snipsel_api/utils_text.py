@@ -27,6 +27,8 @@ def _extract_prefixed(text: str, prefix: str) -> set[str]:
         if not part.startswith(prefix) or len(part) == 1:
             continue
         token = part[1:]
+        if not token or not token[:1].isalpha():
+            continue
         token = _TRAILING_PUNCT_RE.sub("", token)
         if not token:
             continue
