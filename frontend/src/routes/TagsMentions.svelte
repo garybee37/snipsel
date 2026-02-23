@@ -1,6 +1,52 @@
 <script lang="ts">
   import { api, type TagCount } from '../lib/api';
   import { currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
+  import { currentUser } from '../lib/session';
+
+  const DEFAULT_ACCENT = '#4f46e5';
+  type Rgb = { r: number; g: number; b: number };
+
+  function clampByte(n: number): number {
+    return Math.max(0, Math.min(255, Math.round(n)));
+  }
+
+  function hexToRgb(hex: string): Rgb | null {
+    const h = hex.trim();
+    const m = /^#([0-9a-fA-F]{6})$/.exec(h);
+    if (!m) return null;
+    const v = m[1];
+    return {
+      r: parseInt(v.slice(0, 2), 16),
+      g: parseInt(v.slice(2, 4), 16),
+      b: parseInt(v.slice(4, 6), 16),
+    };
+  }
+
+  function mixRgb(a: Rgb, b: Rgb, t: number): Rgb {
+    const tt = Math.max(0, Math.min(1, t));
+    return {
+      r: clampByte(a.r + (b.r - a.r) * tt),
+      g: clampByte(a.g + (b.g - a.g) * tt),
+      b: clampByte(a.b + (b.b - a.b) * tt),
+    };
+  }
+
+  function rgba(c: Rgb, alpha: number): string {
+    const a = Math.max(0, Math.min(1, alpha));
+    return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`;
+  }
+
+  function getAccent(): string {
+    const raw = ($currentUser?.default_collection_header_color || '').trim() || DEFAULT_ACCENT;
+    return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : DEFAULT_ACCENT;
+  }
+
+  function getAccentTint(): string {
+    const base = { r: 255, g: 255, b: 255 };
+    const accent = hexToRgb(getAccent());
+    const mixed = accent ? mixRgb(base, accent, 0.14) : base;
+    return rgba(mixed, 0.96);
+  }
 
   type Mode = 'tags' | 'mentions';
 
@@ -57,14 +103,15 @@
     <span>Tags / Mentions</span>
   </h2>
 
-  <div class="flex rounded-lg border bg-white p-1" role="tablist">
+  <div class="flex overflow-hidden rounded-full border border-slate-200 bg-white" role="tablist">
     <button
       type="button"
       role="tab"
       aria-selected={mode === 'tags'}
-      class="flex-1 rounded-md px-4 py-3 text-base font-medium transition-colors {mode === 'tags'
-        ? 'bg-slate-100 text-slate-900'
+      class="flex-1 px-4 py-3 text-base font-medium transition-colors {mode === 'tags'
+        ? 'text-slate-900'
         : 'text-slate-600 hover:text-slate-900'}"
+      style={mode === 'tags' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
       onclick={() => {
         mode = 'tags';
         loadList();
@@ -79,9 +126,10 @@
       type="button"
       role="tab"
       aria-selected={mode === 'mentions'}
-      class="flex-1 rounded-md px-4 py-3 text-base font-medium transition-colors {mode === 'mentions'
-        ? 'bg-slate-100 text-slate-900'
+      class="flex-1 border-l border-black/5 px-4 py-3 text-base font-medium transition-colors {mode === 'mentions'
+        ? 'text-slate-900'
         : 'text-slate-600 hover:text-slate-900'}"
+      style={mode === 'mentions' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
       onclick={() => {
         mode = 'mentions';
         loadList();
@@ -99,18 +147,20 @@
   {:else if items.length === 0}
     <div class="py-8 text-center text-sm text-slate-500">No {mode} yet</div>
   {:else}
-    <div class="space-y-2">
+    <div class="space-y-1">
       {#each items as it (it.name)}
         <button
           type="button"
-          class="w-full rounded-lg border bg-white px-4 py-4 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+          class="w-full px-2 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
           onclick={() => selectToken(it.name)}
         >
           <div class="flex items-center justify-between gap-3">
             <span class="text-lg font-medium text-slate-900">
               <span class="text-slate-400" aria-hidden="true">{mode === 'tags' ? '#' : '@'}</span>{it.name}
             </span>
-            <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">{it.count}</span>
+            <span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-600 shadow-sm ring-1 ring-black/5">
+              {it.count}
+            </span>
           </div>
         </button>
       {/each}
