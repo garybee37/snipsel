@@ -8,8 +8,33 @@
   let busy = false;
 
   type Filter = 'all' | 'favorites' | 'day' | 'normal' | 'shared' | 'templates';
-  let filter: Filter = 'all';
+  let filter: Filter = 'favorites';
   let titleFilter = '';
+
+  type SortKey = 'modified' | 'name';
+  type SortDir = 'desc' | 'asc';
+  let sortKey: SortKey = 'modified';
+  let sortDir: SortDir = 'desc';
+
+  function cmpString(a: string, b: string): number {
+    return a.localeCompare(b, undefined, { sensitivity: 'base' });
+  }
+
+  function sortCollections(list: Collection[], key: SortKey, dirRaw: SortDir): Collection[] {
+    const dir = dirRaw === 'asc' ? 1 : -1;
+    const copy = [...list];
+    copy.sort((a, b) => {
+      if (key === 'name') {
+        return cmpString(a.title, b.title) * dir;
+      }
+      // modified
+      const ta = Date.parse(a.modified_at);
+      const tb = Date.parse(b.modified_at);
+      if (ta === tb) return cmpString(a.title, b.title);
+      return (ta - tb) * dir;
+    });
+    return copy;
+  }
 
   function matchesFilter(c: Collection, f: Filter): boolean {
     if (f === 'favorites') return Boolean(c.is_favorite);
@@ -26,7 +51,11 @@
     return c.title.toLowerCase().includes(q);
   }
 
-  $: filtered = $collections.filter((c) => matchesFilter(c, filter) && matchesTitle(c, titleFilter));
+  $: filtered = sortCollections(
+    $collections.filter((c) => matchesFilter(c, filter) && matchesTitle(c, titleFilter)),
+    sortKey,
+    sortDir
+  );
 
   async function loadCollections() {
     isLoading.set(true);
@@ -142,6 +171,34 @@
         placeholder="Filter by title"
         bind:value={titleFilter}
       />
+
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="text-xs font-medium uppercase text-slate-500">Sort</div>
+        <button
+          class="rounded-md border px-3 py-2 text-base {sortKey === 'modified' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+          type="button"
+          onclick={() => (sortKey = 'modified')}
+        >
+          Modified
+        </button>
+        <button
+          class="rounded-md border px-3 py-2 text-base {sortKey === 'name' ? 'bg-slate-100 font-medium' : 'bg-white'}"
+          type="button"
+          onclick={() => (sortKey = 'name')}
+        >
+          Name
+        </button>
+
+        <button
+          class="ml-auto grid h-10 w-10 place-items-center rounded-md border text-lg hover:bg-slate-50"
+          type="button"
+          aria-label={sortDir === 'asc' ? 'Sort ascending' : 'Sort descending'}
+          title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
+          onclick={() => (sortDir = sortDir === 'asc' ? 'desc' : 'asc')}
+        >
+          {sortDir === 'asc' ? '↑' : '↓'}
+        </button>
+      </div>
     </div>
   </div>
 
