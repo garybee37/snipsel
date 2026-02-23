@@ -1,5 +1,6 @@
 <script lang="ts">
   import { api, type Collection } from '../lib/api';
+  import { currentUser } from '../lib/session';
   import { collections, currentView, isLoading, pendingReference } from '../lib/stores';
 
   let showCreate = false;
@@ -10,6 +11,51 @@
   type Filter = 'all' | 'favorites' | 'day' | 'normal' | 'shared' | 'templates';
   let filter: Filter = 'favorites';
   let titleFilter = '';
+
+  const DEFAULT_ACCENT = '#4f46e5';
+  type Rgb = { r: number; g: number; b: number };
+
+  function clampByte(n: number): number {
+    return Math.max(0, Math.min(255, Math.round(n)));
+  }
+
+  function hexToRgb(hex: string): Rgb | null {
+    const h = hex.trim();
+    const m = /^#([0-9a-fA-F]{6})$/.exec(h);
+    if (!m) return null;
+    const v = m[1];
+    return {
+      r: parseInt(v.slice(0, 2), 16),
+      g: parseInt(v.slice(2, 4), 16),
+      b: parseInt(v.slice(4, 6), 16),
+    };
+  }
+
+  function mixRgb(a: Rgb, b: Rgb, t: number): Rgb {
+    const tt = Math.max(0, Math.min(1, t));
+    return {
+      r: clampByte(a.r + (b.r - a.r) * tt),
+      g: clampByte(a.g + (b.g - a.g) * tt),
+      b: clampByte(a.b + (b.b - a.b) * tt),
+    };
+  }
+
+  function rgba(c: Rgb, alpha: number): string {
+    const a = Math.max(0, Math.min(1, alpha));
+    return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`;
+  }
+
+  function getAccent(): string {
+    const raw = ($currentUser?.default_collection_header_color || '').trim() || DEFAULT_ACCENT;
+    return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : DEFAULT_ACCENT;
+  }
+
+  function getAccentTint(): string {
+    const base = { r: 255, g: 255, b: 255 };
+    const accent = hexToRgb(getAccent());
+    const mixed = accent ? mixRgb(base, accent, 0.14) : base;
+    return rgba(mixed, 0.96);
+  }
 
   type SortKey = 'modified' | 'name';
   type SortDir = 'desc' | 'asc';
@@ -83,6 +129,20 @@
     currentView.set({ type: 'collection', id: c.id });
   }
 
+  async function toggleFavorite(c: Collection) {
+    const next = !Boolean(c.is_favorite);
+    collections.update((list) => list.map((x) => (x.id === c.id ? { ...x, is_favorite: next } : x)));
+    try {
+      if (next) {
+        await api.collections.favorite(c.id);
+      } else {
+        await api.collections.unfavorite(c.id);
+      }
+    } catch {
+      collections.update((list) => list.map((x) => (x.id === c.id ? { ...x, is_favorite: !next } : x)));
+    }
+  }
+
   function editCollection(c: Collection) {
     currentView.set({ type: 'collection_settings', id: c.id });
   }
@@ -125,85 +185,116 @@
       </button>
     </div>
 
-    <div class="flex flex-col gap-3 rounded-lg border bg-white p-3">
-      <div class="flex flex-wrap gap-2">
-        <button
-          class="rounded-md border px-4 py-2 text-base {filter === 'all' ? 'bg-slate-100 font-medium' : 'bg-white'}"
-          type="button"
-          onclick={() => (filter = 'all')}
-        >
-          All
-        </button>
-        <button
-          class="rounded-md border px-4 py-2 text-base {filter === 'favorites' ? 'bg-slate-100 font-medium' : 'bg-white'}"
-          type="button"
-          onclick={() => (filter = 'favorites')}
-        >
-          Favorites
-        </button>
-        <button
-          class="rounded-md border px-4 py-2 text-base {filter === 'day' ? 'bg-slate-100 font-medium' : 'bg-white'}"
-          type="button"
-          onclick={() => (filter = 'day')}
-        >
-          Days
-        </button>
-        <button
-          class="rounded-md border px-4 py-2 text-base {filter === 'normal' ? 'bg-slate-100 font-medium' : 'bg-white'}"
-          type="button"
-          onclick={() => (filter = 'normal')}
-        >
-          Lists
-        </button>
-        <button
-          class="rounded-md border px-4 py-2 text-base {filter === 'shared' ? 'bg-slate-100 font-medium' : 'bg-white'}"
-          type="button"
-          onclick={() => (filter = 'shared')}
-        >
-          Shared
-        </button>
-        <button
-          class="rounded-md border px-4 py-2 text-base {filter === 'templates' ? 'bg-slate-100 font-medium' : 'bg-white'}"
-          type="button"
-          onclick={() => (filter = 'templates')}
-        >
-          Templates
-        </button>
+    <div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="overflow-hidden rounded-full border border-slate-200 bg-white">
+        <div class="grid grid-cols-6">
+          <button
+            class="px-3 py-3 text-sm font-medium transition-colors {filter === 'all'
+              ? 'text-slate-900'
+              : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => (filter = 'all')}
+            style={filter === 'all' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          >
+            All
+          </button>
+          <button
+            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'favorites'
+              ? 'text-slate-900'
+              : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => (filter = 'favorites')}
+            style={filter === 'favorites' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          >
+            Favorites
+          </button>
+          <button
+            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'day'
+              ? 'text-slate-900'
+              : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => (filter = 'day')}
+            style={filter === 'day' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          >
+            Days
+          </button>
+          <button
+            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'normal'
+              ? 'text-slate-900'
+              : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => (filter = 'normal')}
+            style={filter === 'normal' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          >
+            Lists
+          </button>
+          <button
+            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'shared'
+              ? 'text-slate-900'
+              : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => (filter = 'shared')}
+            style={filter === 'shared' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          >
+            Shared
+          </button>
+          <button
+            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'templates'
+              ? 'text-slate-900'
+              : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => (filter = 'templates')}
+            style={filter === 'templates' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          >
+            Templates
+          </button>
+        </div>
       </div>
 
-      <input
-        class="w-full rounded-md border px-4 py-3 text-lg"
-        type="search"
-        placeholder="Filter by title"
-        bind:value={titleFilter}
-      />
+      <div class="flex items-center gap-3">
+        <input
+          class="min-w-0 flex-1 rounded-full border border-slate-200 bg-white/80 px-4 py-3 text-lg shadow-sm outline-none ring-1 ring-black/5"
+          type="search"
+          placeholder="Filter by title"
+          bind:value={titleFilter}
+        />
 
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="text-xs font-medium uppercase text-slate-500">Sort</div>
-        <button
-          class="rounded-md border px-3 py-2 text-base {sortKey === 'modified' ? 'bg-slate-100 font-medium' : 'bg-white'}"
-          type="button"
-          onclick={() => (sortKey = 'modified')}
-        >
-          Modified
-        </button>
-        <button
-          class="rounded-md border px-3 py-2 text-base {sortKey === 'name' ? 'bg-slate-100 font-medium' : 'bg-white'}"
-          type="button"
-          onclick={() => (sortKey = 'name')}
-        >
-          Name
-        </button>
+        <div class="ml-auto flex items-center gap-2">
+          <div class="overflow-hidden rounded-full border border-slate-200 bg-white">
+            <div class="flex">
+              <button
+                class="px-4 py-2 text-sm font-medium {sortKey === 'modified'
+                  ? 'text-slate-900'
+                  : 'text-slate-600 hover:text-slate-900'}"
+                type="button"
+                onclick={() => (sortKey = 'modified')}
+                style={sortKey === 'modified' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+              >
+                Modified
+              </button>
+              <button
+                class="border-l border-black/5 px-4 py-2 text-sm font-medium {sortKey === 'name'
+                  ? 'text-slate-900'
+                  : 'text-slate-600 hover:text-slate-900'}"
+                type="button"
+                onclick={() => (sortKey = 'name')}
+                style={sortKey === 'name' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+              >
+                Name
+              </button>
+            </div>
+          </div>
 
-        <button
-          class="ml-auto grid h-10 w-10 place-items-center rounded-md border text-lg hover:bg-slate-50"
-          type="button"
-          aria-label={sortDir === 'asc' ? 'Sort ascending' : 'Sort descending'}
-          title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
-          onclick={() => (sortDir = sortDir === 'asc' ? 'desc' : 'asc')}
-        >
-          {sortDir === 'asc' ? '↑' : '↓'}
-        </button>
+          <button
+            class="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white/80 text-lg text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-white"
+            type="button"
+            aria-label={sortDir === 'asc' ? 'Sort ascending' : 'Sort descending'}
+            title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
+            onclick={() => (sortDir = sortDir === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortDir === 'asc' ? '↑' : '↓'}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -253,31 +344,56 @@
   {:else if filtered.length === 0}
     <div class="py-8 text-center text-sm text-slate-500">No collections yet</div>
   {:else}
-    <div class="space-y-3">
+    <div class="space-y-2">
       {#each filtered as c}
-        <div class="flex w-full items-center gap-4 rounded-lg border bg-white px-4 py-4">
+        <div class="flex w-full items-center gap-3 px-1 py-2">
           <button class="flex flex-1 items-center gap-3 text-left" type="button" onclick={() => openCollection(c)}>
             <span class="text-3xl">{c.icon}</span>
-            <span class="flex-1 text-lg font-medium">{c.title}</span>
-            {#if c.is_favorite}
-              <span class="text-xl" aria-hidden="true">♥</span>
-            {/if}
-            {#if c.access_level === 'read' || c.access_level === 'write'}
-              <span class="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">shared</span>
-            {/if}
-            {#if c.archived}
-              <span class="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">archived</span>
-            {/if}
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-lg font-medium">{c.title}</div>
+              <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-slate-500">
+                {#if c.access_level === 'read' || c.access_level === 'write'}
+                  <span class="rounded px-1.5 py-0.5" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
+                    >shared</span
+                  >
+                {/if}
+                {#if c.archived}
+                  <span class="rounded px-1.5 py-0.5" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
+                    >archived</span
+                  >
+                {/if}
+                {#if c.is_template}
+                  <span class="rounded px-1.5 py-0.5" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
+                    >template</span
+                  >
+                {/if}
+              </div>
+            </div>
           </button>
-          <button
-            class="grid h-12 w-12 place-items-center rounded-md border text-xl text-slate-700 hover:bg-slate-50"
-            type="button"
-            aria-label="Edit collection"
-            title="Edit"
-            onclick={() => editCollection(c)}
-          >
-            ⓘ
-          </button>
+
+          <div class="overflow-hidden rounded-full border border-slate-200 bg-white/80 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+            <div class="flex">
+              <button
+                class="grid h-11 w-12 place-items-center text-lg text-slate-700 hover:bg-black/5"
+                type="button"
+                aria-label={c.is_favorite ? 'Unfavorite' : 'Favorite'}
+                title={c.is_favorite ? 'Unfavorite' : 'Favorite'}
+                onclick={() => toggleFavorite(c)}
+                style={c.is_favorite ? `color: ${getAccent()}` : undefined}
+              >
+                {c.is_favorite ? '♥' : '♡'}
+              </button>
+              <button
+                class="grid h-11 w-12 place-items-center border-l border-black/5 text-lg text-slate-700 hover:bg-black/5"
+                type="button"
+                aria-label="Edit collection"
+                title="Edit"
+                onclick={() => editCollection(c)}
+              >
+                ⓘ
+              </button>
+            </div>
+          </div>
         </div>
       {/each}
     </div>
