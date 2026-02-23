@@ -20,6 +20,24 @@ from snipsel_api.models import (
     Collection,
 )
 
+
+def _touch_collections_for_snipsel(*, snipsel_id: str, modified_by_id: str) -> None:
+    now = datetime.utcnow()
+    collection_ids = (
+        db.session.execute(
+            db.select(CollectionSnipsel.collection_id).where(CollectionSnipsel.snipsel_id == snipsel_id)
+        )
+        .scalars()
+        .all()
+    )
+    if not collection_ids:
+        return
+    db.session.execute(
+        db.update(Collection)
+        .where(Collection.id.in_(collection_ids), Collection.deleted_at.is_(None))
+        .values(modified_at=now, modified_by_id=modified_by_id)
+    )
+
 from sqlalchemy.orm import joinedload
 from snipsel_api.utils_text import extract_mentions, extract_tags
 
@@ -132,6 +150,11 @@ def reference_snipsel(collection_id: str, snipsel_id: str):
     )
     cs = CollectionSnipsel(collection_id=collection_id, snipsel_id=s.id, position=max_pos + 1, indent=0)
     db.session.add(cs)
+    db.session.execute(
+        db.update(Collection)
+        .where(Collection.id == collection_id, Collection.deleted_at.is_(None))
+        .values(modified_at=datetime.utcnow(), modified_by_id=user.id)
+    )
     db.session.commit()
     return json_response({"item": _collection_item_json(cs)}, status=201)
 
@@ -301,6 +324,7 @@ def update_snipsel(snipsel_id: str):
     s.modified_by_id = user.id
     _sync_tags_mentions(user_id=s.owner_user_id, snipsel=s)
     _sync_backlinks(user_id=user.id, snipsel=s)
+    _touch_collections_for_snipsel(snipsel_id=snipsel_id, modified_by_id=user.id)
     db.session.commit()
     return json_response({"snipsel": _snipsel_json(s)})
 
@@ -338,6 +362,11 @@ def delete_from_collection(collection_id: str, snipsel_id: str):
             s.deleted_at = datetime.utcnow()
             s.deleted_by_id = user.id
 
+    db.session.execute(
+        db.update(Collection)
+        .where(Collection.id == collection_id, Collection.deleted_at.is_(None))
+        .values(modified_at=datetime.utcnow(), modified_by_id=user.id)
+    )
     db.session.commit()
     return json_response({"ok": True})
 
@@ -383,6 +412,11 @@ def reorder_collection(collection_id: str):
         if isinstance(indent, int) and indent >= 0:
             cs.indent = indent
 
+    db.session.execute(
+        db.update(Collection)
+        .where(Collection.id == collection_id, Collection.deleted_at.is_(None))
+        .values(modified_at=datetime.utcnow(), modified_by_id=user.id)
+    )
     db.session.commit()
     return json_response({"ok": True})
 

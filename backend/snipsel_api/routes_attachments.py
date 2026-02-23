@@ -12,6 +12,7 @@ from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
 from snipsel_api.models import Attachment, Snipsel
 from snipsel_api.permissions import can_read_snipsel_via_collections, can_write_snipsel_via_collections
+from snipsel_api.routes_snipsels import _touch_collections_for_snipsel
 
 attachments_bp = Blueprint("attachments", __name__)
 
@@ -62,6 +63,7 @@ def upload_attachment(snipsel_id: str):
         created_by_id=user.id,
     )
     db.session.add(att)
+    _touch_collections_for_snipsel(snipsel_id=snipsel_id, modified_by_id=user.id)
     db.session.commit()
 
     return json_response(
@@ -158,6 +160,7 @@ def delete_attachment(attachment_id: str):
             pass
 
     db.session.delete(att)
+    _touch_collections_for_snipsel(snipsel_id=snipsel.id, modified_by_id=user.id)
     db.session.commit()
     return json_response({"ok": True})
 
