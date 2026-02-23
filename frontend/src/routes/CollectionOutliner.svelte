@@ -568,16 +568,16 @@
 
       {#if taskProgress().total > 0}
         <button
-          class="absolute left-[5.5rem] right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm"
+          class="absolute left-[5.5rem] right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm backdrop-blur-md"
           type="button"
           aria-label="Toggle done tasks"
           title={hideDoneTasks ? 'Show done tasks' : 'Hide done tasks'}
           onclick={toggleHideDoneTasks}
         >
-          <div class="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div class="h-2 w-full overflow-hidden rounded-full bg-black/10">
             <div
               class="h-full rounded-full"
-              style={`width: ${Math.round(taskProgress().ratio * 100)}%; background-color: ${getToolboxBg()}`}
+              style={`width: ${Math.round(taskProgress().ratio * 100)}%; background-color: ${getHeaderColor()}`}
             ></div>
           </div>
         </button>
@@ -607,7 +607,7 @@
 
       {#if showStatusPill}
         <div
-          class="absolute right-4 top-0 z-10 -translate-y-1/2 flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-lg text-slate-800 shadow-sm"
+          class="absolute right-4 top-0 z-10 -translate-y-1/2 flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-lg text-slate-800 shadow-sm backdrop-blur-md"
           aria-label="Collection status"
         >
           {#if $currentCollection.is_favorite}
