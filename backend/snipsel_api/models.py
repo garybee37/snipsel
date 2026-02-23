@@ -61,8 +61,6 @@ class Collection(db.Model):
     header_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     header_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
-    is_favorite: Mapped[bool] = mapped_column(default=False, nullable=False)
-
     is_template: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     default_snipsel_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
@@ -105,6 +103,17 @@ class CollectionShare(db.Model):
         UniqueConstraint("collection_id", "shared_with_user_id", name="uq_collection_share_collection_user"),
         CheckConstraint("permission in ('read','write')", name="ck_collection_shares_permission"),
     )
+
+
+class CollectionFavorite(db.Model):
+    __tablename__ = "collection_favorites"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    collection_id: Mapped[str] = mapped_column(ForeignKey("collections.id"), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+    user = relationship("User")
+    collection = relationship("Collection")
 
 
 class Snipsel(db.Model):

@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Attachment, Collection, CollectionShare, CollectionSnipsel, Snipsel, User
+from snipsel_api.models import Attachment, Collection, CollectionFavorite, CollectionShare, CollectionSnipsel, Snipsel, User
 from snipsel_api.permissions import can_read_collection, can_write_collection, get_collection_access_level
 from snipsel_api.routes_attachments import _resolve_attachment_path, _resolve_thumbnail_path
 from snipsel_api.routes_snipsels import _sync_backlinks, _sync_tags_mentions
@@ -76,9 +76,18 @@ def list_collections():
         )
     }
 
+    fav_ids = set(
+        db.session.execute(
+            db.select(CollectionFavorite.collection_id).where(CollectionFavorite.user_id == user.id)
+        )
+        .scalars()
+        .all()
+    )
+
     out = []
     for c in items:
         j = _collection_json(c)
+        j["is_favorite"] = c.id in fav_ids
         if c.owner_user_id == user.id:
             j["access_level"] = "owner"
         else:
@@ -107,6 +116,15 @@ def get_today_collection():
     if existing:
         _maybe_carry_over_open_tasks(user=user, today_collection=existing, day=day)
         j = _collection_json(existing)
+        j["is_favorite"] = (
+            db.session.execute(
+                db.select(CollectionFavorite).where(
+                    CollectionFavorite.user_id == user.id,
+                    CollectionFavorite.collection_id == existing.id,
+                )
+            ).scalars().first()
+            is not None
+        )
         j["access_level"] = "owner"
         return json_response({"collection": j})
 
@@ -151,6 +169,7 @@ def get_today_collection():
     if tpl_id:
         _maybe_copy_template_contents(user=user, template_collection_id=tpl_id, target_collection=c)
     j = _collection_json(c)
+    j["is_favorite"] = False
     j["access_level"] = "owner"
     return json_response({"collection": j}, status=201)
 
@@ -424,7 +443,6 @@ def create_collection():
     icon = (data.get("icon") or "🗒").strip() or "🗒"
     header_image_url = (data.get("header_image_url") or "").strip() or None
     header_color = (data.get("header_color") or "").strip() or user.default_collection_header_color or None
-    is_favorite = bool(data.get("is_favorite"))
     default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
 
     if not title:
@@ -436,7 +454,6 @@ def create_collection():
         icon=icon,
         header_image_url=header_image_url,
         header_color=header_color,
-        is_favorite=is_favorite,
         default_snipsel_type=default_snipsel_type,
         created_by_id=user.id,
         modified_by_id=user.id,
@@ -444,6 +461,7 @@ def create_collection():
     db.session.add(c)
     db.session.commit()
     j = _collection_json(c)
+    j["is_favorite"] = False
     j["access_level"] = "owner"
     return json_response({"collection": j}, status=201)
 
@@ -458,6 +476,15 @@ def get_collection(collection_id: str):
     if not c or c.deleted_at is not None:
         raise api_error(404, "not_found", "Collection not found")
     j = _collection_json(c)
+    j["is_favorite"] = (
+        db.session.execute(
+            db.select(CollectionFavorite).where(
+                CollectionFavorite.user_id == user.id,
+                CollectionFavorite.collection_id == c.id,
+            )
+        ).scalars().first()
+        is not None
+    )
     if c.owner_user_id == user.id:
         j["access_level"] = "owner"
     else:
@@ -494,8 +521,6 @@ def update_collection(collection_id: str):
     if "archived" in data:
         archived = bool(data.get("archived"))
         c.archived_at = datetime.utcnow() if archived else None
-    if "is_favorite" in data:
-        c.is_favorite = bool(data.get("is_favorite"))
     if "is_template" in data:
         c.is_template = bool(data.get("is_template"))
     if "default_snipsel_type" in data:
@@ -504,6 +529,15 @@ def update_collection(collection_id: str):
     c.modified_by_id = user.id
     db.session.commit()
     j = _collection_json(c)
+    j["is_favorite"] = (
+        db.session.execute(
+            db.select(CollectionFavorite).where(
+                CollectionFavorite.user_id == user.id,
+                CollectionFavorite.collection_id == c.id,
+            )
+        ).scalars().first()
+        is not None
+    )
     j["access_level"] = "owner"
     return json_response({"collection": j})
 
@@ -535,7 +569,6 @@ def _collection_json(c: Collection) -> dict:
         "icon": c.icon,
         "header_image_url": c.header_image_url,
         "header_color": c.header_color,
-        "is_favorite": c.is_favorite,
         "is_template": getattr(c, "is_template", False),
         "default_snipsel_type": c.default_snipsel_type,
         "archived": c.archived_at is not None,
@@ -583,6 +616,44 @@ def list_shares(collection_id: str):
             ]
         }
     )
+
+
+@collections_bp.post("/<collection_id>/favorite")
+@require_auth
+def favorite_collection(collection_id: str):
+    user = current_user()
+    if not can_read_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
+    c = db.session.get(Collection, collection_id)
+    if not c or c.deleted_at is not None:
+        raise api_error(404, "not_found", "Collection not found")
+
+    existing = db.session.execute(
+        db.select(CollectionFavorite).where(
+            CollectionFavorite.user_id == user.id,
+            CollectionFavorite.collection_id == c.id,
+        )
+    ).scalars().first()
+    if not existing:
+        db.session.add(CollectionFavorite(user_id=user.id, collection_id=c.id))
+        db.session.commit()
+    return json_response({"ok": True})
+
+
+@collections_bp.delete("/<collection_id>/favorite")
+@require_auth
+def unfavorite_collection(collection_id: str):
+    user = current_user()
+    existing = db.session.execute(
+        db.select(CollectionFavorite).where(
+            CollectionFavorite.user_id == user.id,
+            CollectionFavorite.collection_id == collection_id,
+        )
+    ).scalars().first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+    return json_response({"ok": True})
 
 
 @collections_bp.post("/<collection_id>/shares")

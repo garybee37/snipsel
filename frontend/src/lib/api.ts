@@ -173,7 +173,6 @@ export const api = {
       icon?: string;
       header_image_url?: string;
       header_color?: string;
-      is_favorite?: boolean;
       default_snipsel_type?: string;
     }) =>
       requestJson<{ collection: Collection }>('/api/collections', {
@@ -188,7 +187,6 @@ export const api = {
         header_image_url?: string;
         header_color?: string;
         archived?: boolean;
-        is_favorite?: boolean;
         is_template?: boolean;
         default_snipsel_type?: string;
       }
@@ -197,6 +195,9 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),
+
+    favorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'POST' }),
+    unfavorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'DELETE' }),
     delete: (id: string) =>
       requestJson<{ ok: true }>(`/api/collections/${id}`, { method: 'DELETE' }),
 
