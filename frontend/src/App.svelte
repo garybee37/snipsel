@@ -207,13 +207,27 @@
       />
       {#if $currentUser}
         <button
-          class="grid h-12 w-12 place-items-center rounded-md bg-indigo-600 text-xl font-medium text-white hover:bg-indigo-700"
+          class="grid h-12 w-12 place-items-center rounded-md border border-slate-200 bg-slate-100 text-slate-800 hover:bg-slate-200 {$currentView.type === 'settings'
+            ? 'bg-slate-200'
+            : ''}"
           type="button"
-          onclick={onNewSnipsel}
-          aria-label="New snipsel (today)"
-          title="New snipsel (today)"
+          onclick={() => currentView.set({ type: 'settings' })}
+          aria-label="Settings"
+          title="Settings"
         >
-          ✎
+          <svg
+            class="h-6 w-6"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" />
+            <path d="M19.4 15a1.8 1.8 0 00.36 1.98l.05.05a2.2 2.2 0 01-1.56 3.76h-.07a1.8 1.8 0 00-1.98.36 1.8 1.8 0 00-.52 1.27V22a2.2 2.2 0 01-4.4 0v-.07a1.8 1.8 0 00-.36-1.98 1.8 1.8 0 00-1.27-.52H8a2.2 2.2 0 010-4.4h.07a1.8 1.8 0 001.98-.36 1.8 1.8 0 00.52-1.27V12a2.2 2.2 0 014.4 0v.07a1.8 1.8 0 00.36 1.98 1.8 1.8 0 001.27.52H16a2.2 2.2 0 013.4.93z" />
+          </svg>
         </button>
       {/if}
       <div class="w-12"></div>
@@ -278,6 +292,20 @@
             <path d="M16 4l-2 16" />
           </svg>
         </button>
+
+        <button
+          class="rounded-md px-2 py-4"
+          type="button"
+          onclick={onNewSnipsel}
+          aria-label="New snipsel (today)"
+          title="New snipsel (today)"
+        >
+          <svg class="mx-auto h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
+          </svg>
+        </button>
+
         <button
           class="rounded-md px-2 py-4 {$currentView.type === 'calendar' ? 'bg-slate-100 font-medium' : ''}"
           type="button"
@@ -302,18 +330,6 @@
           <svg class="mx-auto h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 11l3 3L22 4" />
             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-          </svg>
-        </button>
-        <button
-          class="rounded-md px-2 py-4 {$currentView.type === 'settings' ? 'bg-slate-100 font-medium' : ''}"
-          type="button"
-          onclick={() => currentView.set({ type: 'settings' })}
-          aria-label="Settings"
-          title="Settings"
-        >
-          <svg class="mx-auto h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" />
-            <path d="M19.4 15a1.8 1.8 0 00.36 1.98l.05.05a2.2 2.2 0 01-1.56 3.76h-.07a1.8 1.8 0 00-1.98.36 1.8 1.8 0 00-.52 1.27V22a2.2 2.2 0 01-4.4 0v-.07a1.8 1.8 0 00-.36-1.98 1.8 1.8 0 00-1.27-.52H8a2.2 2.2 0 010-4.4h.07a1.8 1.8 0 001.98-.36 1.8 1.8 0 00.52-1.27V12a2.2 2.2 0 014.4 0v.07a1.8 1.8 0 00.36 1.98 1.8 1.8 0 001.27.52H16a2.2 2.2 0 013.4.93z" />
           </svg>
         </button>
       </div>
