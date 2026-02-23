@@ -101,6 +101,17 @@
     return rgba(mixed, 0.96);
   }
 
+  function getTokenBg(): string {
+    const base = hexToRgb(TOOLBOX_BASE_COLOR) ?? { r: 255, g: 255, b: 255 };
+    const header = hexToRgb(getHeaderColor());
+    const mixed = header ? mixRgb(base, header, 0.16) : base;
+    return rgba(mixed, 0.96);
+  }
+
+  function getTokenFg(): string {
+    return getHeaderColor();
+  }
+
   function openImageModal(id: string, filename: string) {
     modalImage = { id, filename };
   }
@@ -614,9 +625,12 @@
   function renderMarkdown(text: string | null): string {
     if (!text) return '';
     const html = md.render(text);
+    const tokenBg = getTokenBg();
+    const tokenFg = getTokenFg();
     return html.replace(
       /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
-      (m, p1, token) => `${p1}<mark class="snip-token">${token}</mark>`
+      (m, p1, token) =>
+        `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${tokenFg}">${token}</mark>`
     );
   }
 
@@ -798,7 +812,10 @@
                 }}
               >
                 {#if item.snipsel.task_done}
-                  <span class="block h-full w-full rounded bg-indigo-600"></span>
+                  <span
+                    class="block h-full w-full rounded"
+                    style={`background-color: ${getHeaderColor()}`}
+                  ></span>
                 {/if}
               </button>
 

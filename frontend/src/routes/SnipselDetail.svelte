@@ -2,6 +2,7 @@
   import { api, type Attachment, type Snipsel } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
   import { currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
+  import { currentUser } from '../lib/session';
 
   interface Props {
     snipselId: string;
@@ -95,9 +96,13 @@
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+    const raw = ($currentUser?.default_collection_header_color || '').trim() || '#4f46e5';
+    const accent = /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : '#4f46e5';
+    const tokenBg = `rgba(255, 255, 255, 0.92)`;
     return escaped.replace(
       /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
-      (m, p1, token) => `${p1}<mark class="snip-token">${token}</mark>`
+      (m, p1, token) =>
+        `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${accent}">${token}</mark>`
     );
   }
 
