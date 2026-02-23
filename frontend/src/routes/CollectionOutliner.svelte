@@ -50,11 +50,12 @@
   const TOOLBOX_BASE_COLOR = '#ffffff';
 
   function getHeaderColor(): string {
-    return (
-      $currentCollection?.header_color ??
-      $currentUser?.default_collection_header_color ??
-      DEFAULT_HEADER_COLOR
-    );
+    const raw =
+      ($currentCollection?.header_color || '').trim() ||
+      ($currentUser?.default_collection_header_color || '').trim() ||
+      DEFAULT_HEADER_COLOR;
+
+    return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : DEFAULT_HEADER_COLOR;
   }
 
   type Rgb = { r: number; g: number; b: number };
@@ -516,6 +517,11 @@
     return items.filter((i) => !isDoneTask(i));
   }
 
+  function hiddenDoneCount(items: CollectionItem[]): number {
+    if (!hideDoneTasks) return 0;
+    return items.filter((i) => isDoneTask(i)).length;
+  }
+
   $effect(() => {
     if ($currentCollection) {
       loadItems();
@@ -562,7 +568,7 @@
 
       {#if taskProgress().total > 0}
         <button
-          class="absolute left-20 right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm"
+          class="absolute left-[5.5rem] right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm"
           type="button"
           aria-label="Toggle done tasks"
           title={hideDoneTasks ? 'Show done tasks' : 'Hide done tasks'}
@@ -647,7 +653,7 @@
     </div>
   {:else}
     <div class="flex flex-col">
-        {#each visibleItems($sortedItems) as item (item.snipsel_id)}
+      {#each visibleItems($sortedItems) as item (item.snipsel_id)}
         <div class="group relative pl-6 pr-10" style="margin-left: {item.indent * 1.25}rem">
           {#if item.snipsel_id === $editingSnipselId}
             <div
@@ -825,6 +831,12 @@
         }}
         disabled={!canWrite()}
       ></button>
+
+      {#if hideDoneTasks && hiddenDoneCount($sortedItems) > 0}
+        <div class="mt-3 text-center text-sm text-slate-500">
+          {hiddenDoneCount($sortedItems)} erledigte Aufgaben ausgeblendet
+        </div>
+      {/if}
     </div>
   {/if}
 
