@@ -794,17 +794,17 @@
               <button
                 type="button"
                 aria-label={item.snipsel.task_done ? 'Mark task not done' : 'Mark task done'}
-                class="absolute left-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded border border-slate-300 bg-white"
+                class="absolute left-1 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white"
                 onclick={(e) => {
                   e.stopPropagation();
                   toggleTaskDone(item);
                 }}
+                style={item.snipsel.task_done
+                  ? `border-color: ${getHeaderColor()}; background-color: ${getToolboxBg()}; color: ${getHeaderColor()}`
+                  : undefined}
               >
                 {#if item.snipsel.task_done}
-                  <span
-                    class="block h-full w-full rounded"
-                    style={`background-color: ${getHeaderColor()}`}
-                  ></span>
+                  ✓
                 {/if}
               </button>
 

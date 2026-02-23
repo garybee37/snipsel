@@ -98,7 +98,8 @@
       .replace(/>/g, '&gt;');
     const raw = ($currentUser?.default_collection_header_color || '').trim() || '#4f46e5';
     const accent = /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : '#4f46e5';
-    const tokenBg = `rgba(255, 255, 255, 0.92)`;
+    // tinted background like the toolbox for readability
+    const tokenBg = `rgba(255, 255, 255, 0.96)`;
     return escaped.replace(
       /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
       (m, p1, token) =>
@@ -210,32 +211,38 @@
       <div class="rounded-lg border bg-white p-3">
         <div class="text-xs uppercase text-slate-500">Tags / Mentions</div>
         <div class="mt-2 flex flex-wrap gap-2">
-          {#each snipsel.tags ?? [] as t (t)}
-            <button
-              type="button"
-              class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              onclick={() => {
-                currentView.set({ type: 'search' });
-                searchQuery.set('');
-                api.search({ tag: t }).then(searchResults.set).catch(() => searchError.set('Search failed'));
-              }}
-            >
-              #{t}
-            </button>
-          {/each}
-          {#each snipsel.mentions ?? [] as m (m)}
-            <button
-              type="button"
-              class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              onclick={() => {
-                currentView.set({ type: 'search' });
-                searchQuery.set('');
-                api.search({ mention: m }).then(searchResults.set).catch(() => searchError.set('Search failed'));
-              }}
-            >
-              @{m}
-            </button>
-          {/each}
+            {#each snipsel.tags ?? [] as t (t)}
+              <button
+                type="button"
+                class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                style={`background-color: rgba(255,255,255,0.92); color: ${/^#[0-9a-fA-F]{6}$/.test(($currentUser?.default_collection_header_color || '').trim() || '#4f46e5')
+                  ? (($currentUser?.default_collection_header_color || '').trim() || '#4f46e5')
+                  : '#4f46e5'}`}
+                onclick={() => {
+                  currentView.set({ type: 'search' });
+                  searchQuery.set('');
+                  api.search({ tag: t }).then(searchResults.set).catch(() => searchError.set('Search failed'));
+                }}
+              >
+                #{t}
+              </button>
+            {/each}
+            {#each snipsel.mentions ?? [] as m (m)}
+              <button
+                type="button"
+                class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                style={`background-color: rgba(255,255,255,0.92); color: ${/^#[0-9a-fA-F]{6}$/.test(($currentUser?.default_collection_header_color || '').trim() || '#4f46e5')
+                  ? (($currentUser?.default_collection_header_color || '').trim() || '#4f46e5')
+                  : '#4f46e5'}`}
+                onclick={() => {
+                  currentView.set({ type: 'search' });
+                  searchQuery.set('');
+                  api.search({ mention: m }).then(searchResults.set).catch(() => searchError.set('Search failed'));
+                }}
+              >
+                @{m}
+              </button>
+            {/each}
         </div>
       </div>
     {/if}
