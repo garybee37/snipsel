@@ -23,7 +23,13 @@
 </script>
 
 <div class="space-y-4">
-  <h2 class="text-2xl font-semibold">Todos</h2>
+  <h2 class="flex items-center gap-2 text-2xl font-semibold">
+    <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+    </svg>
+    <span>Todos</span>
+  </h2>
 
   {#if items.length === 0}
     <div class="text-base text-slate-500">No tasks found</div>

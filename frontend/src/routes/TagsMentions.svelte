@@ -46,7 +46,16 @@
 </script>
 
 <div class="space-y-4">
-  <h2 class="text-2xl font-semibold">Tags / Mentions</h2>
+  <h2 class="flex items-center gap-2 text-2xl font-semibold">
+    <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 12h16" />
+      <path d="M6 8h12" />
+      <path d="M6 16h12" />
+      <path d="M10 4l-2 16" />
+      <path d="M16 4l-2 16" />
+    </svg>
+    <span>Tags / Mentions</span>
+  </h2>
 
   <div class="flex rounded-lg border bg-white p-1" role="tablist">
     <button

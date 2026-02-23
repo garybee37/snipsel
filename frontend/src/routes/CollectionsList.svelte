@@ -109,7 +109,13 @@
 <div class="space-y-2">
   <div class="space-y-3">
     <div class="flex items-center justify-between">
-      <h2 class="text-2xl font-semibold">Collections</h2>
+      <h2 class="flex items-center gap-2 text-2xl font-semibold">
+        <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 4h6a2 2 0 012 2v14H5a2 2 0 01-2-2V4z" />
+          <path d="M13 6a2 2 0 012-2h6v14a2 2 0 01-2 2h-6V6z" />
+        </svg>
+        <span>Collections</span>
+      </h2>
       <button
         class="rounded-md bg-slate-900 px-4 py-3 text-lg font-medium text-white"
         type="button"

@@ -74,7 +74,15 @@
 
 <div class="space-y-3">
   <div class="flex items-center justify-between">
-    <h2 class="text-2xl font-semibold">{monthLabel(cursor)}</h2>
+    <h2 class="flex items-center gap-2 text-2xl font-semibold">
+      <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M16 2v4" />
+        <path d="M8 2v4" />
+        <path d="M3 10h18" />
+      </svg>
+      <span>{monthLabel(cursor)}</span>
+    </h2>
     <div class="flex gap-2">
       <button class="rounded-md border px-4 py-3 text-lg" type="button" onclick={() => (cursor = addMonths(cursor, -1))}>
         Prev
