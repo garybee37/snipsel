@@ -25,6 +25,8 @@
 
   let selectedIds = $state<Set<string>>(new Set());
 
+  let hideDoneTasks = $state(false);
+
   function canWrite(): boolean {
     return $currentCollection?.access_level !== 'read';
   }
@@ -114,6 +116,12 @@
 
   function clearSelection() {
     selectedIds = new Set();
+  }
+
+  function toggleHideDoneTasks() {
+    hideDoneTasks = !hideDoneTasks;
+    clearSelection();
+    editingSnipselId.set(null);
   }
 
   function openDetail(id: string) {
@@ -499,6 +507,15 @@
     return Boolean(a.mime_type?.startsWith('image/') || a.has_thumbnail);
   }
 
+  function isDoneTask(item: CollectionItem): boolean {
+    return item.snipsel.type === 'task' && Boolean(item.snipsel.task_done);
+  }
+
+  function visibleItems(items: CollectionItem[]): CollectionItem[] {
+    if (!hideDoneTasks) return items;
+    return items.filter((i) => !isDoneTask(i));
+  }
+
   $effect(() => {
     if ($currentCollection) {
       loadItems();
@@ -509,6 +526,13 @@
     void editContent;
     autosizeTextarea();
   });
+
+  function taskProgress() {
+    const tasks = $sortedItems.filter((i) => i.snipsel.type === 'task');
+    const total = tasks.length;
+    const done = tasks.filter((i) => Boolean(i.snipsel.task_done)).length;
+    return { total, done, ratio: total > 0 ? done / total : 0 };
+  }
 </script>
 
 <div class="space-y-3">
@@ -529,12 +553,29 @@
       ></div>
 
       <div class="relative px-4 py-3">
-        <div
-          class="absolute left-4 top-0 -translate-y-1/2 grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm"
-          aria-hidden="true"
+      <div
+        class="absolute left-4 top-0 -translate-y-1/2 grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm"
+        aria-hidden="true"
+      >
+        <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
+      </div>
+
+      {#if taskProgress().total > 0}
+        <button
+          class="absolute left-20 right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm"
+          type="button"
+          aria-label="Toggle done tasks"
+          title={hideDoneTasks ? 'Show done tasks' : 'Hide done tasks'}
+          onclick={toggleHideDoneTasks}
         >
-          <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
-        </div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+            <div
+              class="h-full rounded-full"
+              style={`width: ${Math.round(taskProgress().ratio * 100)}%; background-color: ${getToolboxBg()}`}
+            ></div>
+          </div>
+        </button>
+      {/if}
 
         <button
           class="pl-20 text-lg font-semibold hover:underline"
@@ -606,7 +647,7 @@
     </div>
   {:else}
     <div class="flex flex-col">
-      {#each $sortedItems as item (item.snipsel_id)}
+        {#each visibleItems($sortedItems) as item (item.snipsel_id)}
         <div class="group relative pl-6 pr-10" style="margin-left: {item.indent * 1.25}rem">
           {#if item.snipsel_id === $editingSnipselId}
             <div
