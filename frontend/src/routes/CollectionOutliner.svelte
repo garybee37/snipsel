@@ -101,17 +101,6 @@
     return rgba(mixed, 0.96);
   }
 
-  function getTokenBg(): string {
-    const base = hexToRgb(TOOLBOX_BASE_COLOR) ?? { r: 255, g: 255, b: 255 };
-    const header = hexToRgb(getHeaderColor());
-    const mixed = header ? mixRgb(base, header, 0.16) : base;
-    return rgba(mixed, 0.96);
-  }
-
-  function getTokenFg(): string {
-    return getHeaderColor();
-  }
-
   function openImageModal(id: string, filename: string) {
     modalImage = { id, filename };
   }
@@ -625,8 +614,8 @@
   function renderMarkdown(text: string | null): string {
     if (!text) return '';
     const html = md.render(text);
-    const tokenBg = getTokenBg();
-    const tokenFg = getTokenFg();
+    const tokenBg = getToolboxBg();
+    const tokenFg = getHeaderColor();
     return html.replace(
       /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
       (m, p1, token) =>
