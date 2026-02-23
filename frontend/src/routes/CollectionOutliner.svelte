@@ -22,8 +22,13 @@
   let editContent = $state('');
   let editIndent = $state(0);
   let saving = $state(false);
+  let creatingFromTripleEmptyLines = $state(false);
 
   let selectedIds = $state<Set<string>>(new Set());
+
+  // Prevent stale list fetches from overwriting optimistic mutations.
+  let itemsLoadSeq = 0;
+  let itemsMutationSeq = 0;
 
   let hideDoneTasks = $state(false);
 
@@ -213,9 +218,13 @@
 
   async function loadItems() {
     if (!$currentCollection) return;
+    const loadSeq = ++itemsLoadSeq;
+    const mutationAtStart = itemsMutationSeq;
     isLoading.set(true);
     try {
       const res = await api.snipsels.list($currentCollection.id);
+      if (loadSeq !== itemsLoadSeq) return;
+      if (mutationAtStart !== itemsMutationSeq) return;
       collectionItems.set(res.items);
     } finally {
       isLoading.set(false);
@@ -288,19 +297,46 @@
     } else if (e.key === 'Escape') {
       e.preventDefault();
       cancelEdit();
-    } else if (e.key === ' ') {
-      // Shortcut: typing three spaces creates a new snipsel below.
-      // We detect the 3rd space via keydown (two spaces already in editContent).
-      if (editContent.endsWith('  ')) {
-        e.preventDefault();
-        editContent = editContent.slice(0, -2);
+    }
+  }
 
-        const currentId = $editingSnipselId;
-        const currentItem = currentId ? $sortedItems.find((i) => i.snipsel_id === currentId) : null;
-        if (currentItem) {
-          void createSnipselAfterPosition(currentItem.position, currentItem.indent);
-        }
-      }
+  async function handleEditInput() {
+    autosizeTextarea();
+    if (creatingFromTripleEmptyLines) return;
+
+    const el = textareaRef;
+    if (!el) return;
+
+    const atEnd = (el.selectionStart ?? 0) === el.value.length && (el.selectionEnd ?? 0) === el.value.length;
+    if (!atEnd) return;
+
+    if (!editContent.endsWith('\n\n\n')) return;
+
+    const currentId = $editingSnipselId;
+    const currentItem = currentId ? $sortedItems.find((i) => i.snipsel_id === currentId) : null;
+    if (!currentId || !currentItem) return;
+
+    creatingFromTripleEmptyLines = true;
+    try {
+      // Remove the 3 empty lines.
+      const nextContent = editContent.slice(0, -3);
+      editContent = nextContent;
+
+      // Persist current snipsel update immediately so we don't lose edits when switching focus.
+      const contentToSave = nextContent.trim().length === 0 ? null : nextContent;
+      itemsMutationSeq += 1;
+      await api.snipsels.update(currentId, { content_markdown: contentToSave });
+      collectionItems.update((items) =>
+        items.map((i) =>
+          i.snipsel_id === currentId
+            ? { ...i, snipsel: { ...i.snipsel, content_markdown: contentToSave } }
+            : i
+        )
+      );
+
+      await createSnipselAfterPosition(currentItem.position, currentItem.indent);
+    } finally {
+      creatingFromTripleEmptyLines = false;
     }
   }
 
@@ -312,6 +348,7 @@
   }
 
   function handleEditFocusOut(e: FocusEvent) {
+    if (creatingFromTripleEmptyLines) return;
     const related = e.relatedTarget as Node | null;
     if (related && editContainerRef?.contains(related)) return;
     if (!saving) saveEdit();
@@ -347,6 +384,8 @@
         type: $currentCollection.default_snipsel_type || 'text',
         ...(geo ?? {}),
       });
+
+      itemsMutationSeq += 1;
       collectionItems.update((items) => [...items, res.item]);
       startEdit(res.item);
     } finally {
@@ -395,11 +434,18 @@
       const reordered = next.map((i, index) => ({ ...i, position: index + 1 }));
       collectionItems.set(reordered);
 
+      // Mark mutation so any in-flight loadItems doesn't overwrite local optimistic state.
+      itemsMutationSeq += 1;
+
       const payload = reordered.map((i) => ({ snipsel_id: i.snipsel_id, position: i.position, indent: i.indent }));
       await api.snipsels.reorder($currentCollection.id, payload);
 
       const createdItem = reordered.find((i) => i.snipsel_id === newId);
       if (createdItem) startEdit(createdItem);
+
+      // Ensure we don't immediately auto-delete the newly created empty snipsel
+      // due to a focus-out save on the previous snipsel.
+      itemsMutationSeq += 1;
     } finally {
       isLoading.set(false);
     }
@@ -413,7 +459,13 @@
 
   $effect(() => {
     if ($newSnipselRequest > 0 && $currentCollection) {
-      createSnipsel();
+      // Consume the request so we don't create multiple.
+      newSnipselRequest.set(0);
+      clearSelection();
+      closeTypeMenu();
+      closeTemplateMenu();
+      // Ensure we start from the correct collection's list before optimistic append.
+      loadItems().then(() => createSnipsel());
     }
   });
 
@@ -730,7 +782,7 @@
                 class="w-full resize-none bg-transparent text-lg outline-none"
                 rows="1"
                 bind:value={editContent}
-                oninput={autosizeTextarea}
+                oninput={handleEditInput}
                 onkeydown={handleKeydown}
               ></textarea>
             </div>

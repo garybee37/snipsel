@@ -25,6 +25,8 @@
 
   let initialized = $state(false);
 
+  let isSwitchingCollection = $state(false);
+
   let lastCollectionId: string | null = $state(null);
 
   async function pruneEmptySnipsels(collectionId: string) {
@@ -81,6 +83,7 @@
 
   async function openToday() {
     isLoading.set(true);
+    isSwitchingCollection = true;
     try {
       const today = getTodayDate();
       const res = await api.collections.today(today);
@@ -89,6 +92,7 @@
       currentView.set({ type: 'collection', id: res.collection.id });
     } finally {
       isLoading.set(false);
+      isSwitchingCollection = false;
     }
   }
 
@@ -111,12 +115,14 @@
 
   async function openCollectionById(id: string) {
     isLoading.set(true);
+    isSwitchingCollection = true;
     try {
       const res = await api.collections.get(id);
       await pruneEmptySnipsels(res.collection.id);
       currentCollection.set(res.collection);
     } finally {
       isLoading.set(false);
+      isSwitchingCollection = false;
     }
   }
 
@@ -157,6 +163,7 @@
 
   $effect(() => {
     if ($currentView.type === 'collection') {
+      if (isSwitchingCollection) return;
       if ($currentCollection?.id !== $currentView.id) {
         openCollectionById($currentView.id);
       }
