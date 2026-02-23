@@ -288,6 +288,19 @@
     } else if (e.key === 'Escape') {
       e.preventDefault();
       cancelEdit();
+    } else if (e.key === ' ') {
+      // Shortcut: typing three spaces creates a new snipsel below.
+      // We detect the 3rd space via keydown (two spaces already in editContent).
+      if (editContent.endsWith('  ')) {
+        e.preventDefault();
+        editContent = editContent.slice(0, -2);
+
+        const currentId = $editingSnipselId;
+        const currentItem = currentId ? $sortedItems.find((i) => i.snipsel_id === currentId) : null;
+        if (currentItem) {
+          void createSnipselAfterPosition(currentItem.position, currentItem.indent);
+        }
+      }
     }
   }
 
@@ -336,6 +349,57 @@
       });
       collectionItems.update((items) => [...items, res.item]);
       startEdit(res.item);
+    } finally {
+      isLoading.set(false);
+    }
+  }
+
+  async function createSnipselAfterPosition(position: number, indent: number) {
+    if (!$currentCollection) return;
+    if (!canWrite()) return;
+    isLoading.set(true);
+    try {
+      let geo:
+        | { geo_lat: number; geo_lng: number; geo_accuracy_m?: number }
+        | null = null;
+      try {
+        geo = await new Promise((resolve) => {
+          if (!('geolocation' in navigator)) return resolve(null);
+          navigator.geolocation.getCurrentPosition(
+            (pos) =>
+              resolve({
+                geo_lat: pos.coords.latitude,
+                geo_lng: pos.coords.longitude,
+                geo_accuracy_m: pos.coords.accuracy,
+              }),
+            () => resolve(null),
+            { enableHighAccuracy: false, maximumAge: 60_000, timeout: 1500 }
+          );
+        });
+      } catch {
+        geo = null;
+      }
+
+      const res = await api.snipsels.create($currentCollection.id, {
+        type: $currentCollection.default_snipsel_type || 'text',
+        ...(geo ?? {}),
+      });
+
+      const newId = res.item.snipsel_id;
+
+      const list = [...$sortedItems];
+      const idx = list.findIndex((i) => i.position === position);
+      const insertAt = idx >= 0 ? idx + 1 : list.length;
+      const next = [...list.slice(0, insertAt), { ...res.item, indent }, ...list.slice(insertAt)];
+
+      const reordered = next.map((i, index) => ({ ...i, position: index + 1 }));
+      collectionItems.set(reordered);
+
+      const payload = reordered.map((i) => ({ snipsel_id: i.snipsel_id, position: i.position, indent: i.indent }));
+      await api.snipsels.reorder($currentCollection.id, payload);
+
+      const createdItem = reordered.find((i) => i.snipsel_id === newId);
+      if (createdItem) startEdit(createdItem);
     } finally {
       isLoading.set(false);
     }

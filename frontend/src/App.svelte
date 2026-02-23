@@ -75,9 +75,7 @@
   }
 
   async function onNewSnipsel() {
-    if ($currentView.type !== 'collection') {
-      await openToday();
-    }
+    await openToday();
     requestNewSnipsel();
   }
 
@@ -202,11 +200,13 @@
       />
       {#if $currentUser}
         <button
-          class="rounded-md bg-indigo-600 px-3 py-3 text-lg font-medium text-white hover:bg-indigo-700"
+          class="grid h-12 w-12 place-items-center rounded-md bg-indigo-600 text-xl font-medium text-white hover:bg-indigo-700"
           type="button"
           onclick={onNewSnipsel}
+          aria-label="New snipsel (today)"
+          title="New snipsel (today)"
         >
-          + New
+          ✎
         </button>
       {/if}
       <div class="w-12"></div>
