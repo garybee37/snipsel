@@ -22,6 +22,8 @@
   let loading = $state(true);
   let changingType = $state(false);
 
+  let copied = $state(false);
+
   let modalImage = $state<{ id: string; filename: string } | null>(null);
 
   function openImageModal(id: string, filename: string) {
@@ -121,6 +123,35 @@
   }
 
   load();
+
+  function directLinkUrl(): string {
+    const u = new URL(window.location.href);
+    u.searchParams.set('v', 'snipsel');
+    u.searchParams.set('id', snipselId);
+    // drop unrelated params
+    u.searchParams.delete('sn');
+    u.searchParams.delete('pos');
+    u.searchParams.delete('q');
+    return u.toString();
+  }
+
+  async function copyDirectLink() {
+    const text = directLinkUrl();
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+      setTimeout(() => {
+        copied = false;
+      }, 1200);
+    } catch {
+      // fallback
+      const el = document.getElementById('snipsel-direct-link') as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }
+  }
 </script>
 
 <div class="space-y-5">
@@ -136,6 +167,31 @@
     <div class="rounded-lg border bg-white p-5">
       <div class="text-xs uppercase text-slate-500">Snipsel</div>
       <div class="mt-1 text-base font-medium">{snipsel.type}</div>
+
+      <div class="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+        <div class="text-xs uppercase text-slate-500">Direct link</div>
+        <div class="mt-2 flex items-center gap-2">
+          <input
+            id="snipsel-direct-link"
+            class="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm outline-none ring-1 ring-black/5"
+            readonly
+            value={directLinkUrl()}
+          />
+          <button
+            class="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-black/5"
+            type="button"
+            aria-label="Copy direct link"
+            title="Copy"
+            onclick={copyDirectLink}
+            style={`color: ${copied ? (/^#[0-9a-fA-F]{6}$/.test(($currentUser?.default_collection_header_color || '').trim() || '#4f46e5')
+              ? (($currentUser?.default_collection_header_color || '').trim() || '#4f46e5')
+              : '#4f46e5') : ''}`}
+          >
+            {copied ? '✓' : '⧉'}
+          </button>
+        </div>
+        <div class="mt-1 text-xs text-slate-500">Tap to copy. If it fails, tap the field and copy manually.</div>
+      </div>
 
       <div class="mt-3 flex items-center gap-2">
         <span class="text-base text-slate-500">Type</span>

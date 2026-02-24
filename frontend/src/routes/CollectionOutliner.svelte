@@ -948,8 +948,12 @@
       {#each visibleItems($sortedItems) as item (item.snipsel_id)}
         <div
           id={`snipsel-${item.snipsel_id}`}
-          class="group relative pl-6 pr-10 {anchorHighlightId === item.snipsel_id ? 'ring-2 ring-indigo-400 rounded-lg' : ''}"
-          style="margin-left: {item.indent * 1.25}rem"
+          class="group relative pl-6 pr-10 {anchorHighlightId === item.snipsel_id ? 'ring-2 rounded-lg' : ''}"
+          style={
+            anchorHighlightId === item.snipsel_id
+              ? `margin-left: ${item.indent * 1.25}rem; --tw-ring-color: ${getHeaderColor()}`
+              : `margin-left: ${item.indent * 1.25}rem`
+          }
         >
           {#if item.snipsel_id === $editingSnipselId}
             <div
