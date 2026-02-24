@@ -9,7 +9,7 @@ from sqlalchemy import literal
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Collection, CollectionShare, CollectionSnipsel, Mention, Snipsel, SnipselMention, SnipselTag, Tag
+from snipsel_api.models import Collection, CollectionShare, CollectionSnipsel, Mention, Snipsel, SnipselMention, SnipselTag, Tag, User
 
 search_bp = Blueprint("search", __name__)
 
@@ -247,6 +247,21 @@ def search():
                 db.and_(Snipsel.modified_at >= start, Snipsel.modified_at < end),
             )
         )
+
+    if snipsel_type == "task" and not mention and not q and not tag and not day_parsed:
+        stmt = stmt.where(Snipsel.created_by_id == user.id)
+
+        other_user_mention_exists = (
+            db.select(db.func.count())
+            .select_from(SnipselMention)
+            .join(Mention, Mention.id == SnipselMention.mention_id)
+            .join(User, User.username == Mention.name)
+            .where(
+                SnipselMention.snipsel_id == Snipsel.id,
+                User.id != user.id,
+            )
+        )
+        stmt = stmt.where(other_user_mention_exists.scalar_subquery() == 0)
 
     accessible_rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
 
