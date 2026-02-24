@@ -8,7 +8,7 @@
   let newIcon = '🗒';
   let busy = false;
 
-  type Filter = 'all' | 'favorites' | 'day' | 'normal' | 'shared' | 'templates';
+  type Filter = 'all' | 'favorites' | 'day' | 'mine' | 'shared' | 'templates';
   let filter: Filter = 'favorites';
   let titleFilter = '';
 
@@ -85,8 +85,14 @@
   function matchesFilter(c: Collection, f: Filter): boolean {
     if (f === 'favorites') return Boolean(c.is_favorite);
     if (f === 'day') return Boolean(c.list_for_day);
-    if (f === 'normal') return !c.list_for_day;
-    if (f === 'shared') return c.access_level === 'read' || c.access_level === 'write';
+    if (f === 'mine') return c.access_level === 'owner';
+    if (f === 'shared') {
+      return (
+        c.access_level === 'read' ||
+        c.access_level === 'write' ||
+        (c.access_level === 'owner' && Boolean(c.shared_out))
+      );
+    }
     if (f === 'templates') return Boolean(c.is_template);
     return true;
   }
@@ -206,7 +212,7 @@
             onclick={() => (filter = 'favorites')}
             style={filter === 'favorites' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
           >
-            Favorites
+            Favs
           </button>
           <button
             class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'day'
@@ -219,14 +225,14 @@
             Days
           </button>
           <button
-            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'normal'
+            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'mine'
               ? 'text-slate-900'
               : 'text-slate-600 hover:text-slate-900'}"
             type="button"
-            onclick={() => (filter = 'normal')}
-            style={filter === 'normal' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+            onclick={() => (filter = 'mine')}
+            style={filter === 'mine' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
           >
-            Lists
+            My
           </button>
           <button
             class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'shared'
@@ -371,8 +377,26 @@
             </div>
           </button>
 
-          <div class="overflow-hidden rounded-full border border-slate-200 bg-white/80 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+          <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
             <div class="flex">
+              {#if filter === 'shared'}
+                <div
+                  class="grid h-11 w-12 place-items-center text-lg"
+                  aria-label={c.access_level === 'owner' && c.shared_out ? 'Shared by you' : 'Shared with you'}
+                  title={c.access_level === 'owner' && c.shared_out ? 'Shared by you' : 'Shared with you'}
+                  style={
+                    c.access_level === 'owner' && c.shared_out
+                      ? `color: ${getAccent()}`
+                      : undefined
+                  }
+                >
+                  {#if c.access_level === 'owner' && c.shared_out}
+                    ⇪
+                  {:else}
+                    ⇩
+                  {/if}
+                </div>
+              {/if}
               <button
                 class="grid h-11 w-12 place-items-center text-lg text-slate-700 hover:bg-black/5"
                 type="button"

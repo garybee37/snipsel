@@ -76,6 +76,17 @@ def list_collections():
         )
     }
 
+    owned_item_ids = [c.id for c in items if c.owner_user_id == user.id]
+    shared_out_ids = set(
+        db.session.execute(
+            db.select(db.distinct(CollectionShare.collection_id)).where(
+                CollectionShare.collection_id.in_(owned_item_ids) if owned_item_ids else db.false()
+            )
+        )
+        .scalars()
+        .all()
+    )
+
     fav_ids = set(
         db.session.execute(
             db.select(CollectionFavorite.collection_id).where(CollectionFavorite.user_id == user.id)
@@ -90,10 +101,12 @@ def list_collections():
         j["is_favorite"] = c.id in fav_ids
         if c.owner_user_id == user.id:
             j["access_level"] = "owner"
+            j["shared_out"] = c.id in shared_out_ids
         else:
             perm = perms.get(c.id)
             j["access_level"] = "write" if perm == "write" else "read"
             j["shared_by_username"] = owner_names.get(c.owner_user_id)
+            j["shared_out"] = False
         out.append(j)
 
     return json_response({"collections": out})
