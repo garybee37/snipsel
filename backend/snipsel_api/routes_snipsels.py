@@ -281,11 +281,14 @@ def get_snipsel(snipsel_id: str):
         .all()
     )
 
+    can_toggle_task_done = bool(s.type == "task" and (has_collection_access or is_mentioned))
+
     return json_response(
         {
             "snipsel": _snipsel_json(s),
             "has_collection_access": bool(has_collection_access),
             "has_write_access": bool(has_write_access),
+            "can_toggle_task_done": bool(can_toggle_task_done),
             "tags": [n for n in tag_names if n and n[:1].isalpha()],
             "mentions": [n for n in mention_names if n and n[:1].isalpha()],
             "placements": [
@@ -317,15 +320,36 @@ def update_snipsel(snipsel_id: str):
     s = db.session.get(Snipsel, snipsel_id)
     if not s or s.deleted_at is not None:
         raise api_error(404, "not_found", "Snipsel not found")
-    if s.owner_user_id != user.id and not can_write_snipsel_via_collections(user.id, snipsel_id):
-        raise api_error(404, "not_found", "Snipsel not found")
+    has_collection_access = s.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel_id)
+    has_write_access = s.owner_user_id == user.id or can_write_snipsel_via_collections(user.id, snipsel_id)
+
+    uname = (getattr(user, "username", "") or "").strip().casefold()
+    is_mentioned = False
+    if uname:
+        is_mentioned = (
+            (db.session.execute(
+                db.select(db.func.count())
+                .select_from(SnipselMention)
+                .join(Mention, Mention.id == SnipselMention.mention_id)
+                .where(SnipselMention.snipsel_id == snipsel_id, Mention.name == uname)
+            ).scalar() or 0)
+            > 0
+        )
+
+    can_toggle_task_done = bool(
+        s.type == "task" and (has_collection_access or is_mentioned)
+    )
+
+    if not has_write_access:
+        if not (can_toggle_task_done and "task_done" in (request.get_json() or {})):
+            raise api_error(404, "not_found", "Snipsel not found")
     data = request.get_json() or {}
 
-    if "type" in data:
+    if "type" in data and has_write_access:
         new_type = data.get("type")
         if isinstance(new_type, str) and new_type:
             s.type = new_type
-    if "content_markdown" in data:
+    if "content_markdown" in data and has_write_access:
         s.content_markdown = data.get("content_markdown")
     if "task_done" in data:
         done = bool(data.get("task_done"))
@@ -336,16 +360,17 @@ def update_snipsel(snipsel_id: str):
         else:
             s.done_at = None
             s.done_by_id = None
-    if "external_url" in data:
+    if "external_url" in data and has_write_access:
         s.external_url = data.get("external_url")
-    if "external_label" in data:
+    if "external_label" in data and has_write_access:
         s.external_label = data.get("external_label")
-    if "internal_target_snipsel_id" in data:
+    if "internal_target_snipsel_id" in data and has_write_access:
         s.internal_target_snipsel_id = data.get("internal_target_snipsel_id")
 
     s.modified_by_id = user.id
-    _sync_tags_mentions(user_id=s.owner_user_id, snipsel=s)
-    _sync_backlinks(user_id=user.id, snipsel=s)
+    if has_write_access:
+        _sync_tags_mentions(user_id=s.owner_user_id, snipsel=s)
+        _sync_backlinks(user_id=user.id, snipsel=s)
     _touch_collections_for_snipsel(snipsel_id=snipsel_id, modified_by_id=user.id)
     db.session.commit()
     return json_response({"snipsel": _snipsel_json(s)})

@@ -4,7 +4,8 @@
   import { currentUser } from '../lib/session';
   import { getCurrentUrl } from '../lib/router';
 
-  let items: SearchSnipselHit[] = [];
+	let items = $state<SearchSnipselHit[]>([]);
+	let showDone = $state(false);
 
   const DEFAULT_ACCENT = '#4f46e5';
   type Rgb = { r: number; g: number; b: number };
@@ -55,12 +56,23 @@
 		isLoading.set(true);
 		try {
 			const mentionName = ($currentUser?.username || '').trim();
-			const res = await api.search({ type: 'task', mentions_me: Boolean(mentionName) });
+			const res = await api.search({
+				type: 'task',
+				mentions_me: Boolean(mentionName),
+				task_done: showDone,
+			});
 			items = res.snipsels;
 		} finally {
 			isLoading.set(false);
 		}
 	}
+
+	$effect(() => {
+		const uname = ($currentUser?.username || '').trim();
+		void uname;
+		void showDone;
+		load();
+	});
 
 	async function toggleDone(id: string, current: boolean) {
 		collectionAnchor.set(null);
@@ -93,34 +105,64 @@
     }
   }
 
-	load();
+	// loaded via $effect
 </script>
 
 <div class="space-y-4">
-  <h2 class="flex items-center gap-2 text-2xl font-semibold">
+	<h2 class="flex items-center gap-2 text-2xl font-semibold">
     <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M9 11l3 3L22 4" />
       <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
     </svg>
     <span>Todos</span>
-  </h2>
+	</h2>
 
-  {#if items.length === 0}
-    <div class="py-8 text-center text-sm text-slate-500">No open tasks</div>
-  {:else}
+	<div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+		<div class="grid grid-cols-2">
+			<button
+				class="px-4 py-3 text-sm font-medium transition-colors {showDone
+					? 'text-slate-600 hover:text-slate-900'
+					: 'text-slate-900'}"
+				type="button"
+				onclick={() => (showDone = false)}
+				style={!showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+			>
+				Open
+			</button>
+			<button
+				class="border-l border-black/5 px-4 py-3 text-sm font-medium transition-colors {showDone
+					? 'text-slate-900'
+					: 'text-slate-600 hover:text-slate-900'}"
+				type="button"
+				onclick={() => (showDone = true)}
+				style={showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+			>
+				Done
+			</button>
+		</div>
+	</div>
+
+	{#if items.length === 0}
+		<div class="py-8 text-center text-sm text-slate-500">No {showDone ? 'done' : 'open'} tasks</div>
+	{:else}
     <div class="space-y-2">
 		{#each items as t}
 			{@const hasAccess = t.has_collection_access !== false}
+			{@const canToggle = t.can_toggle_task_done === true}
 			<div class="flex w-full items-center gap-3 px-1 py-2">
 				<button
 					class="grid h-8 w-8 place-items-center rounded-full border border-slate-300 bg-white disabled:opacity-40"
 					type="button"
-					aria-label="Mark done"
-					title="Done"
-					disabled={!hasAccess}
-					style={hasAccess ? `border-color: ${getAccent()}` : undefined}
-					onclick={() => toggleDone(t.id, false)}
-				></button>
+					aria-label={t.task_done ? 'Mark open' : 'Mark done'}
+					title={t.task_done ? 'Open' : 'Done'}
+					disabled={!canToggle}
+					style={canToggle ? `border-color: ${getAccent()}` : undefined}
+					onclick={() => toggleDone(t.id, t.task_done)}
+				>
+					{#if t.task_done}
+						<span class="text-sm font-semibold" style={`color: ${getAccent()}`}>✓</span>
+					{/if}
+				</button>
 
 				<button class="min-w-0 flex flex-1 items-start gap-3 text-left" type="button" onclick={() => openInCollection(t)}>
 					<div class="min-w-0 flex-1">

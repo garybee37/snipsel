@@ -11,6 +11,7 @@ from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
 from snipsel_api.models import Attachment, Snipsel
+from snipsel_api.models import Mention, SnipselMention
 from snipsel_api.permissions import can_read_snipsel_via_collections, can_write_snipsel_via_collections
 from snipsel_api.routes_snipsels import _touch_collections_for_snipsel
 
@@ -89,12 +90,25 @@ def download_attachment(attachment_id: str):
         raise api_error(404, "not_found", "Attachment not found")
 
     snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if (
-        not snipsel
-        or snipsel.deleted_at is not None
-        or (snipsel.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel.id))
-    ):
+    if not snipsel or snipsel.deleted_at is not None:
         raise api_error(404, "not_found", "Attachment not found")
+
+    can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
+    if not can_read:
+        uname = (getattr(user, "username", "") or "").strip().casefold()
+        if not uname:
+            raise api_error(404, "not_found", "Attachment not found")
+        is_mentioned = (
+            (db.session.execute(
+                db.select(db.func.count())
+                .select_from(SnipselMention)
+                .join(Mention, Mention.id == SnipselMention.mention_id)
+                .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
+            ).scalar() or 0)
+            > 0
+        )
+        if not is_mentioned:
+            raise api_error(404, "not_found", "Attachment not found")
 
     path = _resolve_attachment_path(att)
     if not path:
@@ -115,12 +129,25 @@ def download_thumbnail(attachment_id: str):
         raise api_error(404, "not_found", "Thumbnail not found")
 
     snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if (
-        not snipsel
-        or snipsel.deleted_at is not None
-        or (snipsel.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel.id))
-    ):
+    if not snipsel or snipsel.deleted_at is not None:
         raise api_error(404, "not_found", "Thumbnail not found")
+
+    can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
+    if not can_read:
+        uname = (getattr(user, "username", "") or "").strip().casefold()
+        if not uname:
+            raise api_error(404, "not_found", "Thumbnail not found")
+        is_mentioned = (
+            (db.session.execute(
+                db.select(db.func.count())
+                .select_from(SnipselMention)
+                .join(Mention, Mention.id == SnipselMention.mention_id)
+                .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
+            ).scalar() or 0)
+            > 0
+        )
+        if not is_mentioned:
+            raise api_error(404, "not_found", "Thumbnail not found")
 
     path = _resolve_thumbnail_path(att)
     if not path:

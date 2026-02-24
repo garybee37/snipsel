@@ -134,6 +134,16 @@ def search():
     if scope not in {"my", "shared", "all"}:
         raise api_error(400, "invalid_input", "scope must be my, shared, or all")
     snipsel_type = (request.args.get("type") or "").strip() or None
+    task_done_raw = (request.args.get("task_done") or "").strip()
+    task_done_filter: bool | None
+    if task_done_raw == "":
+        task_done_filter = None
+    elif task_done_raw == "1":
+        task_done_filter = True
+    elif task_done_raw == "0":
+        task_done_filter = False
+    else:
+        raise api_error(400, "invalid_input", "task_done must be 0 or 1")
     include_archived = request.args.get("include_archived") == "1"
     day = request.args.get("day")
     day_parsed = date.fromisoformat(day) if day else None
@@ -196,7 +206,8 @@ def search():
     if snipsel_type:
         stmt = stmt.where(Snipsel.type == snipsel_type)
     if snipsel_type == "task":
-        stmt = stmt.where(Snipsel.task_done.is_(False))
+        done_val = task_done_filter if task_done_filter is not None else False
+        stmt = stmt.where(Snipsel.task_done.is_(done_val))
     if q:
         like = f"%{q}%"
         stmt = stmt.where(
@@ -239,10 +250,11 @@ def search():
 
     accessible_rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
 
-    hits_by_id: dict[str, tuple[Snipsel, str | None, int | None, str | None, str | None, bool, bool]] = {}
+    hits_by_id: dict[str, tuple[Snipsel, str | None, int | None, str | None, str | None, bool, bool, bool]] = {}
     for s, collection_id, position, collection_title, collection_icon in accessible_rows:
         if s.id not in hits_by_id:
             can_write = bool(s.owner_user_id == user.id or (collection_id in writable_set))
+            can_toggle_task_done = bool(s.type == "task")
             hits_by_id[s.id] = (
                 s,
                 collection_id,
@@ -251,10 +263,12 @@ def search():
                 collection_icon,
                 True,
                 can_write,
+                can_toggle_task_done,
             )
 
     if mentions_me and snipsel_type == "task" and getattr(user, "username", None):
         uname = str(user.username).casefold()
+        done_val = task_done_filter if task_done_filter is not None else False
         m_stmt = (
             db.select(
                 Snipsel,
@@ -264,7 +278,7 @@ def search():
             .where(
                 Snipsel.deleted_at.is_(None),
                 Snipsel.type == "task",
-                Snipsel.task_done.is_(False),
+                Snipsel.task_done.is_(done_val),
                 Mention.name == uname,
             )
             .distinct()
@@ -281,7 +295,8 @@ def search():
                 None,
                 None,
                 False,
-                bool(s.owner_user_id == user.id),
+                True,
+                bool(s.type == "task"),
             )
 
     rows = sorted(hits_by_id.values(), key=lambda r: r[0].modified_at, reverse=True)[:200]
@@ -317,8 +332,9 @@ def search():
                     "position": position,
                     "has_collection_access": has_collection_access,
                     "has_write_access": has_write_access,
+                    "can_toggle_task_done": can_toggle_task_done,
                 }
-                for s, collection_id, position, collection_title, collection_icon, has_collection_access, has_write_access in rows
+                for s, collection_id, position, collection_title, collection_icon, has_collection_access, has_write_access, can_toggle_task_done in rows
             ],
             "collections": [
                 {
