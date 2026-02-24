@@ -616,46 +616,93 @@
     collectionItems.set(next.map((i, index) => ({ ...i, position: index + 1 })));
   }
 
-  function longPress(handler: () => void, ms = 450) {
+  function longPress(onLongPress: () => void, onShortPress: () => void, ms = 450) {
     let timer: ReturnType<typeof setTimeout> | null = null;
-    let fired = false;
-
-    function start(e: Event) {
-      fired = false;
-      timer = setTimeout(() => {
-        fired = true;
-        handler();
-      }, ms);
-      if (e.cancelable) e.preventDefault();
-    }
+    let firedLong = false;
+    let handledByPointer = false;
+    let activePointerId: number | null = null;
 
     function cancel() {
       if (timer) clearTimeout(timer);
       timer = null;
     }
 
+    function reset() {
+      cancel();
+      firedLong = false;
+      handledByPointer = false;
+      activePointerId = null;
+    }
+
     return {
-      onpointerdown: (e: PointerEvent) => start(e),
-      onpointerup: () => cancel(),
-      onpointercancel: () => cancel(),
+      onpointerdown: (e: PointerEvent) => {
+        reset();
+
+        activePointerId = e.pointerId;
+
+        // Make pointerup reliable even if the finger drifts slightly.
+        try {
+          (e.currentTarget as HTMLElement | null)?.setPointerCapture(e.pointerId);
+        } catch {
+          // Ignore (some browsers/targets may not support capture).
+        }
+
+        timer = setTimeout(() => {
+          firedLong = true;
+          handledByPointer = true;
+          onLongPress();
+        }, ms);
+      },
+      onpointerup: (e: PointerEvent) => {
+        cancel();
+
+        if (!firedLong) {
+          handledByPointer = true;
+          onShortPress();
+        }
+
+        if (activePointerId !== null) {
+          try {
+            (e.currentTarget as HTMLElement | null)?.releasePointerCapture(activePointerId);
+          } catch {
+            // Ignore.
+          }
+        }
+
+        activePointerId = null;
+      },
+      onpointercancel: () => reset(),
       onpointerleave: () => cancel(),
       onclick: (e: MouseEvent) => {
-        if (fired) {
+        // If we already handled via pointer events, suppress the synthetic click.
+        if (handledByPointer) {
           e.preventDefault();
           e.stopPropagation();
+          handledByPointer = false;
+          return;
         }
+
+        // Keyboard / non-pointer activation fallback.
+        onShortPress();
       },
       oncontextmenu: (e: MouseEvent) => {
-        if (fired) {
-          e.preventDefault();
-        }
+        if (firedLong) e.preventDefault();
       },
     };
   }
 
-  const lpMoveTop = longPress(() => void moveSelectedToEdge('top'));
-  const lpMoveBottom = longPress(() => void moveSelectedToEdge('bottom'));
-  const lpOutdentToZero = longPress(() => void setIndentSelected(0));
+  const lpMoveTop = longPress(
+    () => void moveSelectedToEdge('top'),
+    () => void moveSelected(-1)
+  );
+  const lpMoveBottom = longPress(
+    () => void moveSelectedToEdge('bottom'),
+    () => void moveSelected(1)
+  );
+  const lpOutdentToZero = longPress(
+    () => void setIndentSelected(0),
+    () => void adjustIndentSelected(-1)
+  );
 
   async function moveSelected(dir: -1 | 1) {
     if (!$currentCollection) return;
