@@ -2,6 +2,7 @@
   import { api, type SearchSnipselHit } from '../lib/api';
   import { collectionAnchor, currentView, isLoading } from '../lib/stores';
   import { currentUser } from '../lib/session';
+  import { getCurrentUrl } from '../lib/router';
 
   let items: SearchSnipselHit[] = [];
 
@@ -68,7 +69,7 @@
 
   function openInfo(id: string) {
     collectionAnchor.set(null);
-    currentView.set({ type: 'snipsel', id });
+    currentView.set({ type: 'snipsel', id, returnTo: getCurrentUrl() });
   }
 
   function openInCollection(t: SearchSnipselHit) {

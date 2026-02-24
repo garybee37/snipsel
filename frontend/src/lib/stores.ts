@@ -12,7 +12,7 @@ export type View =
   | { type: 'todos' }
   | { type: 'calendar' }
   | { type: 'settings' }
-  | { type: 'snipsel'; id: string };
+  | { type: 'snipsel'; id: string; returnTo?: string };
 
 export const currentView = writable<View>({ type: 'loading' });
 export const collections = writable<Collection[]>([]);

@@ -1,9 +1,10 @@
 <script lang="ts">
   import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
+  import { getCurrentUrl } from '../lib/router';
 
   function openSnipsel(id: string) {
     collectionAnchor.set(null);
-    currentView.set({ type: 'snipsel', id });
+    currentView.set({ type: 'snipsel', id, returnTo: getCurrentUrl() });
   }
 </script>
 

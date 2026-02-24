@@ -14,6 +14,7 @@
     sortedItems,
   } from '../lib/stores';
   import { currentUser } from '../lib/session';
+  import { getCurrentUrl } from '../lib/router';
 
   const md = new MarkdownIt({ html: false, linkify: true, breaks: true });
 
@@ -137,7 +138,7 @@
   }
 
   function openDetail(id: string) {
-    currentView.set({ type: 'snipsel', id });
+    currentView.set({ type: 'snipsel', id, returnTo: getCurrentUrl() });
   }
 
   async function toggleTaskDone(item: CollectionItem) {

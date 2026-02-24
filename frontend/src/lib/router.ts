@@ -4,7 +4,7 @@ export type Route =
   | { v: 'collections' }
   | { v: 'collection'; id: string; sn?: string; pos?: number }
   | { v: 'collection_settings'; id: string }
-  | { v: 'snipsel'; id: string }
+  | { v: 'snipsel'; id: string; returnTo?: string }
   | { v: 'tags_mentions' }
   | { v: 'search'; q?: string }
   | { v: 'todos' }
@@ -56,7 +56,8 @@ export function parseRouteFromLocation(loc: Location): Route | null {
   if (v === 'snipsel') {
     const id = sp.get('id') ?? '';
     if (!id) return null;
-    return { v, id };
+    const returnTo = sp.get('returnTo') ?? undefined;
+    return { v, id, returnTo: returnTo || undefined };
   }
 
   if (v === 'search') {
@@ -71,7 +72,7 @@ export function routeToView(route: Route): View {
   if (route.v === 'collections') return { type: 'collections' };
   if (route.v === 'collection') return { type: 'collection', id: route.id };
   if (route.v === 'collection_settings') return { type: 'collection_settings', id: route.id };
-  if (route.v === 'snipsel') return { type: 'snipsel', id: route.id };
+  if (route.v === 'snipsel') return { type: 'snipsel', id: route.id, returnTo: route.returnTo };
   if (route.v === 'tags_mentions') return { type: 'tags_mentions' };
   if (route.v === 'search') return { type: 'search' };
   if (route.v === 'todos') return { type: 'todos' };
@@ -84,7 +85,7 @@ export function viewToRoute(view: View): Route {
   if (view.type === 'collections') return { v: 'collections' };
   if (view.type === 'collection') return { v: 'collection', id: view.id };
   if (view.type === 'collection_settings') return { v: 'collection_settings', id: view.id };
-  if (view.type === 'snipsel') return { v: 'snipsel', id: view.id };
+  if (view.type === 'snipsel') return { v: 'snipsel', id: view.id, returnTo: view.returnTo };
   if (view.type === 'tags_mentions') return { v: 'tags_mentions' };
   if (view.type === 'search') return { v: 'search' };
   if (view.type === 'todos') return { v: 'todos' };
@@ -103,6 +104,7 @@ export function routeToUrl(route: Route, pathname = location.pathname): string {
     if (typeof route.pos === 'number') sp.set('pos', String(clampPos(route.pos)));
   } else if (route.v === 'collection_settings' || route.v === 'snipsel') {
     sp.set('id', route.id);
+    if (route.v === 'snipsel' && route.returnTo) sp.set('returnTo', route.returnTo);
   } else if (route.v === 'search') {
     if (route.q) sp.set('q', route.q);
   }
