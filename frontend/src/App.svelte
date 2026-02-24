@@ -40,6 +40,8 @@
 
   let hasSyncedUrl = $state(false);
 
+  let lastUserId: string | null = $state(null);
+
   let isSwitchingCollection = $state(false);
 
   let lastCollectionId: string | null = $state(null);
@@ -168,6 +170,11 @@
       const res = await api.collections.get(id);
       await pruneEmptySnipsels(res.collection.id);
       currentCollection.set(res.collection);
+    } catch {
+      currentCollection.set(null);
+      collectionAnchor.set(null);
+      currentView.set({ type: 'collections' });
+      replaceUrl(routeToUrl({ v: 'collections' }));
     } finally {
       isLoading.set(false);
       isSwitchingCollection = false;
@@ -198,6 +205,25 @@
   $effect(() => {
     if (!initialized) {
       initSession();
+    }
+  });
+
+  $effect(() => {
+    const uid = $currentUser?.id ?? null;
+
+    if (uid && uid !== lastUserId) {
+      // New login (or user switched): allow deep links to be applied again.
+      didInitRoute = false;
+      hasSyncedUrl = false;
+      lastUserId = uid;
+      return;
+    }
+
+    if (!uid && lastUserId) {
+      // Logout: reset routing init state.
+      didInitRoute = false;
+      hasSyncedUrl = false;
+      lastUserId = null;
     }
   });
 

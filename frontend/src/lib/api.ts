@@ -102,6 +102,10 @@ export type SearchSnipselHit = {
   internal_target_snipsel_id: string | null;
   created_at: string;
   modified_at: string;
+  collection_id?: string | null;
+  collection_title?: string | null;
+  collection_icon?: string | null;
+  position?: number | null;
 };
 
 export type SearchCollectionHit = {

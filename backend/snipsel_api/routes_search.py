@@ -155,8 +155,15 @@ def search():
     )
 
     stmt = (
-        db.select(Snipsel)
+        db.select(
+            Snipsel,
+            CollectionSnipsel.collection_id.label("collection_id"),
+            CollectionSnipsel.position.label("position"),
+            Collection.title.label("collection_title"),
+            Collection.icon.label("collection_icon"),
+        )
         .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
+        .join(Collection, Collection.id == CollectionSnipsel.collection_id)
         .where(
             Snipsel.deleted_at.is_(None),
             CollectionSnipsel.collection_id.in_(accessible_collection_ids) if accessible_collection_ids else db.false(),
@@ -165,6 +172,8 @@ def search():
     )
     if snipsel_type:
         stmt = stmt.where(Snipsel.type == snipsel_type)
+    if snipsel_type == "task":
+        stmt = stmt.where(Snipsel.task_done.is_(False))
     if q:
         like = f"%{q}%"
         stmt = stmt.where(
@@ -205,7 +214,7 @@ def search():
             )
         )
 
-    results = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).scalars().all()
+    rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
 
     collection_hits = []
     if q:
@@ -232,8 +241,12 @@ def search():
                     "internal_target_snipsel_id": s.internal_target_snipsel_id,
                     "created_at": s.created_at.isoformat() + "Z",
                     "modified_at": s.modified_at.isoformat() + "Z",
+                    "collection_id": collection_id,
+                    "collection_title": collection_title,
+                    "collection_icon": collection_icon,
+                    "position": int(position) if position is not None else None,
                 }
-                for s in results
+                for s, collection_id, position, collection_title, collection_icon in rows
             ],
             "collections": [
                 {

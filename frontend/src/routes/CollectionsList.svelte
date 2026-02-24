@@ -62,6 +62,8 @@
   let sortKey: SortKey = 'modified';
   let sortDir: SortDir = 'desc';
 
+  let didInitialLoad = false;
+
   function cmpString(a: string, b: string): number {
     return a.localeCompare(b, undefined, { sensitivity: 'base' });
   }
@@ -169,7 +171,8 @@
     }
   }
 
-  $: if ($collections.length === 0) {
+  $: if (!didInitialLoad) {
+    didInitialLoad = true;
     loadCollections();
   }
 </script>
