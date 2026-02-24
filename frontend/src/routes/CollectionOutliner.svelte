@@ -36,6 +36,8 @@
   let lastAnchorKey = $state<string | null>(null);
   let anchorHighlightId = $state<string | null>(null);
 
+  let lastCollectionId = $state<string | null>(null);
+
   function canWrite(): boolean {
     return $currentCollection?.access_level !== 'read';
   }
@@ -776,9 +778,17 @@
   }
 
   $effect(() => {
-    if ($currentCollection) {
-      loadItems();
+    const nextId = $currentCollection?.id ?? null;
+    if (nextId && nextId !== lastCollectionId) {
+      lastCollectionId = nextId;
+      collectionItems.set([]);
+      lastAnchorKey = null;
+      anchorHighlightId = null;
+      selectedIds = new Set();
+      editingSnipselId.set(null);
     }
+
+    if ($currentCollection) loadItems();
   });
 
   $effect(() => {
@@ -806,7 +816,7 @@
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => {
         if (anchorHighlightId === target.snipsel_id) anchorHighlightId = null;
-      }, 900);
+      }, 10000);
     }, 0);
   });
 
