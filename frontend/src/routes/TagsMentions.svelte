@@ -49,8 +49,10 @@
   }
 
   type Mode = 'tags' | 'mentions';
+  type Scope = 'my' | 'shared';
 
   let mode = $state<Mode>('tags');
+  let scope = $state<Scope>('my');
   let items = $state<TagCount[]>([]);
   let loadingList = $state(false);
 
@@ -58,10 +60,10 @@
     loadingList = true;
     try {
       if (mode === 'tags') {
-        const res = await api.tags.list();
+        const res = await api.tags.list(scope);
         items = res.tags;
       } else {
-        const res = await api.mentions.list();
+        const res = await api.mentions.list(scope);
         items = res.mentions;
       }
     } finally {
@@ -76,7 +78,7 @@
     currentView.set({ type: 'search' });
     isLoading.set(true);
     try {
-      const res = await api.search(mode === 'tags' ? { tag: name } : { mention: name });
+      const res = await api.search(mode === 'tags' ? { tag: name, scope } : { mention: name, scope });
       searchResults.set(res);
     } catch {
       searchResults.set(null);
@@ -103,43 +105,78 @@
     <span>Tags / Mentions</span>
   </h2>
 
-  <div class="flex overflow-hidden rounded-full border border-slate-200 bg-white" role="tablist">
-    <button
-      type="button"
-      role="tab"
-      aria-selected={mode === 'tags'}
-      class="flex-1 px-4 py-3 text-base font-medium transition-colors {mode === 'tags'
-        ? 'text-slate-900'
-        : 'text-slate-600 hover:text-slate-900'}"
-      style={mode === 'tags' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-      onclick={() => {
-        mode = 'tags';
-        loadList();
-      }}
-    >
-      <span class="flex items-center justify-center gap-2">
-        <span aria-hidden="true">#</span>
-        <span>Tags</span>
-      </span>
-    </button>
-    <button
-      type="button"
-      role="tab"
-      aria-selected={mode === 'mentions'}
-      class="flex-1 border-l border-black/5 px-4 py-3 text-base font-medium transition-colors {mode === 'mentions'
-        ? 'text-slate-900'
-        : 'text-slate-600 hover:text-slate-900'}"
-      style={mode === 'mentions' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-      onclick={() => {
-        mode = 'mentions';
-        loadList();
-      }}
-    >
-      <span class="flex items-center justify-center gap-2">
-        <span aria-hidden="true">@</span>
-        <span>Mentions</span>
-      </span>
-    </button>
+  <div class="flex items-center gap-2">
+    <div class="flex flex-1 overflow-hidden rounded-full border border-slate-200 bg-white" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={mode === 'tags'}
+        class="flex-1 px-4 py-3 text-base font-medium transition-colors {mode === 'tags'
+          ? 'text-slate-900'
+          : 'text-slate-600 hover:text-slate-900'}"
+        style={mode === 'tags' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+        onclick={() => {
+          mode = 'tags';
+          loadList();
+        }}
+      >
+        <span class="flex items-center justify-center gap-2">
+          <span aria-hidden="true">#</span>
+          <span>Tags</span>
+        </span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={mode === 'mentions'}
+        class="flex-1 border-l border-black/5 px-4 py-3 text-base font-medium transition-colors {mode === 'mentions'
+          ? 'text-slate-900'
+          : 'text-slate-600 hover:text-slate-900'}"
+        style={mode === 'mentions' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+        onclick={() => {
+          mode = 'mentions';
+          loadList();
+        }}
+      >
+        <span class="flex items-center justify-center gap-2">
+          <span aria-hidden="true">@</span>
+          <span>Mentions</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="flex overflow-hidden rounded-full border border-slate-200 bg-white" role="tablist" aria-label="Scope">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={scope === 'my'}
+        class="px-4 py-3 text-base font-medium transition-colors {scope === 'my'
+          ? 'text-slate-900'
+          : 'text-slate-600 hover:text-slate-900'}"
+        style={scope === 'my' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+        onclick={() => {
+          scope = 'my';
+          loadList();
+        }}
+      >
+        My
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={scope === 'shared'}
+        class="border-l border-black/5 px-4 py-3 text-base font-medium transition-colors {scope === 'shared'
+          ? 'text-slate-900'
+          : 'text-slate-600 hover:text-slate-900'}"
+        style={scope === 'shared' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+        onclick={() => {
+          scope = 'shared';
+          loadList();
+        }}
+      >
+        Shared
+      </button>
+    </div>
   </div>
 
   {#if loadingList}

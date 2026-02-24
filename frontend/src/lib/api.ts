@@ -322,6 +322,7 @@ export const api = {
     type?: string;
     include_archived?: boolean;
     day?: string;
+    scope?: 'my' | 'shared' | 'all';
   }) => {
     const sp = new URLSearchParams();
     if (params.q) sp.set('q', params.q);
@@ -330,15 +331,22 @@ export const api = {
     if (params.type) sp.set('type', params.type);
     if (params.include_archived) sp.set('include_archived', '1');
     if (params.day) sp.set('day', params.day);
+    if (params.scope) sp.set('scope', params.scope);
     const qs = sp.toString();
     return requestJson<SearchResponse>(`/api/search${qs ? `?${qs}` : ''}`);
   },
 
   tags: {
-    list: () => requestJson<{ tags: TagCount[] }>('/api/tags'),
+    list: (scope?: 'my' | 'shared') => {
+      const qs = scope ? `?scope=${encodeURIComponent(scope)}` : '';
+      return requestJson<{ tags: TagCount[] }>(`/api/tags${qs}`);
+    },
   },
 
   mentions: {
-    list: () => requestJson<{ mentions: TagCount[] }>('/api/mentions'),
+    list: (scope?: 'my' | 'shared') => {
+      const qs = scope ? `?scope=${encodeURIComponent(scope)}` : '';
+      return requestJson<{ mentions: TagCount[] }>(`/api/mentions${qs}`);
+    },
   },
 };

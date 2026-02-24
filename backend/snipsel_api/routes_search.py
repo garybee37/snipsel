@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 from flask import Blueprint, request
 
 from snipsel_api.auth_session import current_user, json_response, require_auth
-from snipsel_api.errors import ApiError
+from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
 from snipsel_api.models import Collection, CollectionShare, CollectionSnipsel, Mention, Snipsel, SnipselMention, SnipselTag, Tag
 
@@ -16,14 +16,38 @@ search_bp = Blueprint("search", __name__)
 @require_auth
 def list_tags():
     user = current_user()
+    scope = (request.args.get("scope") or "my").strip().lower()
+    if scope not in {"my", "shared"}:
+        raise api_error(400, "invalid_input", "scope must be my or shared")
+
+    accessible_collection_ids = (
+        db.session.execute(
+            db.select(Collection.id)
+            .outerjoin(
+                CollectionShare,
+                db.and_(
+                    CollectionShare.collection_id == Collection.id,
+                    CollectionShare.shared_with_user_id == user.id,
+                ),
+            )
+            .where(
+                Collection.deleted_at.is_(None),
+                db.or_(Collection.owner_user_id == user.id, CollectionShare.permission.in_(["read", "write"])),
+            )
+        )
+        .scalars()
+        .all()
+    )
+
     rows = (
         db.session.execute(
             db.select(Tag.name, db.func.count(db.distinct(SnipselTag.snipsel_id)))
             .join(SnipselTag, SnipselTag.tag_id == Tag.id)
             .join(Snipsel, Snipsel.id == SnipselTag.snipsel_id)
+            .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
             .where(
-                Tag.owner_user_id == user.id,
-                Snipsel.owner_user_id == user.id,
+                CollectionSnipsel.collection_id.in_(accessible_collection_ids) if accessible_collection_ids else db.false(),
+                Tag.owner_user_id == user.id if scope == "my" else Tag.owner_user_id != user.id,
                 Snipsel.deleted_at.is_(None),
             )
             .group_by(Tag.name)
@@ -46,14 +70,38 @@ def list_tags():
 @require_auth
 def list_mentions():
     user = current_user()
+    scope = (request.args.get("scope") or "my").strip().lower()
+    if scope not in {"my", "shared"}:
+        raise api_error(400, "invalid_input", "scope must be my or shared")
+
+    accessible_collection_ids = (
+        db.session.execute(
+            db.select(Collection.id)
+            .outerjoin(
+                CollectionShare,
+                db.and_(
+                    CollectionShare.collection_id == Collection.id,
+                    CollectionShare.shared_with_user_id == user.id,
+                ),
+            )
+            .where(
+                Collection.deleted_at.is_(None),
+                db.or_(Collection.owner_user_id == user.id, CollectionShare.permission.in_(["read", "write"])),
+            )
+        )
+        .scalars()
+        .all()
+    )
+
     rows = (
         db.session.execute(
             db.select(Mention.name, db.func.count(db.distinct(SnipselMention.snipsel_id)))
             .join(SnipselMention, SnipselMention.mention_id == Mention.id)
             .join(Snipsel, Snipsel.id == SnipselMention.snipsel_id)
+            .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
             .where(
-                Mention.owner_user_id == user.id,
-                Snipsel.owner_user_id == user.id,
+                CollectionSnipsel.collection_id.in_(accessible_collection_ids) if accessible_collection_ids else db.false(),
+                Mention.owner_user_id == user.id if scope == "my" else Mention.owner_user_id != user.id,
                 Snipsel.deleted_at.is_(None),
             )
             .group_by(Mention.name)
@@ -79,6 +127,9 @@ def search():
     q = (request.args.get("q") or "").strip()
     tag = (request.args.get("tag") or "").strip().casefold() or None
     mention = (request.args.get("mention") or "").strip().casefold() or None
+    scope = (request.args.get("scope") or "my").strip().lower()
+    if scope not in {"my", "shared", "all"}:
+        raise api_error(400, "invalid_input", "scope must be my, shared, or all")
     snipsel_type = (request.args.get("type") or "").strip() or None
     include_archived = request.args.get("include_archived") == "1"
     day = request.args.get("day")
@@ -125,17 +176,24 @@ def search():
         )
 
     if tag:
-        stmt = (
-            stmt.join(SnipselTag, SnipselTag.snipsel_id == Snipsel.id)
-            .join(Tag, Tag.id == SnipselTag.tag_id)
-            .where(Tag.owner_user_id == user.id, Tag.name == tag)
-        )
+        stmt = stmt.join(SnipselTag, SnipselTag.snipsel_id == Snipsel.id).join(Tag, Tag.id == SnipselTag.tag_id)
+        if scope == "shared":
+            stmt = stmt.where(Tag.owner_user_id != user.id, Tag.name == tag)
+        elif scope == "all":
+            stmt = stmt.where(Tag.name == tag)
+        else:
+            stmt = stmt.where(Tag.owner_user_id == user.id, Tag.name == tag)
+
     if mention:
-        stmt = (
-            stmt.join(SnipselMention, SnipselMention.snipsel_id == Snipsel.id)
-            .join(Mention, Mention.id == SnipselMention.mention_id)
-            .where(Mention.owner_user_id == user.id, Mention.name == mention)
+        stmt = stmt.join(SnipselMention, SnipselMention.snipsel_id == Snipsel.id).join(
+            Mention, Mention.id == SnipselMention.mention_id
         )
+        if scope == "shared":
+            stmt = stmt.where(Mention.owner_user_id != user.id, Mention.name == mention)
+        elif scope == "all":
+            stmt = stmt.where(Mention.name == mention)
+        else:
+            stmt = stmt.where(Mention.owner_user_id == user.id, Mention.name == mention)
 
     if day_parsed:
         start = datetime(day_parsed.year, day_parsed.month, day_parsed.day)
