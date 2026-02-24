@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, type Attachment, type Snipsel } from '../lib/api';
+  import { api, type Attachment, type Snipsel, type SnipselDetailResponse } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
   import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
   import { currentUser } from '../lib/session';
@@ -79,21 +79,18 @@
     modalImage = null;
   }
 
-  async function load() {
-    loading = true;
-    try {
-      const res = (await fetch(`/api/snipsels/${snipselId}`, { credentials: 'include' }).then((r) => r.json())) as {
-        snipsel: Snipsel;
-        tags?: string[];
-        mentions?: string[];
-        placements?: Array<{ collection_id: string; position: number; indent: number }>;
-		};
-      snipsel = res.snipsel;
-      snipsel.tags = res.tags ?? [];
-      snipsel.mentions = res.mentions ?? [];
-		const nextPlacements = res.placements ?? [];
-		placements = nextPlacements;
-		void loadPlacementFavorites(nextPlacements);
+	let hasWriteAccess = $state(true);
+
+	async function load() {
+		loading = true;
+		try {
+			const res = (await fetch(`/api/snipsels/${snipselId}`, { credentials: 'include' }).then((r) => r.json())) as SnipselDetailResponse;
+			snipsel = res.snipsel;
+			snipsel = { ...res.snipsel, tags: res.tags ?? [], mentions: res.mentions ?? [] };
+			hasWriteAccess = res.has_write_access !== false;
+			const nextPlacements = res.placements ?? [];
+			placements = nextPlacements;
+			void loadPlacementFavorites(nextPlacements);
 		// backlinks currently unused in UI
 	} finally {
 		loading = false;
@@ -101,6 +98,7 @@
 	}
 
 	async function setType(nextType: 'text' | 'image' | 'attachment' | 'task') {
+		if (!hasWriteAccess) return;
 		if (!snipsel) return;
 		if (snipsel.type === nextType) return;
 		changingType = true;
@@ -169,8 +167,8 @@
 	function favoriteIcon(filled: boolean) {
 		return {
 			__html: filled
-				? '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.562-.955L10 .5l2.95 5.455 6.562.955-4.756 4.635 1.122 6.545z"/></svg>'
-				: '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 1.2l2.86 5.3 6.03.88-4.36 4.25 1.03 6.01L10 14.9 4.44 17.64l1.03-6.01-4.36-4.25 6.03-.88L10 1.2z"/></svg>',
+				? '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>'
+				: '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>',
 		};
 	}
 
@@ -222,11 +220,12 @@
 		currentView.set({ type: 'collection_settings', id: collectionId });
 	}
 
-  async function deleteAttachment(attachmentId: string) {
-    if (!confirm('Delete attachment?')) return;
-    await api.attachments.delete(attachmentId);
-    await load();
-  }
+	async function deleteAttachment(attachmentId: string) {
+		if (!hasWriteAccess) return;
+		if (!confirm('Delete attachment?')) return;
+		await api.attachments.delete(attachmentId);
+		await load();
+	}
 
   load();
 

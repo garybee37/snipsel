@@ -4,6 +4,8 @@ from datetime import date, datetime, timedelta
 
 from flask import Blueprint, request
 
+from sqlalchemy import literal
+
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
@@ -127,6 +129,7 @@ def search():
     q = (request.args.get("q") or "").strip()
     tag = (request.args.get("tag") or "").strip().casefold() or None
     mention = (request.args.get("mention") or "").strip().casefold() or None
+    mentions_me = request.args.get("mentions_me") == "1"
     scope = (request.args.get("scope") or "my").strip().lower()
     if scope not in {"my", "shared", "all"}:
         raise api_error(400, "invalid_input", "scope must be my, shared, or all")
@@ -153,6 +156,26 @@ def search():
         .scalars()
         .all()
     )
+
+    writable_collection_ids = (
+        db.session.execute(
+            db.select(Collection.id)
+            .outerjoin(
+                CollectionShare,
+                db.and_(
+                    CollectionShare.collection_id == Collection.id,
+                    CollectionShare.shared_with_user_id == user.id,
+                ),
+            )
+            .where(
+                Collection.deleted_at.is_(None),
+                db.or_(Collection.owner_user_id == user.id, CollectionShare.permission == "write"),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    writable_set = set(writable_collection_ids)
 
     stmt = (
         db.select(
@@ -214,7 +237,54 @@ def search():
             )
         )
 
-    rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
+    accessible_rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
+
+    hits_by_id: dict[str, tuple[Snipsel, str | None, int | None, str | None, str | None, bool, bool]] = {}
+    for s, collection_id, position, collection_title, collection_icon in accessible_rows:
+        if s.id not in hits_by_id:
+            can_write = bool(s.owner_user_id == user.id or (collection_id in writable_set))
+            hits_by_id[s.id] = (
+                s,
+                collection_id,
+                int(position) if position is not None else None,
+                collection_title,
+                collection_icon,
+                True,
+                can_write,
+            )
+
+    if mentions_me and snipsel_type == "task" and getattr(user, "username", None):
+        uname = str(user.username).casefold()
+        m_stmt = (
+            db.select(
+                Snipsel,
+            )
+            .join(SnipselMention, SnipselMention.snipsel_id == Snipsel.id)
+            .join(Mention, Mention.id == SnipselMention.mention_id)
+            .where(
+                Snipsel.deleted_at.is_(None),
+                Snipsel.type == "task",
+                Snipsel.task_done.is_(False),
+                Mention.name == uname,
+            )
+            .distinct()
+        )
+
+        mentioned_rows = db.session.execute(m_stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
+        for (s,) in mentioned_rows:
+            if s.id in hits_by_id:
+                continue
+            hits_by_id[s.id] = (
+                s,
+                None,
+                None,
+                None,
+                None,
+                False,
+                bool(s.owner_user_id == user.id),
+            )
+
+    rows = sorted(hits_by_id.values(), key=lambda r: r[0].modified_at, reverse=True)[:200]
 
     collection_hits = []
     if q:
@@ -244,9 +314,11 @@ def search():
                     "collection_id": collection_id,
                     "collection_title": collection_title,
                     "collection_icon": collection_icon,
-                    "position": int(position) if position is not None else None,
+                    "position": position,
+                    "has_collection_access": has_collection_access,
+                    "has_write_access": has_write_access,
                 }
-                for s, collection_id, position, collection_title, collection_icon in rows
+                for s, collection_id, position, collection_title, collection_icon, has_collection_access, has_write_access in rows
             ],
             "collections": [
                 {

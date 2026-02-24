@@ -51,33 +51,39 @@
     return rgba(mixed, 0.96);
   }
 
-  async function load() {
-    isLoading.set(true);
-    try {
-      const res = await api.search({ type: 'task' });
-      items = res.snipsels;
-    } finally {
-      isLoading.set(false);
-    }
-  }
+	async function load() {
+		isLoading.set(true);
+		try {
+			const mentionName = ($currentUser?.username || '').trim();
+			const res = await api.search({ type: 'task', mentions_me: Boolean(mentionName) });
+			items = res.snipsels;
+		} finally {
+			isLoading.set(false);
+		}
+	}
 
-  async function toggleDone(id: string, current: boolean) {
-    collectionAnchor.set(null);
-    await api.snipsels.update(id, { task_done: !current });
-    await load();
-  }
+	async function toggleDone(id: string, current: boolean) {
+		collectionAnchor.set(null);
+		await api.snipsels.update(id, { task_done: !current });
+		await load();
+	}
 
   function openInfo(id: string) {
     collectionAnchor.set(null);
     currentView.set({ type: 'snipsel', id, returnTo: getCurrentUrl() });
   }
 
-  function openInCollection(t: SearchSnipselHit) {
-    const collectionId = (t.collection_id ?? '').trim();
-    if (!collectionId) {
-      openInfo(t.id);
-      return;
-    }
+	function openInCollection(t: SearchSnipselHit) {
+		const hasAccess = t.has_collection_access !== false;
+		if (!hasAccess) {
+			openInfo(t.id);
+			return;
+		}
+		const collectionId = (t.collection_id ?? '').trim();
+		if (!collectionId) {
+			openInfo(t.id);
+			return;
+		}
     currentView.set({ type: 'collection', id: collectionId });
     const pos = typeof t.position === 'number' ? t.position : undefined;
     if (pos) {
@@ -87,7 +93,7 @@
     }
   }
 
-  load();
+	load();
 </script>
 
 <div class="space-y-4">
@@ -103,27 +109,33 @@
     <div class="py-8 text-center text-sm text-slate-500">No open tasks</div>
   {:else}
     <div class="space-y-2">
-      {#each items as t}
-        <div class="flex w-full items-center gap-3 px-1 py-2">
-          <button
-            class="grid h-8 w-8 place-items-center rounded-full border border-slate-300 bg-white"
-            type="button"
-            aria-label="Mark done"
-            title="Done"
-            style={`border-color: ${getAccent()}`}
-            onclick={() => toggleDone(t.id, false)}
-          ></button>
+		{#each items as t}
+			{@const hasAccess = t.has_collection_access !== false}
+			<div class="flex w-full items-center gap-3 px-1 py-2">
+				<button
+					class="grid h-8 w-8 place-items-center rounded-full border border-slate-300 bg-white disabled:opacity-40"
+					type="button"
+					aria-label="Mark done"
+					title="Done"
+					disabled={!hasAccess}
+					style={hasAccess ? `border-color: ${getAccent()}` : undefined}
+					onclick={() => toggleDone(t.id, false)}
+				></button>
 
-          <button class="min-w-0 flex flex-1 items-start gap-3 text-left" type="button" onclick={() => openInCollection(t)}>
-            <div class="min-w-0 flex-1">
-              <div class="truncate text-lg font-medium text-slate-900">{t.content_markdown ?? ''}</div>
-              <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-slate-500">
-                <span class="rounded px-1.5 py-0.5" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}>
-                  {t.collection_icon ? `${t.collection_icon} ` : ''}{t.collection_title ?? 'Collection'}
-                </span>
-              </div>
-            </div>
-          </button>
+				<button class="min-w-0 flex flex-1 items-start gap-3 text-left" type="button" onclick={() => openInCollection(t)}>
+					<div class="min-w-0 flex-1">
+						<div class="truncate text-lg font-medium text-slate-900">{t.content_markdown ?? ''}</div>
+						<div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-slate-500">
+							<span class="rounded px-1.5 py-0.5" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}>
+								{#if hasAccess}
+									{t.collection_icon ? `${t.collection_icon} ` : ''}{t.collection_title ?? 'Collection'}
+								{:else}
+									Restricted
+								{/if}
+							</span>
+						</div>
+					</div>
+				</button>
 
           <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
             <div class="flex">

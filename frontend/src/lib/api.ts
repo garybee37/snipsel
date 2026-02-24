@@ -75,6 +75,16 @@ export type Snipsel = {
   mentions?: string[];
 };
 
+export type SnipselDetailResponse = {
+  snipsel: Snipsel;
+  tags?: string[];
+  mentions?: string[];
+  placements?: Array<{ collection_id: string; position: number; indent: number }>;
+  backlinks?: Array<{ from_snipsel_id: string; to_snipsel_id: string }>;
+  has_collection_access?: boolean;
+  has_write_access?: boolean;
+};
+
 export type Attachment = {
   id: string;
   filename: string;
@@ -106,6 +116,8 @@ export type SearchSnipselHit = {
   collection_title?: string | null;
   collection_icon?: string | null;
   position?: number | null;
+  has_collection_access?: boolean;
+  has_write_access?: boolean;
 };
 
 export type SearchCollectionHit = {
@@ -324,6 +336,7 @@ export const api = {
     q?: string;
     tag?: string;
     mention?: string;
+    mentions_me?: boolean;
     type?: string;
     include_archived?: boolean;
     day?: string;
@@ -333,6 +346,7 @@ export const api = {
     if (params.q) sp.set('q', params.q);
     if (params.tag) sp.set('tag', params.tag);
     if (params.mention) sp.set('mention', params.mention);
+    if (params.mentions_me) sp.set('mentions_me', '1');
     if (params.type) sp.set('type', params.type);
     if (params.include_archived) sp.set('include_archived', '1');
     if (params.day) sp.set('day', params.day);

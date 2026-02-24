@@ -215,8 +215,28 @@ def get_snipsel(snipsel_id: str):
         .scalars()
         .first()
     )
-    if not s or s.deleted_at is not None or (s.owner_user_id != user.id and not can_read_snipsel_via_collections(user.id, snipsel_id)):
+    if not s or s.deleted_at is not None:
         raise api_error(404, "not_found", "Snipsel not found")
+
+    can_read = s.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel_id)
+    if not can_read:
+        uname = (getattr(user, "username", "") or "").strip().casefold()
+        if not uname:
+            raise api_error(404, "not_found", "Snipsel not found")
+        is_mentioned = (
+            db.session.execute(
+                db.select(db.func.count())
+                .select_from(SnipselMention)
+                .join(Mention, Mention.id == SnipselMention.mention_id)
+                .where(SnipselMention.snipsel_id == snipsel_id, Mention.name == uname)
+            ).scalar()
+            or 0
+        )
+        if is_mentioned <= 0:
+            raise api_error(404, "not_found", "Snipsel not found")
+
+    has_collection_access = s.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel_id)
+    has_write_access = s.owner_user_id == user.id or can_write_snipsel_via_collections(user.id, snipsel_id)
     placements = (
         db.session.execute(
             db.select(CollectionSnipsel)
@@ -264,6 +284,8 @@ def get_snipsel(snipsel_id: str):
     return json_response(
         {
             "snipsel": _snipsel_json(s),
+            "has_collection_access": bool(has_collection_access),
+            "has_write_access": bool(has_write_access),
             "tags": [n for n in tag_names if n and n[:1].isalpha()],
             "mentions": [n for n in mention_names if n and n[:1].isalpha()],
             "placements": [
