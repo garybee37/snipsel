@@ -574,6 +574,89 @@
     collectionItems.set(updated.map((i, idx) => ({ ...i, position: idx + 1 })));
   }
 
+  async function setIndentSelected(indent: number) {
+    if (!$currentCollection) return;
+    if (!canWrite()) return;
+    if (selectedIds.size === 0) return;
+
+    const nextIndent = Math.max(0, Math.min(6, indent));
+    const current = $sortedItems;
+    const updated = current.map((i) => {
+      if (!selectedIds.has(i.snipsel_id)) return i;
+      return { ...i, indent: nextIndent };
+    });
+
+    const payload = updated.map((i, idx) => ({
+      snipsel_id: i.snipsel_id,
+      position: idx + 1,
+      indent: i.indent,
+    }));
+
+    await api.snipsels.reorder($currentCollection.id, payload);
+    collectionItems.set(updated.map((i, idx) => ({ ...i, position: idx + 1 })));
+  }
+
+  async function moveSelectedToEdge(edge: 'top' | 'bottom') {
+    if (!$currentCollection) return;
+    if (!canWrite()) return;
+    if (selectedIds.size === 0) return;
+
+    const list = [...$sortedItems];
+    const selected = list.filter((i) => selectedIds.has(i.snipsel_id));
+    const rest = list.filter((i) => !selectedIds.has(i.snipsel_id));
+    const next = edge === 'top' ? [...selected, ...rest] : [...rest, ...selected];
+
+    const payload = next.map((i, index) => ({
+      snipsel_id: i.snipsel_id,
+      position: index + 1,
+      indent: i.indent,
+    }));
+
+    await api.snipsels.reorder($currentCollection.id, payload);
+    collectionItems.set(next.map((i, index) => ({ ...i, position: index + 1 })));
+  }
+
+  function longPress(handler: () => void, ms = 450) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let fired = false;
+
+    function start(e: Event) {
+      fired = false;
+      timer = setTimeout(() => {
+        fired = true;
+        handler();
+      }, ms);
+      if (e.cancelable) e.preventDefault();
+    }
+
+    function cancel() {
+      if (timer) clearTimeout(timer);
+      timer = null;
+    }
+
+    return {
+      onpointerdown: (e: PointerEvent) => start(e),
+      onpointerup: () => cancel(),
+      onpointercancel: () => cancel(),
+      onpointerleave: () => cancel(),
+      onclick: (e: MouseEvent) => {
+        if (fired) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      oncontextmenu: (e: MouseEvent) => {
+        if (fired) {
+          e.preventDefault();
+        }
+      },
+    };
+  }
+
+  const lpMoveTop = longPress(() => void moveSelectedToEdge('top'));
+  const lpMoveBottom = longPress(() => void moveSelectedToEdge('bottom'));
+  const lpOutdentToZero = longPress(() => void setIndentSelected(0));
+
   async function moveSelected(dir: -1 | 1) {
     if (!$currentCollection) return;
     if (!canWrite()) return;
@@ -983,7 +1066,12 @@
           type="button"
           aria-label="Move up"
           title="Move up"
-          onclick={() => moveSelected(-1)}
+          onclick={lpMoveTop.onclick}
+          onpointerdown={lpMoveTop.onpointerdown}
+          onpointerup={lpMoveTop.onpointerup}
+          onpointercancel={lpMoveTop.onpointercancel}
+          onpointerleave={lpMoveTop.onpointerleave}
+          oncontextmenu={lpMoveTop.oncontextmenu}
           disabled={!canWrite()}
         >
           ↑
@@ -993,7 +1081,12 @@
           type="button"
           aria-label="Move down"
           title="Move down"
-          onclick={() => moveSelected(1)}
+          onclick={lpMoveBottom.onclick}
+          onpointerdown={lpMoveBottom.onpointerdown}
+          onpointerup={lpMoveBottom.onpointerup}
+          onpointercancel={lpMoveBottom.onpointercancel}
+          onpointerleave={lpMoveBottom.onpointerleave}
+          oncontextmenu={lpMoveBottom.oncontextmenu}
           disabled={!canWrite()}
         >
           ↓
@@ -1004,7 +1097,12 @@
           type="button"
           aria-label="Outdent"
           title="Outdent"
-          onclick={() => adjustIndentSelected(-1)}
+          onclick={lpOutdentToZero.onclick}
+          onpointerdown={lpOutdentToZero.onpointerdown}
+          onpointerup={lpOutdentToZero.onpointerup}
+          onpointercancel={lpOutdentToZero.onpointercancel}
+          onpointerleave={lpOutdentToZero.onpointerleave}
+          oncontextmenu={lpOutdentToZero.oncontextmenu}
           disabled={!canWrite()}
         >
           ⇤
