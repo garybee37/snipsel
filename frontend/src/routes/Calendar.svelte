@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api } from '../lib/api';
-  import { currentCollection, currentView, isLoading, toLocalIsoDay } from '../lib/stores';
+  import { collectionAnchor, currentCollection, currentView, isLoading, toLocalIsoDay } from '../lib/stores';
 
   let cursor = $state(new Date());
 
@@ -59,6 +59,7 @@
     try {
       const res = await api.collections.today(iso);
       currentCollection.set(res.collection);
+      collectionAnchor.set(null);
       currentView.set({ type: 'collection', id: res.collection.id });
     } finally {
       isLoading.set(false);

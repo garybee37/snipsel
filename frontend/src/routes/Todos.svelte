@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, type SearchSnipselHit } from '../lib/api';
-  import { isLoading } from '../lib/stores';
+  import { collectionAnchor, isLoading } from '../lib/stores';
 
   let items: SearchSnipselHit[] = [];
 
@@ -15,6 +15,7 @@
   }
 
   async function toggleDone(id: string, current: boolean) {
+    collectionAnchor.set(null);
     await api.snipsels.update(id, { task_done: !current });
     await load();
   }

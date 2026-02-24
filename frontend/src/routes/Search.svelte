@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
+  import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
 
   function openSnipsel(id: string) {
+    collectionAnchor.set(null);
     currentView.set({ type: 'snipsel', id });
   }
 </script>

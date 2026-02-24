@@ -7,11 +7,21 @@
     currentView,
     getTodayDate,
     isLoading,
+    collectionAnchor,
     requestNewSnipsel,
     searchError,
     searchQuery,
     searchResults,
   } from './lib/stores';
+  import {
+    getCurrentUrl,
+    parseRouteFromLocation,
+    pushUrl,
+    replaceUrl,
+    routeToUrl,
+    routeToView,
+    viewToRoute,
+  } from './lib/router';
   import Login from './routes/Login.svelte';
   import CollectionsList from './routes/CollectionsList.svelte';
   import CollectionOutliner from './routes/CollectionOutliner.svelte';
@@ -24,6 +34,11 @@
   import TagsMentions from './routes/TagsMentions.svelte';
 
   let initialized = $state(false);
+
+  let isApplyingRoute = $state(false);
+  let didInitRoute = $state(false);
+
+  let hasSyncedUrl = $state(false);
 
   let isSwitchingCollection = $state(false);
 
@@ -67,12 +82,45 @@
     try {
       const res = await api.me();
       currentUser.set(res.user);
-      await openToday();
+      applyInitialRoute();
     } catch {
       currentUser.set(null);
       currentView.set({ type: 'loading' });
     } finally {
       initialized = true;
+    }
+  }
+
+  function applyInitialRoute() {
+    if (didInitRoute) return;
+    didInitRoute = true;
+
+    const route = parseRouteFromLocation(window.location);
+    if (!route) {
+      openToday().then(() => {
+        const id = $currentCollection?.id;
+        replaceUrl(id ? routeToUrl({ v: 'collection', id }) : routeToUrl({ v: 'collections' }));
+      });
+      return;
+    }
+
+    isApplyingRoute = true;
+    try {
+      currentView.set(routeToView(route));
+      if (route.v === 'collection') {
+        if (route.sn || route.pos) {
+          collectionAnchor.set({ collectionId: route.id, snipselId: route.sn, pos: route.pos });
+        } else {
+          collectionAnchor.set(null);
+        }
+      } else {
+        collectionAnchor.set(null);
+      }
+      if (route.v === 'search') {
+        searchQuery.set(route.q ?? '');
+      }
+    } finally {
+      isApplyingRoute = false;
     }
   }
 
@@ -155,10 +203,77 @@
 
   $effect(() => {
     if (initialized && $currentUser && $currentView.type === 'loading') {
-      openToday().catch(() => {
-        currentView.set({ type: 'collections' });
-      });
+      applyInitialRoute();
     }
+  });
+
+  $effect(() => {
+    if (!initialized) return;
+    if (!$currentUser) return;
+    if (isApplyingRoute) return;
+
+    if ($currentView.type === 'collection') {
+      const a = $collectionAnchor;
+      if (!a || a.collectionId !== $currentView.id) collectionAnchor.set(null);
+    } else {
+      if ($collectionAnchor) collectionAnchor.set(null);
+    }
+
+    let route = viewToRoute($currentView);
+    if (route.v === 'collection') {
+      const a = $collectionAnchor;
+      if (a && a.collectionId === route.id) {
+        route = { ...route, sn: a.snipselId, pos: a.pos };
+      }
+    } else if (route.v === 'search') {
+      const q = $searchQuery.trim();
+      route = { v: 'search', q: q || undefined };
+    }
+
+    const nextUrl = routeToUrl(route);
+    const cur = getCurrentUrl();
+
+    if (!hasSyncedUrl) {
+      replaceUrl(nextUrl);
+      hasSyncedUrl = true;
+      return;
+    }
+
+    const shouldReplace = $currentView.type === 'loading' || $currentView.type === 'search';
+    if (shouldReplace) replaceUrl(nextUrl);
+    else if (cur !== nextUrl) pushUrl(nextUrl);
+  });
+
+  $effect(() => {
+    if (!initialized) return;
+
+    const onPopState = () => {
+      if (!$currentUser) return;
+      const route = parseRouteFromLocation(window.location);
+      if (!route) return;
+
+      isApplyingRoute = true;
+      try {
+        currentView.set(routeToView(route));
+        if (route.v === 'collection') {
+          if (route.sn || route.pos) {
+            collectionAnchor.set({ collectionId: route.id, snipselId: route.sn, pos: route.pos });
+          } else {
+            collectionAnchor.set(null);
+          }
+        } else {
+          collectionAnchor.set(null);
+        }
+        if (route.v === 'search') {
+          searchQuery.set(route.q ?? '');
+        }
+      } finally {
+        isApplyingRoute = false;
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   });
 
   $effect(() => {

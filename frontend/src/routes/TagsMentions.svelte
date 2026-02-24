@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, type TagCount } from '../lib/api';
-  import { currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
+  import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
   import { currentUser } from '../lib/session';
 
   const DEFAULT_ACCENT = '#4f46e5';
@@ -72,6 +72,7 @@
   }
 
   async function selectToken(name: string) {
+    collectionAnchor.set(null);
     searchQuery.set('');
     searchError.set(null);
     searchResults.set(null);

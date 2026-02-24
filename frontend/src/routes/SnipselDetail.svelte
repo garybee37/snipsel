@@ -1,7 +1,7 @@
 <script lang="ts">
   import { api, type Attachment, type Snipsel } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
-  import { currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
+  import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
   import { currentUser } from '../lib/session';
 
   interface Props {
@@ -398,7 +398,10 @@
             <button
               class="text-left text-sm underline"
               type="button"
-              onclick={() => currentView.set({ type: 'collection', id: p.collection_id })}
+              onclick={() => {
+                currentView.set({ type: 'collection', id: p.collection_id });
+                collectionAnchor.set({ collectionId: p.collection_id, pos: p.position });
+              }}
             >
               {p.collection_icon ? `${p.collection_icon} ` : ''}{p.collection_title ?? p.collection_id} (pos {p.position}, indent {p.indent})
             </button>

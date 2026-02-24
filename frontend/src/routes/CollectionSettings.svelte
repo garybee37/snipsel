@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, type Collection, type CollectionShare, type UserLite } from '../lib/api';
-  import { collections, currentCollection, currentView, isLoading } from '../lib/stores';
+  import { collectionAnchor, collections, currentCollection, currentView, isLoading } from '../lib/stores';
 
   interface Props {
     collectionId: string;
@@ -135,6 +135,7 @@
     await api.collections.delete(id);
     collections.update((list) => list.filter((c) => c.id !== id));
     currentCollection.set(null);
+    collectionAnchor.set(null);
     currentView.set({ type: 'collections' });
   }
 

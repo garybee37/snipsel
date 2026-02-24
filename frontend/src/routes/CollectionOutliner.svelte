@@ -4,6 +4,7 @@
   import ImageModal from '../lib/ImageModal.svelte';
   import {
     collectionItems,
+    collectionAnchor,
     currentCollection,
     currentView,
     editingSnipselId,
@@ -31,6 +32,9 @@
   let itemsMutationSeq = 0;
 
   let hideDoneTasks = $state(false);
+
+  let lastAnchorKey = $state<string | null>(null);
+  let anchorHighlightId = $state<string | null>(null);
 
   function canWrite(): boolean {
     return $currentCollection?.access_level !== 'read';
@@ -778,6 +782,35 @@
   });
 
   $effect(() => {
+    const a = $collectionAnchor;
+    const c = $currentCollection;
+    if (!a || !c) return;
+    if (a.collectionId !== c.id) return;
+
+    const key = `${a.collectionId}:${a.snipselId ?? ''}:${a.pos ?? ''}`;
+    if (key === lastAnchorKey) return;
+
+    const target = a.snipselId
+      ? $sortedItems.find((i) => i.snipsel_id === a.snipselId)
+      : typeof a.pos === 'number'
+        ? $sortedItems.find((i) => i.position === a.pos)
+        : null;
+
+    if (!target) return;
+
+    lastAnchorKey = key;
+    anchorHighlightId = target.snipsel_id;
+
+    setTimeout(() => {
+      const el = document.getElementById(`snipsel-${target.snipsel_id}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        if (anchorHighlightId === target.snipsel_id) anchorHighlightId = null;
+      }, 900);
+    }, 0);
+  });
+
+  $effect(() => {
     void editContent;
     autosizeTextarea();
   });
@@ -903,7 +936,11 @@
   {:else}
     <div class="flex flex-col">
       {#each visibleItems($sortedItems) as item (item.snipsel_id)}
-        <div class="group relative pl-6 pr-10" style="margin-left: {item.indent * 1.25}rem">
+        <div
+          id={`snipsel-${item.snipsel_id}`}
+          class="group relative pl-6 pr-10 {anchorHighlightId === item.snipsel_id ? 'ring-2 ring-indigo-400 rounded-lg' : ''}"
+          style="margin-left: {item.indent * 1.25}rem"
+        >
           {#if item.snipsel_id === $editingSnipselId}
             <div
               bind:this={editContainerRef}

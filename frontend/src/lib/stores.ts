@@ -24,6 +24,10 @@ export const newSnipselRequest = writable(0);
 
 export const pendingReference = writable<{ snipselIds: string[]; mode?: 'add' | 'move'; fromCollectionId?: string } | null>(null);
 
+export type CollectionAnchor = { collectionId: string; pos?: number; snipselId?: string } | null;
+
+export const collectionAnchor = writable<CollectionAnchor>(null);
+
 export const searchQuery = writable('');
 export const searchResults = writable<SearchResponse | null>(null);
 export const searchError = writable<string | null>(null);

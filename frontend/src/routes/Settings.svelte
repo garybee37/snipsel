@@ -1,7 +1,7 @@
 <script lang="ts">
   import { api, type Collection } from '../lib/api';
   import { currentUser } from '../lib/session';
-  import { currentView } from '../lib/stores';
+  import { collectionAnchor, currentView } from '../lib/stores';
 
   const DEFAULT_HEADER_COLOR = '#4f46e5';
 
@@ -13,6 +13,7 @@
   async function logout() {
     await api.logout();
     currentUser.set(null);
+    collectionAnchor.set(null);
     currentView.set({ type: 'loading' });
   }
 

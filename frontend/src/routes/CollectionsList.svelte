@@ -1,7 +1,7 @@
 <script lang="ts">
   import { api, type Collection } from '../lib/api';
   import { currentUser } from '../lib/session';
-  import { collections, currentView, isLoading, pendingReference } from '../lib/stores';
+  import { collections, collectionAnchor, currentView, isLoading, pendingReference } from '../lib/stores';
 
   let showCreate = false;
   let newTitle = '';
@@ -129,9 +129,11 @@
         }
       }
       pendingReference.set(null);
+      collectionAnchor.set(null);
       currentView.set({ type: 'collection', id: c.id });
       return;
     }
+    collectionAnchor.set(null);
     currentView.set({ type: 'collection', id: c.id });
   }
 
