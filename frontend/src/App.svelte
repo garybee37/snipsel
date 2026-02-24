@@ -322,32 +322,32 @@
 </script>
 
 <div class="min-h-screen bg-slate-50 text-slate-900">
-  <header class="sticky top-4 z-20 mx-auto max-w-3xl px-4 pointer-events-none">
-    <div class="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
-      <button
-        class="flex items-center gap-2 pl-2 pr-1 font-bold text-lg text-slate-800 transition-colors hover:text-[#4f46e5]"
-        type="button"
-        onclick={openToday}
-      >
-        <img src="/logo.svg" alt="snipsel logo" class="h-6 w-6" />
-        <span class="hidden sm:inline">snipsel</span>
-      </button>
-      <input
-        class="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-100/50 px-4 py-2 text-base transition-all focus:border-[#4f46e5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/20"
-        placeholder="Search"
-        type="search"
-        bind:value={$searchQuery}
-        onfocus={() => {
-          if ($currentUser) currentView.set({ type: 'search' });
-        }}
-        onkeydown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            runSearch();
-          }
-        }}
-      />
-      {#if $currentUser}
+  {#if $currentUser}
+    <header class="sticky top-4 z-20 mx-auto max-w-3xl px-4 pointer-events-none">
+      <div class="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+        <button
+          class="flex items-center gap-2 pl-2 pr-1 font-bold text-lg text-slate-800 transition-colors hover:text-[#4f46e5]"
+          type="button"
+          onclick={openToday}
+        >
+          <img src="/logo.svg" alt="snipsel logo" class="h-6 w-6" />
+          <span class="hidden sm:inline">snipsel</span>
+        </button>
+        <input
+          class="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-100/50 px-4 py-2 text-base transition-all focus:border-[#4f46e5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/20"
+          placeholder="Search"
+          type="search"
+          bind:value={$searchQuery}
+          onfocus={() => {
+            if ($currentUser) currentView.set({ type: 'search' });
+          }}
+          onkeydown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              runSearch();
+            }
+          }}
+        />
         <button
           class="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {$currentView.type === 'settings'
             ? 'bg-[#4f46e5]/10 text-[#4f46e5]'
@@ -371,11 +371,9 @@
             <path d="M19.4 15a1.8 1.8 0 00.36 1.98l.05.05a2.2 2.2 0 01-1.56 3.76h-.07a1.8 1.8 0 00-1.98.36 1.8 1.8 0 00-.52 1.27V22a2.2 2.2 0 01-4.4 0v-.07a1.8 1.8 0 00-.36-1.98 1.8 1.8 0 00-1.27-.52H8a2.2 2.2 0 010-4.4h.07a1.8 1.8 0 001.98-.36 1.8 1.8 0 00.52-1.27V12a2.2 2.2 0 014.4 0v.07a1.8 1.8 0 00.36 1.98 1.8 1.8 0 001.27.52H16a2.2 2.2 0 013.4.93z" />
           </svg>
         </button>
-      {:else}
-        <div class="w-2"></div>
-      {/if}
-    </div>
-  </header>
+      </div>
+    </header>
+  {/if}
 
   <main class="mx-auto max-w-3xl px-4 py-6">
     {#if !initialized}
