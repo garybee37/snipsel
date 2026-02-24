@@ -41,10 +41,8 @@
 
 <div class="mx-auto w-full max-w-sm pt-8 pb-12">
   <div class="flex flex-col items-center mb-8">
-    <div class="grid h-16 w-16 place-items-center rounded-full bg-[#4f46e5]/10 text-[#4f46e5] mb-4 shadow-sm ring-1 ring-[#4f46e5]/20">
-      <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-      </svg>
+    <div class="grid h-16 w-16 place-items-center rounded-full bg-[#4f46e5]/10 mb-4 shadow-sm ring-1 ring-[#4f46e5]/20">
+      <img src="/logo.svg" alt="snipsel logo" class="h-8 w-8" />
     </div>
     <h1 class="text-3xl font-semibold tracking-tight text-slate-800">{mode === 'login' ? 'Welcome back' : 'Create account'}</h1>
     <p class="mt-2 text-slate-500">{mode === 'login' ? 'Sign in to continue' : 'Sign up to get started'}</p>

@@ -322,17 +322,18 @@
 </script>
 
 <div class="min-h-screen bg-slate-50 text-slate-900">
-  <header class="sticky top-0 z-10 border-b bg-white/95 backdrop-blur">
-    <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
+  <header class="sticky top-4 z-20 mx-auto max-w-3xl px-4 pointer-events-none">
+    <div class="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
       <button
-        class="font-semibold hover:underline text-lg"
+        class="flex items-center gap-2 pl-2 pr-1 font-bold text-lg text-slate-800 transition-colors hover:text-[#4f46e5]"
         type="button"
         onclick={openToday}
       >
-        snipsel
+        <img src="/logo.svg" alt="snipsel logo" class="h-6 w-6" />
+        <span class="hidden sm:inline">snipsel</span>
       </button>
       <input
-        class="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-100 px-3 py-3 text-lg"
+        class="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-100/50 px-4 py-2 text-base transition-all focus:border-[#4f46e5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/20"
         placeholder="Search"
         type="search"
         bind:value={$searchQuery}
@@ -348,16 +349,16 @@
       />
       {#if $currentUser}
         <button
-          class="grid h-12 w-12 place-items-center rounded-md border border-slate-200 bg-slate-100 text-slate-800 hover:bg-slate-200 {$currentView.type === 'settings'
-            ? 'bg-slate-200'
-            : ''}"
+          class="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {$currentView.type === 'settings'
+            ? 'bg-[#4f46e5]/10 text-[#4f46e5]'
+            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
           type="button"
           onclick={() => currentView.set({ type: 'settings' })}
           aria-label="Settings"
           title="Settings"
         >
           <svg
-            class="h-6 w-6"
+            class="h-5 w-5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -370,8 +371,9 @@
             <path d="M19.4 15a1.8 1.8 0 00.36 1.98l.05.05a2.2 2.2 0 01-1.56 3.76h-.07a1.8 1.8 0 00-1.98.36 1.8 1.8 0 00-.52 1.27V22a2.2 2.2 0 01-4.4 0v-.07a1.8 1.8 0 00-.36-1.98 1.8 1.8 0 00-1.27-.52H8a2.2 2.2 0 010-4.4h.07a1.8 1.8 0 001.98-.36 1.8 1.8 0 00.52-1.27V12a2.2 2.2 0 014.4 0v.07a1.8 1.8 0 00.36 1.98 1.8 1.8 0 001.27.52H16a2.2 2.2 0 013.4.93z" />
           </svg>
         </button>
+      {:else}
+        <div class="w-2"></div>
       {/if}
-      <div class="w-12"></div>
     </div>
   </header>
 
