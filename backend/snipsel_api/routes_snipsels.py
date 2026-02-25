@@ -355,10 +355,18 @@ def update_snipsel(snipsel_id: str):
         s.content_markdown = data.get("content_markdown")
     if "task_done" in data:
         done = bool(data.get("task_done"))
+        old_done = s.task_done
         s.task_done = done
         if done:
             s.done_at = datetime.utcnow()
             s.done_by_id = user.id
+            if not old_done and user.id != s.created_by_id and s.created_by_id:
+                n = Notification(
+                    user_id=s.created_by_id,
+                    message=f"{user.username} completed a task you created.",
+                    snipsel_id=s.id
+                )
+                db.session.add(n)
         else:
             s.done_at = None
             s.done_by_id = None
