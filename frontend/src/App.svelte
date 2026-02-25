@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { api } from './lib/api';
   import { currentUser } from './lib/session';
   import {
@@ -192,7 +193,7 @@
       searchError.set(null);
       return;
     }
-    currentView.set({ type: 'search' });
+    currentView.update((v) => (v.type === 'search' ? v : { type: 'search' }));
     searchError.set(null);
     isLoading.set(true);
     try {
@@ -293,19 +294,25 @@
   $effect(() => {
     if (!initialized || !$currentUser) return;
 
-    // Track view changes
-    void $currentView.type;
+    // Only track the TYPE of the view, not the whole object or repeated updates to same type
+    const viewType = $currentView.type;
+    void viewType;
 
-    fetchNotifications();
+    untrack(() => {
+      fetchNotifications();
+    });
 
-    const intervalId = setInterval(fetchNotifications, 60000);
+    const intervalId = setInterval(() => {
+      untrack(() => fetchNotifications());
+    }, 60000);
     return () => clearInterval(intervalId);
   });
 
   $effect(() => {
-    void $searchType;
-    if (initialized && $currentUser && $currentView.type === 'search') {
-      runSearch();
+    const type = $searchType;
+    const viewType = $currentView.type;
+    if (initialized && $currentUser && viewType === 'search') {
+      untrack(() => runSearch());
     }
   });
 
