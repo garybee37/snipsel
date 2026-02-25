@@ -13,6 +13,7 @@
     searchQuery,
     searchResults,
     notificationsStore,
+    searchType,
   } from './lib/stores';
   import {
     getCurrentUrl,
@@ -185,7 +186,8 @@
 
   async function runSearch() {
     const q = $searchQuery.trim();
-    if (!q) {
+    const type = $searchType;
+    if (!q && !type) {
       searchResults.set(null);
       searchError.set(null);
       return;
@@ -194,7 +196,7 @@
     searchError.set(null);
     isLoading.set(true);
     try {
-      const res = await api.search({ q });
+      const res = await api.search({ q, type });
       searchResults.set(res);
     } catch {
       searchResults.set(null);
@@ -298,6 +300,13 @@
 
     const intervalId = setInterval(fetchNotifications, 60000);
     return () => clearInterval(intervalId);
+  });
+
+  $effect(() => {
+    void $searchType;
+    if (initialized && $currentUser && $currentView.type === 'search') {
+      runSearch();
+    }
   });
 
   $effect(() => {

@@ -32,6 +32,7 @@ export const collectionAnchor = writable<CollectionAnchor>(null);
 export const searchQuery = writable('');
 export const searchResults = writable<SearchResponse | null>(null);
 export const searchError = writable<string | null>(null);
+export const searchType = writable<string | undefined>(undefined);
 
 export const notificationsStore = writable<import('./api').Notification[]>([]);
 
