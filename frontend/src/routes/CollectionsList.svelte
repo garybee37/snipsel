@@ -188,11 +188,14 @@
         <span>Collections</span>
       </h2>
       <button
-        class="rounded-md bg-slate-900 px-4 py-3 text-lg font-medium text-white"
+        class="flex items-center gap-2 rounded-full bg-slate-900 pl-3 pr-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl"
         type="button"
         onclick={() => (showCreate = true)}
       >
-        + New
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>New</span>
       </button>
     </div>
 
@@ -312,35 +315,35 @@
 
   {#if showCreate}
     <form
-      class="rounded-lg border bg-slate-50 p-3"
+      class="space-y-4 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl ring-1 ring-black/5 backdrop-blur-md"
       onsubmit={(e) => {
         e.preventDefault();
         createCollection();
       }}
     >
-      <div class="mb-2 flex gap-2">
+      <div class="flex gap-3">
         <input
-          class="w-16 rounded-md border px-2 py-1.5 text-center text-lg"
+          class="w-20 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-center text-2xl shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
           bind:value={newIcon}
           maxlength={2}
           placeholder="📋"
         />
         <input
-          class="flex-1 rounded-md border px-4 py-3 text-lg"
+          class="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-lg shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
           bind:value={newTitle}
           placeholder="Collection title"
         />
       </div>
       <div class="flex gap-2">
         <button
-          class="rounded-md bg-slate-900 px-4 py-3 text-lg font-medium text-white"
+          class="flex-1 rounded-full bg-slate-900 px-4 py-3 text-base font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl disabled:opacity-50"
           type="submit"
           disabled={busy || !newTitle.trim()}
         >
-          Create
+          {busy ? 'Creating...' : 'Create Collection'}
         </button>
         <button
-          class="rounded-md border px-4 py-3 text-lg"
+          class="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-medium text-slate-600 shadow-sm ring-1 ring-black/5 hover:bg-slate-50"
           type="button"
           onclick={() => (showCreate = false)}
         >
