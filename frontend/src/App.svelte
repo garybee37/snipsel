@@ -426,7 +426,7 @@
     </header>
   {/if}
 
-  <main class="mx-auto max-w-3xl px-4 py-6">
+  <main class="mx-auto max-w-3xl px-4 pt-24 pb-28">
     {#if !initialized}
       <div class="py-8 text-center text-sm text-slate-500">Loading...</div>
     {:else if !$currentUser}
