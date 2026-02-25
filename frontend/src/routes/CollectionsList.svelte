@@ -87,7 +87,7 @@
   function matchesFilter(c: Collection, f: Filter): boolean {
     if (f === 'favorites') return Boolean(c.is_favorite);
     if (f === 'day') return Boolean(c.list_for_day);
-    if (f === 'mine') return c.access_level === 'owner';
+    if (f === 'mine') return c.access_level === 'owner' && !c.list_for_day && !c.is_template;
     if (f === 'shared') {
       return (
         c.access_level === 'read' ||
