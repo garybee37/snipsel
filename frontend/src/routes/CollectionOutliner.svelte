@@ -54,6 +54,7 @@
   let modalImage = $state<{ id: string; filename: string } | null>(null);
 
   let showTypeMenu = $state(false);
+  let showScrollTop = $state(false);
   function closeTemplateMenu() {
     showTemplateMenu = false;
   }
@@ -832,6 +833,17 @@
     const done = tasks.filter((i) => Boolean(i.snipsel.task_done)).length;
     return { total, done, ratio: total > 0 ? done / total : 0 };
   }
+  $effect(() => {
+    const onScroll = () => {
+      showScrollTop = window.scrollY > 300;
+    };
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  });
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 </script>
 
 <div class="space-y-3">
@@ -852,29 +864,29 @@
       ></div>
 
       <div class="relative px-4 py-3">
-      <div
-        class="absolute left-4 top-0 -translate-y-1/2 grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm"
-        aria-hidden="true"
-      >
-        <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
-      </div>
-
-      {#if taskProgress().total > 0}
-        <button
-          class="absolute left-[5.5rem] right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm backdrop-blur-md"
-          type="button"
-          aria-label="Toggle done tasks"
-          title={hideDoneTasks ? 'Show done tasks' : 'Hide done tasks'}
-          onclick={toggleHideDoneTasks}
+        <div
+          class="absolute left-4 top-0 -translate-y-1/2 grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm"
+          aria-hidden="true"
         >
-          <div class="h-2 w-full overflow-hidden rounded-full bg-black/10">
-            <div
-              class="h-full rounded-full"
-              style={`width: ${Math.round(taskProgress().ratio * 100)}%; background-color: ${getHeaderColor()}`}
-            ></div>
-          </div>
-        </button>
-      {/if}
+          <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
+        </div>
+
+        {#if taskProgress().total > 0}
+          <button
+            class="absolute left-[5.5rem] right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm backdrop-blur-md"
+            type="button"
+            aria-label="Toggle done tasks"
+            title={hideDoneTasks ? 'Show done tasks' : 'Hide done tasks'}
+            onclick={toggleHideDoneTasks}
+          >
+            <div class="h-2 w-full overflow-hidden rounded-full bg-black/10">
+              <div
+                class="h-full rounded-full"
+                style={`width: ${Math.round(taskProgress().ratio * 100)}%; background-color: ${getHeaderColor()}`}
+              ></div>
+            </div>
+          </button>
+        {/if}
 
         <button
           class="pl-20 text-lg font-semibold hover:underline"
@@ -883,6 +895,14 @@
         >
           {$currentCollection?.title}
         </button>
+        {#if $currentCollection}
+          <div class="mt-0.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400">
+            <span>Last modified: {new Date($currentCollection.modified_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+            {#if $currentCollection.modified_by_username && $currentCollection.modified_by_id !== $currentUser?.id}
+              <span>by {$currentCollection.modified_by_username}</span>
+            {/if}
+          </div>
+        {/if}
       </div>
     </div>
 
@@ -1375,6 +1395,22 @@
     </div>
   {/if}
 </div>
+
+{#if showScrollTop}
+  <div class="fixed bottom-24 left-0 right-0 z-10 flex justify-center pointer-events-none">
+    <button 
+      class="pointer-events-auto grid h-12 w-12 place-items-center rounded-full border border-slate-200 bg-white/80 text-slate-600 shadow-lg ring-1 ring-black/5 backdrop-blur-md transition-all hover:-translate-y-1 hover:bg-white" 
+      type="button" 
+      onclick={scrollToTop} 
+      aria-label="Scroll to top" 
+      title="Scroll to top"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+      </svg>
+    </button>
+  </div>
+{/if}
 
 <ImageModal
   attachmentId={modalImage?.id ?? null}

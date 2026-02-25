@@ -594,6 +594,8 @@ def _collection_json(c: Collection) -> dict:
         "list_for_day": c.list_for_day.isoformat() if c.list_for_day else None,
         "created_at": c.created_at.isoformat() + "Z",
         "modified_at": c.modified_at.isoformat() + "Z",
+        "modified_by_id": c.modified_by_id,
+        "modified_by_username": c.modified_by.username if c.modified_by else None,
     }
 
 

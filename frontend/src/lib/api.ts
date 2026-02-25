@@ -32,6 +32,8 @@ export type Collection = {
   access_level?: 'owner' | 'write' | 'read';
   shared_by_username?: string | null;
   shared_out?: boolean;
+  modified_by_id?: string;
+  modified_by_username?: string | null;
 };
 
 export type UserLite = { id: string; username: string };

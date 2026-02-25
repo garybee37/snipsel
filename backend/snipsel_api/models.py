@@ -77,6 +77,8 @@ class Collection(db.Model):
     deleted_by_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     owner = relationship("User", foreign_keys=[owner_user_id])
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    modified_by = relationship("User", foreign_keys=[modified_by_id])
 
     __table_args__ = (
         UniqueConstraint("owner_user_id", "list_for_day", name="uq_collection_owner_day"),
