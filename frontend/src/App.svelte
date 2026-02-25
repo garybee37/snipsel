@@ -241,8 +241,19 @@
   $effect(() => {
     if (initialized && $currentUser && $currentView.type === 'loading') {
       applyInitialRoute();
-      fetchNotifications();
     }
+  });
+
+  $effect(() => {
+    if (!initialized || !$currentUser) return;
+
+    // Track view changes
+    void $currentView.type;
+
+    fetchNotifications();
+
+    const intervalId = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(intervalId);
   });
 
   $effect(() => {
