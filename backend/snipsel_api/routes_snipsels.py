@@ -527,15 +527,15 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel) -> None:
         if name not in old_mention_names:
             mentioned_user = db.session.execute(db.select(User).where(User.username == name)).scalar_one_or_none()
             if mentioned_user and mentioned_user.id != user_id:
-                author = db.session.get(User, user_id)
-                author_name = author.username if author else "Someone"
-                n = Notification(
-                    user_id=mentioned_user.id,
-                    message=f"{author_name} mentioned you in a snipsel.",
-                    snipsel_id=snipsel.id
-                )
-                db.session.add(n)
-
+                if snipsel.type == "task" or can_read_snipsel_via_collections(mentioned_user.id, snipsel.id):
+                    author = db.session.get(User, user_id)
+                    author_name = author.username if author else "Someone"
+                    n = Notification(
+                        user_id=mentioned_user.id,
+                        message=f"{author_name} mentioned you in a snipsel.",
+                        snipsel_id=snipsel.id
+                    )
+                    db.session.add(n)
 def _sync_backlinks(*, user_id: str, snipsel: Snipsel) -> None:
     db.session.execute(db.delete(SnipselLink).where(SnipselLink.from_snipsel_id == snipsel.id))
 
