@@ -67,7 +67,7 @@
   }
 
   async function maybeDeleteEmptyDayCollection(collectionId: string) {
-    const c = $currentCollection;
+    const c = untrack(() => $currentCollection);
     if (!c || c.id !== collectionId) return;
     if (!c.list_for_day) return;
 
@@ -77,7 +77,7 @@
       if (res.items.length > 0) return;
 
       await api.collections.delete(collectionId);
-      if ($currentCollection?.id === collectionId) currentCollection.set(null);
+      if (untrack(() => $currentCollection?.id) === collectionId) currentCollection.set(null);
       collections.update((xs) => xs.filter((x) => x.id !== collectionId));
     } catch {
       // best-effort
@@ -104,7 +104,7 @@
     const route = parseRouteFromLocation(window.location);
     if (!route) {
       openToday().then(() => {
-        const id = $currentCollection?.id;
+        const id = untrack(() => $currentCollection?.id);
         replaceUrl(id ? routeToUrl({ v: 'collection', id }) : routeToUrl({ v: 'collections' }));
       });
       return;
@@ -185,25 +185,37 @@
     }
   }
 
+  let isSearching = false;
   async function runSearch() {
-    const q = $searchQuery.trim();
-    const type = $searchType;
+    if (isSearching) return;
+    const q = untrack(() => $searchQuery).trim();
+    const type = untrack(() => $searchType);
     if (!q && !type) {
       searchResults.set(null);
       searchError.set(null);
       return;
     }
-    currentView.update((v) => (v.type === 'search' ? v : { type: 'search' }));
+    
+    isSearching = true;
+    
+    // Set view to search if not already, but guard it with strict check
+    const curView = untrack(() => $currentView);
+    if (curView.type !== 'search') {
+      currentView.set({ type: 'search' });
+    }
+
     searchError.set(null);
     isLoading.set(true);
     try {
       const res = await api.search({ q, type });
       searchResults.set(res);
-    } catch {
+    } catch (e) {
+      console.error('Search failed:', e);
       searchResults.set(null);
       searchError.set('Search failed');
     } finally {
       isLoading.set(false);
+      isSearching = false;
     }
   }
 
@@ -214,7 +226,7 @@
   }
 
   function hexToRgb(hex: string): Rgb | null {
-    const h = hex.trim();
+    const h = (hex || '').trim();
     const m = /^#([0-9a-fA-F]{6})$/.exec(h);
     if (!m) return null;
     const v = m[1];
@@ -240,7 +252,8 @@
   }
 
   function getAccent(): string {
-    const raw = ($currentUser?.default_collection_header_color || '').trim() || DEFAULT_ACCENT;
+    const u = $currentUser;
+    const raw = (u?.default_collection_header_color || '').trim() || DEFAULT_ACCENT;
     return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : DEFAULT_ACCENT;
   }
 
@@ -251,12 +264,17 @@
     return rgba(mixed, 0.96);
   }
 
+  let isFetchingNotifications = false;
   async function fetchNotifications() {
+    if (isFetchingNotifications) return;
+    isFetchingNotifications = true;
     try {
       const res = await api.notifications.list();
       notificationsStore.set(res.notifications);
     } catch {
       // ignore
+    } finally {
+      isFetchingNotifications = false;
     }
   }
 
@@ -270,7 +288,6 @@
     const uid = $currentUser?.id ?? null;
 
     if (uid && uid !== lastUserId) {
-      // New login (or user switched): allow deep links to be applied again.
       didInitRoute = false;
       hasSyncedUrl = false;
       lastUserId = uid;
@@ -278,7 +295,6 @@
     }
 
     if (!uid && lastUserId) {
-      // Logout: reset routing init state.
       didInitRoute = false;
       hasSyncedUrl = false;
       lastUserId = null;
@@ -286,21 +302,20 @@
   });
 
   $effect(() => {
-    if (initialized && $currentUser && $currentView.type === 'loading') {
+    if (initialized && $currentUser && untrack(() => $currentView.type) === 'loading') {
       applyInitialRoute();
     }
   });
 
+  // Notifications Effect
   $effect(() => {
     if (!initialized || !$currentUser) return;
-
-    // Only track the TYPE of the view, not the whole object or repeated updates to same type
+    
+    // Only track view type changes
     const viewType = $currentView.type;
     void viewType;
 
-    untrack(() => {
-      fetchNotifications();
-    });
+    untrack(() => fetchNotifications());
 
     const intervalId = setInterval(() => {
       untrack(() => fetchNotifications());
@@ -308,11 +323,23 @@
     return () => clearInterval(intervalId);
   });
 
+  // Search Effect
+  let searchDebounce: ReturnType<typeof setTimeout> | null = null;
   $effect(() => {
-    const type = $searchType;
+    if (!initialized || !$currentUser) return;
+    
+    // Track query and type
+    const q = $searchQuery;
+    const t = $searchType;
+    void q; void t;
+
+    // Run search if currently in search view
     const viewType = $currentView.type;
-    if (initialized && $currentUser && viewType === 'search') {
-      untrack(() => runSearch());
+    if (viewType === 'search') {
+      if (searchDebounce) clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        untrack(() => runSearch());
+      }, 300);
     }
   });
 
@@ -321,22 +348,25 @@
     if (!$currentUser) return;
     if (isApplyingRoute) return;
 
-    if ($currentView.type === 'collection') {
-      const a = $collectionAnchor;
-      if (!a || a.collectionId !== $currentView.id) collectionAnchor.set(null);
+    // Read currentView and searchQuery
+    const view = $currentView;
+    const query = $searchQuery;
+
+    if (view.type === 'collection') {
+      const a = untrack(() => $collectionAnchor);
+      if (!a || a.collectionId !== view.id) collectionAnchor.set(null);
     } else {
-      if ($collectionAnchor) collectionAnchor.set(null);
+      if (untrack(() => $collectionAnchor)) collectionAnchor.set(null);
     }
 
-    let route = viewToRoute($currentView);
+    let route = viewToRoute(view);
     if (route.v === 'collection') {
-      const a = $collectionAnchor;
+      const a = untrack(() => $collectionAnchor);
       if (a && a.collectionId === route.id) {
         route = { ...route, sn: a.snipselId, pos: a.pos };
       }
     } else if (route.v === 'search') {
-      const q = $searchQuery.trim();
-      route = { v: 'search', q: q || undefined };
+      route = { v: 'search', q: query.trim() || undefined };
     }
 
     const nextUrl = routeToUrl(route);
@@ -348,7 +378,7 @@
       return;
     }
 
-    const shouldReplace = $currentView.type === 'loading' || $currentView.type === 'search';
+    const shouldReplace = view.type === 'loading' || view.type === 'search';
     if (shouldReplace) replaceUrl(nextUrl);
     else if (cur !== nextUrl) pushUrl(nextUrl);
   });
@@ -386,19 +416,23 @@
   });
 
   $effect(() => {
-    if ($currentView.type === 'collection') {
+    const view = $currentView;
+    if (view.type === 'collection') {
       if (isSwitchingCollection) return;
-      if ($currentCollection?.id !== $currentView.id) {
-        openCollectionById($currentView.id);
+      if (untrack(() => $currentCollection?.id) !== view.id) {
+        untrack(() => openCollectionById(view.id));
       }
     }
   });
 
   $effect(() => {
-    const nextId = $currentView.type === 'collection' ? $currentView.id : null;
+    const view = $currentView;
+    const nextId = view.type === 'collection' ? view.id : null;
     if (lastCollectionId && lastCollectionId !== nextId) {
-      pruneEmptySnipsels(lastCollectionId);
-      maybeDeleteEmptyDayCollection(lastCollectionId);
+      untrack(() => {
+        pruneEmptySnipsels(lastCollectionId!);
+        maybeDeleteEmptyDayCollection(lastCollectionId!);
+      });
     }
     lastCollectionId = nextId;
   });
@@ -422,7 +456,9 @@
           type="search"
           bind:value={$searchQuery}
           onfocus={() => {
-            if ($currentUser) currentView.set({ type: 'search' });
+            if ($currentUser && $currentView.type !== 'search') {
+              currentView.set({ type: 'search' });
+            }
           }}
           onkeydown={(e) => {
             if (e.key === 'Enter') {
@@ -441,10 +477,7 @@
           title="Notifications"
         >
           {#if $notificationsStore.filter(n => !n.is_read).length > 0}
-            <span 
-              class="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-xs font-bold text-white shadow-sm ring-2 ring-white"
-              style={`background-color: ${getAccent()}`}
-            >
+            <span class="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#4f46e5] px-1 text-xs font-bold text-white shadow-sm ring-2 ring-white">
               {$notificationsStore.filter(n => !n.is_read).length}
             </span>
           {/if}
