@@ -11,6 +11,7 @@ export type View =
   | { type: 'search' }
   | { type: 'todos' }
   | { type: 'calendar' }
+  | { type: 'settings' }
   | { type: 'notifications' }
   | { type: 'snipsel'; id: string; returnTo?: string };
 

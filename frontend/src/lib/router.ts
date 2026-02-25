@@ -9,6 +9,7 @@ export type Route =
   | { v: 'search'; q?: string }
   | { v: 'todos' }
   | { v: 'calendar' }
+  | { v: 'settings' }
   | { v: 'notifications' }
   | { v: 'loading' };
 

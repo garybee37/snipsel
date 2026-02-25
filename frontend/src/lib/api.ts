@@ -44,6 +44,15 @@ export type CollectionShare = {
   created_at: string;
 };
 
+export type Notification = {
+  id: string;
+  message: string;
+  is_read: boolean;
+  snipsel_id?: string | null;
+  collection_id?: string | null;
+  created_at: string;
+};
+
 export type Snipsel = {
   id: string;
   type: string;
