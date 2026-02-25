@@ -346,6 +346,7 @@ def update_snipsel(snipsel_id: str):
             raise api_error(404, "not_found", "Snipsel not found")
     data = request.get_json() or {}
 
+    old_type = s.type
     if "type" in data and has_write_access:
         new_type = data.get("type")
         if isinstance(new_type, str) and new_type:
@@ -370,8 +371,7 @@ def update_snipsel(snipsel_id: str):
 
     s.modified_by_id = user.id
     if has_write_access:
-        _sync_tags_mentions(user_id=s.owner_user_id, snipsel=s)
-        _sync_backlinks(user_id=user.id, snipsel=s)
+        _sync_tags_mentions(user_id=s.owner_user_id, snipsel=s, newly_became_task=(old_type != "task" and s.type == "task"))
     _touch_collections_for_snipsel(snipsel_id=snipsel_id, modified_by_id=user.id)
     db.session.commit()
     return json_response({"snipsel": _snipsel_json(s)})
@@ -476,7 +476,7 @@ def _get_owned_snipsel(user_id: str, snipsel_id: str) -> Snipsel:
     return s
 
 
-def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel) -> None:
+def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel, newly_became_task: bool = False) -> None:
     text = snipsel.content_markdown or ""
     tag_names = extract_tags(text)
     mention_names = extract_mentions(text)
@@ -524,7 +524,7 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel) -> None:
         db.session.add(SnipselMention(snipsel_id=snipsel.id, mention_id=m.id))
 
     for name in set(mention_names):
-        if name not in old_mention_names:
+        if name not in old_mention_names or newly_became_task:
             mentioned_user = db.session.execute(db.select(User).where(User.username == name)).scalar_one_or_none()
             if mentioned_user and mentioned_user.id != user_id:
                 if snipsel.type == "task" or can_read_snipsel_via_collections(mentioned_user.id, snipsel.id):
