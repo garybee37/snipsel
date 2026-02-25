@@ -1180,7 +1180,7 @@
           oncontextmenu={lpMoveTop.oncontextmenu}
           disabled={!canWrite()}
         >
-          ↑
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
@@ -1195,7 +1195,7 @@
           oncontextmenu={lpMoveBottom.oncontextmenu}
           disabled={!canWrite()}
         >
-          ↓
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
 
         <button
@@ -1211,7 +1211,7 @@
           oncontextmenu={lpOutdentToZero.oncontextmenu}
           disabled={!canWrite()}
         >
-          ⇤
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H9m0 0 4-4m-4 4 4 4M3 5v14"/></svg>
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
@@ -1221,7 +1221,7 @@
           onclick={() => adjustIndentSelected(1)}
           disabled={!canWrite()}
         >
-          ⇥
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h12m0 0-4-4m4 4-4 4M21 5v14"/></svg>
         </button>
 
         <div class="relative">
@@ -1233,7 +1233,7 @@
             onclick={() => (showTypeMenu = !showTypeMenu)}
             disabled={!canWrite()}
           >
-            T
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
           </button>
           {#if showTypeMenu}
             <div class="absolute bottom-12 right-0 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
@@ -1268,7 +1268,7 @@
           onclick={copySelected}
           disabled={!canWrite()}
         >
-          ⧉
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
         </button>
 
         <div class="relative">
@@ -1280,7 +1280,7 @@
             onclick={() => (showTemplateMenu = !showTemplateMenu)}
             disabled={!canWrite()}
           >
-            □
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           </button>
           {#if showTemplateMenu}
             <div class="absolute bottom-12 right-0 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
@@ -1317,7 +1317,7 @@
           onclick={() => attachmentsInputRef?.click()}
           disabled={uploadingAttachments || !canWrite()}
         >
-          📎
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
@@ -1327,7 +1327,7 @@
           onclick={moveSelectedToCollection}
           disabled={!canWrite()}
         >
-          ⇄
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4M2 12h20M6 8l-4 4 4 4"/></svg>
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
@@ -1337,7 +1337,7 @@
           onclick={addSelectedToCollection}
           disabled={!canWrite()}
         >
-          ＋
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
@@ -1346,7 +1346,7 @@
           title="Info"
           onclick={openDetailSelected}
         >
-          ⓘ
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-red-600/90 text-lg text-white hover:bg-red-600"
@@ -1356,7 +1356,7 @@
           onclick={deleteSelected}
           disabled={!canWrite()}
         >
-          🗑
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5v6m4-6v6"/></svg>
         </button>
         <button
           class="grid h-11 w-11 place-items-center rounded-md text-lg text-slate-600 hover:bg-black/5 hover:text-slate-900"
@@ -1369,7 +1369,7 @@
             closeTemplateMenu();
           }}
         >
-          ✕
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
     </div>
