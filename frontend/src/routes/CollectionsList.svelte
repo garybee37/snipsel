@@ -188,14 +188,15 @@
         <span>Collections</span>
       </h2>
       <button
-        class="flex items-center gap-2 rounded-full bg-slate-900 pl-3 pr-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl"
+        class="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-all"
         type="button"
         onclick={() => (showCreate = true)}
+        aria-label="New collection"
+        title="New collection"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style={`color: ${getAccent()}`}>
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
         </svg>
-        <span>New</span>
       </button>
     </div>
 
@@ -336,7 +337,8 @@
       </div>
       <div class="flex gap-2">
         <button
-          class="flex-1 rounded-full bg-slate-900 px-4 py-3 text-base font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl disabled:opacity-50"
+          class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-3 text-base font-bold shadow-sm ring-1 ring-black/5 transition-all hover:bg-slate-50 disabled:opacity-50"
+          style={`color: ${getAccent()}`}
           type="submit"
           disabled={busy || !newTitle.trim()}
         >
