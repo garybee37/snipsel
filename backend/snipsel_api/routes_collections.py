@@ -336,6 +336,12 @@ def _insert_template_into_collection(
             )
         )
 
+        n = Notification(
+            user_id=s.shared_with_user_id,
+            message=f"{user.username} shared collection '{target_collection.title}' with you.",
+            collection_id=target_collection.id
+        )
+        db.session.add(n)
     db.session.commit()
 
 
