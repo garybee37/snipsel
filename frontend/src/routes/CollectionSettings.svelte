@@ -254,36 +254,57 @@
         </div>
 
         <div class="mt-4 space-y-4">
-          <label class="block">
-            <span class="mb-1.5 block text-sm font-medium text-slate-700">Title</span>
-            <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={title} />
-          </label>
+          <div class="flex gap-3">
+            <label class="block flex-1">
+              <span class="mb-1.5 block text-sm font-medium text-slate-700">Title</span>
+              <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={title} />
+            </label>
 
-          <label class="block">
-            <span class="mb-1.5 block text-sm font-medium text-slate-700">Icon</span>
-            <input class="w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-2xl shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={icon} />
-          </label>
+            <label class="block">
+              <span class="mb-1.5 block text-sm font-medium text-slate-700">Icon</span>
+              <input class="w-20 rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xl shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={icon} />
+            </label>
+          </div>
 
-          <label class="block">
-            <span class="mb-1.5 block text-sm font-medium text-slate-700">Default snipsel type</span>
-            <div class="flex items-center gap-2">
-              <select class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={defaultSnipselType}>
-                <option value="">Text (default)</option>
-                <option value="task">Task</option>
-                <option value="image">Image</option>
-                <option value="attachment">File</option>
-              </select>
-              {#if defaultSnipselType}
+          <div class="block">
+            <span class="mb-2 block text-sm font-medium text-slate-700">Default snipsel type</span>
+            <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+              <div class="grid grid-cols-4">
                 <button
-                  class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  class="px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === '' || defaultSnipselType === 'text' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
                   type="button"
                   onclick={() => (defaultSnipselType = '')}
+                  style={defaultSnipselType === '' || defaultSnipselType === 'text' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
                 >
-                  Clear
+                  Note
                 </button>
-              {/if}
+                <button
+                  class="border-l border-black/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'image' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+                  type="button"
+                  onclick={() => (defaultSnipselType = 'image')}
+                  style={defaultSnipselType === 'image' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+                >
+                  Image
+                </button>
+                <button
+                  class="border-l border-black/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'attachment' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+                  type="button"
+                  onclick={() => (defaultSnipselType = 'attachment')}
+                  style={defaultSnipselType === 'attachment' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+                >
+                  File
+                </button>
+                <button
+                  class="border-l border-black/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'task' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+                  type="button"
+                  onclick={() => (defaultSnipselType = 'task')}
+                  style={defaultSnipselType === 'task' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+                >
+                  Task
+                </button>
+              </div>
             </div>
-          </label>
+          </div>
         </div>
       </div>
 
