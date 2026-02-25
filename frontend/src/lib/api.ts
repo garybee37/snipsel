@@ -296,43 +296,7 @@ export const api = {
         { method: 'POST' }
       ),
     reorder: (
-  },
-
-  notifications: {
-    list: () => requestJson<{ notifications: Notification[] }>('/api/notifications'),
-    markRead: (id: string) => requestJson<{ success: boolean }>(`/api/notifications/${id}/mark-read`, { method: 'POST' }),
-    markAllRead: () => requestJson<{ success: boolean }>('/api/notifications/mark-all-read', { method: 'POST' }),
-    deleteRead: () => requestJson<{ success: boolean }>('/api/notifications/read', { method: 'DELETE' }),
-  },
-
-  attachments: {
-    upload: (snipselId: string, file: File) => {
-      const fd = new FormData();
-      fd.append('file', file);
-      return requestJson<{ attachment: Attachment }>(
-        `/api/snipsels/${snipselId}/attachments`,
-        { method: 'POST', body: fd }
-      );
-    },
-    delete: (attachmentId: string) =>
-      requestJson<{ ok: true }>(`/api/attachments/${attachmentId}`, {
-        method: 'DELETE',
-      }),
-  },
-
-  mentions: {
-    list: () => requestJson<{ mentions: string[] }>('/api/mentions'),
-  },
-
-  tags: {
-    list: () => requestJson<{ tags: TagCount[] }>('/api/tags'),
-  },
-
-  search: (input: { q: string }) =>
-    requestJson<SearchResponse>(
-      `/api/search?q=${encodeURIComponent(input.q)}`
-    ),
-};
+      collectionId: string,
       items: Array<{ snipsel_id: string; position: number; indent: number }>
     ) =>
       requestJson<{ ok: true }>(
@@ -342,6 +306,13 @@ export const api = {
           body: JSON.stringify({ items }),
         }
       ),
+  },
+
+  notifications: {
+    list: () => requestJson<{ notifications: Notification[] }>('/api/notifications'),
+    markRead: (id: string) => requestJson<{ success: boolean }>(`/api/notifications/${id}/mark-read`, { method: 'POST' }),
+    markAllRead: () => requestJson<{ success: boolean }>('/api/notifications/mark-all-read', { method: 'POST' }),
+    deleteRead: () => requestJson<{ success: boolean }>('/api/notifications/read', { method: 'DELETE' }),
   },
 
   attachments: {
