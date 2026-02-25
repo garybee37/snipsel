@@ -176,7 +176,7 @@
         style={isToday ? `box-shadow: inset 0 0 0 2px ${getAccent()}` : undefined}
       >
         {#if showIcon}
-          <span class="absolute right-0.5 top-0.5 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white text-[15px] shadow-sm ring-1 ring-black/5">
+          <span class="absolute -right-1 -top-1 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white text-[12px] shadow-sm ring-1 ring-black/5">
             {collectionData.icon}
           </span>
         {/if}
