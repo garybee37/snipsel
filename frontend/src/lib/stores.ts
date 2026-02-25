@@ -35,6 +35,9 @@ export const searchError = writable<string | null>(null);
 export const notificationsStore = writable<import('./api').Notification[]>([]);
 
 export function requestNewSnipsel() {
+  newSnipselRequest.update((n) => n + 1);
+}
+
 export function getTodayDate(): string {
   return toLocalIsoDay(new Date());
 }
