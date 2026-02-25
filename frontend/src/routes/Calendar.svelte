@@ -1,10 +1,55 @@
 <script lang="ts">
   import { api } from '../lib/api';
   import { collectionAnchor, currentCollection, currentView, isLoading, toLocalIsoDay } from '../lib/stores';
+  import { currentUser } from '../lib/session';
 
   let cursor = $state(new Date());
+  let dayCollections = $state<Map<string, { icon: string | null }>>(new Map());
 
-  let dayCollections = $state<Set<string>>(new Set());
+  const DEFAULT_ACCENT = '#4f46e5';
+  type Rgb = { r: number; g: number; b: number };
+
+  function clampByte(n: number): number {
+    return Math.max(0, Math.min(255, Math.round(n)));
+  }
+
+  function hexToRgb(hex: string): Rgb | null {
+    const h = hex.trim();
+    const m = /^#([0-9a-fA-F]{6})$/.exec(h);
+    if (!m) return null;
+    const v = m[1];
+    return {
+      r: parseInt(v.slice(0, 2), 16),
+      g: parseInt(v.slice(2, 4), 16),
+      b: parseInt(v.slice(4, 6), 16),
+    };
+  }
+
+  function mixRgb(a: Rgb, b: Rgb, t: number): Rgb {
+    const tt = Math.max(0, Math.min(1, t));
+    return {
+      r: clampByte(a.r + (b.r - a.r) * tt),
+      g: clampByte(a.g + (b.g - a.g) * tt),
+      b: clampByte(a.b + (b.b - a.b) * tt),
+    };
+  }
+
+  function rgba(c: Rgb, alpha: number): string {
+    const a = Math.max(0, Math.min(1, alpha));
+    return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`;
+  }
+
+  function getAccent(): string {
+    const raw = ($currentUser?.default_collection_header_color || '').trim() || DEFAULT_ACCENT;
+    return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : DEFAULT_ACCENT;
+  }
+
+  function getAccentTint(): string {
+    const base = { r: 255, g: 255, b: 255 };
+    const accent = hexToRgb(getAccent());
+    const mixed = accent ? mixRgb(base, accent, 0.14) : base;
+    return rgba(mixed, 0.96);
+  }
 
   function startOfMonth(d: Date) {
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -13,7 +58,6 @@
   function addMonths(d: Date, delta: number) {
     return new Date(d.getFullYear(), d.getMonth() + delta, 1);
   }
-
 
   function monthLabel(d: Date) {
     return d.toLocaleString(undefined, { month: 'long', year: 'numeric' });
@@ -38,11 +82,11 @@
     isLoading.set(true);
     try {
       const res = await api.collections.list(true);
-      const set = new Set<string>();
+      const map = new Map<string, { icon: string | null }>();
       for (const c of res.collections) {
-        if (c.list_for_day) set.add(c.list_for_day);
+        if (c.list_for_day) map.set(c.list_for_day, { icon: c.icon });
       }
-      dayCollections = set;
+      dayCollections = map;
     } finally {
       isLoading.set(false);
     }
@@ -73,31 +117,44 @@
   const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 </script>
 
-<div class="space-y-3">
-  <div class="flex items-center justify-between">
-    <h2 class="flex items-center gap-2 text-2xl font-semibold">
-      <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <path d="M16 2v4" />
-        <path d="M8 2v4" />
-        <path d="M3 10h18" />
-      </svg>
-      <span>{monthLabel(cursor)}</span>
-    </h2>
-    <div class="flex gap-2">
-      <button class="rounded-md border px-4 py-3 text-lg" type="button" onclick={() => (cursor = addMonths(cursor, -1))}>
+<div class="space-y-4">
+  <h2 class="flex items-center gap-2 text-2xl font-semibold">
+    <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4" />
+      <path d="M8 2v4" />
+      <path d="M3 10h18" />
+    </svg>
+    <span>{monthLabel(cursor)}</span>
+  </h2>
+
+  <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+    <div class="grid grid-cols-3">
+      <button
+        class="px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+        type="button"
+        onclick={() => (cursor = addMonths(cursor, -1))}
+      >
         Prev
       </button>
-      <button class="rounded-md border px-4 py-3 text-lg" type="button" onclick={() => (cursor = new Date())}>
+      <button
+        class="border-l border-black/5 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+        type="button"
+        onclick={() => (cursor = new Date())}
+      >
         Today
       </button>
-      <button class="rounded-md border px-4 py-3 text-lg" type="button" onclick={() => (cursor = addMonths(cursor, 1))}>
+      <button
+        class="border-l border-black/5 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+        type="button"
+        onclick={() => (cursor = addMonths(cursor, 1))}
+      >
         Next
       </button>
     </div>
   </div>
 
-  <div class="grid grid-cols-7 gap-1 text-center text-base text-slate-500">
+  <div class="grid grid-cols-7 gap-1 text-center text-sm font-medium text-slate-500">
     {#each weekdays as w}
       <div class="py-1">{w}</div>
     {/each}
@@ -106,23 +163,32 @@
   <div class="grid grid-cols-7 gap-1">
     {#each getGridDays(cursor) as cell}
       {@const iso = toLocalIsoDay(cell.day)}
-      {@const hasCollection = dayCollections.has(iso)}
+      {@const collectionData = dayCollections.get(iso)}
+      {@const hasCollection = !!collectionData}
       {@const isToday = isSameLocalDay(cell.day, new Date())}
+      {@const showIcon = collectionData?.icon && collectionData.icon !== '📅'}
       <button
         class="relative aspect-square rounded-lg text-lg transition-colors {cell.inMonth
           ? 'bg-white hover:bg-slate-50'
-          : 'bg-slate-50 text-slate-400 hover:bg-slate-100'} {isToday ? 'ring-2 ring-indigo-400' : ''}"
+          : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}"
         type="button"
         onclick={() => openDay(cell.day)}
+        style={isToday ? `box-shadow: inset 0 0 0 2px ${getAccent()}` : undefined}
       >
+        {#if showIcon}
+          <span class="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] shadow-sm ring-1 ring-black/5">
+            {collectionData.icon}
+          </span>
+        {/if}
         <span
-          class="mx-auto grid h-14 w-14 place-items-center rounded-full text-lg {hasCollection
-            ? 'bg-indigo-600 text-white font-semibold'
+          class="mx-auto grid h-10 w-10 place-items-center rounded-full text-base {hasCollection
+            ? 'font-semibold'
             : isToday
-              ? 'bg-indigo-50 text-indigo-700 font-semibold'
+              ? 'bg-slate-100 font-semibold text-slate-900'
               : cell.inMonth
                 ? 'text-slate-800'
                 : 'text-slate-400'}"
+          style={hasCollection ? `background-color: ${getAccent()}; color: white` : undefined}
         >
           {cell.day.getDate()}
         </span>
