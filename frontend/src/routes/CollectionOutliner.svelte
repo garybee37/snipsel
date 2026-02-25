@@ -895,16 +895,17 @@
         >
           {$currentCollection?.title}
         </button>
-        {#if $currentCollection}
-          <div class="mt-0.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400">
-            <span>Last modified: {new Date($currentCollection.modified_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
-            {#if $currentCollection.modified_by_username && $currentCollection.modified_by_id !== $currentUser?.id}
-              <span>by {$currentCollection.modified_by_username}</span>
-            {/if}
-          </div>
-        {/if}
+
       </div>
     </div>
+    {#if $currentCollection}
+      <div class="mt-1 flex items-center justify-end gap-1.5 px-1 text-[10px] text-slate-400">
+        <span>Last modified: {new Date($currentCollection.modified_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+        {#if $currentCollection.modified_by_username && $currentCollection.modified_by_id !== $currentUser?.id}
+          <span>by {$currentCollection.modified_by_username}</span>
+        {/if}
+      </div>
+    {/if}
 
     {#if $currentCollection}
       {@const level = $currentCollection.access_level}
