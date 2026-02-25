@@ -81,7 +81,7 @@ export function routeToView(route: Route): View {
   if (route.v === 'settings') return { type: 'settings' };
   if (route.v === 'notifications') return { type: 'notifications' };
   return { type: 'loading' };
-
+}
 export function viewToRoute(view: View): Route {
   if (view.type === 'collections') return { v: 'collections' };
   if (view.type === 'collection') return { v: 'collection', id: view.id };
@@ -94,7 +94,7 @@ export function viewToRoute(view: View): Route {
   if (view.type === 'settings') return { v: 'settings' };
   if (view.type === 'notifications') return { v: 'notifications' };
   return { v: 'loading' };
-
+}
 export function routeToUrl(route: Route, pathname = location.pathname): string {
   const sp = new URLSearchParams();
   sp.set('v', route.v);
