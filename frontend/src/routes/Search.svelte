@@ -1,5 +1,6 @@
 <script lang="ts">
   import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults, searchType } from '../lib/stores';
+  import type { SearchSnipselHit } from '../lib/api';
   import { getCurrentUrl } from '../lib/router';
   import { currentUser } from '../lib/session';
 
@@ -48,9 +49,14 @@
     return rgba(mixed, 0.96);
   }
 
-  function openSnipsel(id: string) {
-    collectionAnchor.set(null);
-    currentView.set({ type: 'snipsel', id, returnTo: getCurrentUrl() });
+  function openSnipsel(s: SearchSnipselHit) {
+    if (s.collection_id) {
+      collectionAnchor.set({ collectionId: s.collection_id, snipselId: s.id, pos: s.position ?? undefined });
+      currentView.set({ type: 'collection', id: s.collection_id });
+    } else {
+      collectionAnchor.set(null);
+      currentView.set({ type: 'snipsel', id: s.id, returnTo: getCurrentUrl() });
+    }
   }
 
   function formatDate(iso: string) {
@@ -104,38 +110,65 @@
   {#if $isLoading && !$searchResults}
     <div class="py-12 text-center text-slate-500">Searching...</div>
   {:else if $searchResults}
-    <div class="space-y-3">
-      <div class="flex items-center justify-between px-1">
-        <div class="text-xs font-medium uppercase tracking-wider text-slate-500">
-          Results for "{$searchQuery.trim() || '—'}"
-        </div>
-        <div class="text-xs text-slate-400">
-          {$searchResults.snipsels.length} found
-        </div>
-      </div>
-
-      {#if $searchResults.snipsels.length === 0}
-        <div class="rounded-xl border border-slate-200 bg-white/80 p-8 text-center text-slate-500 backdrop-blur-md">
-          No matches found
-        </div>
-      {:else}
-        <div class="space-y-2">
-          {#each $searchResults.snipsels as s (s.id)}
-            <div class="flex w-full items-center gap-3 px-1 py-2">
-              <button class="min-w-0 flex flex-1 items-start gap-3 text-left" type="button" onclick={() => openSnipsel(s.id)}>
-                <div class="min-w-0 flex-1">
-                  <div class="line-clamp-2 text-lg font-medium text-slate-900">{s.content_markdown || '(No content)'}</div>
-                  <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
-                    <span class="font-semibold uppercase tracking-tight" style={`color: ${getAccent()}`}>{s.type}</span>
-                    <span class="opacity-30">|</span>
-                    <span>{formatDate(s.modified_at)}</span>
-                  </div>
-                </div>
+    <div class="space-y-6">
+      {#if $searchResults.collections.length > 0}
+        <div class="space-y-3">
+          <div class="text-xs font-medium uppercase tracking-wider text-slate-500 px-1">Collections</div>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {#each $searchResults.collections as c (c.id)}
+              <button 
+                class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:shadow-md text-left"
+                type="button"
+                onclick={() => currentView.set({ type: 'collection', id: c.id })}
+              >
+                <span class="text-2xl">{c.icon}</span>
+                <span class="font-medium text-slate-900 truncate">{c.title}</span>
               </button>
-            </div>
-          {/each}
+            {/each}
+          </div>
         </div>
       {/if}
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between px-1">
+          <div class="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Snipsels for "{$searchQuery.trim() || '—'}"
+          </div>
+          <div class="text-xs text-slate-400">
+            {$searchResults.snipsels.length} found
+          </div>
+        </div>
+
+        {#if $searchResults.snipsels.length === 0}
+          <div class="rounded-xl border border-slate-200 bg-white/80 p-8 text-center text-slate-500 backdrop-blur-md">
+            No matches found
+          </div>
+        {:else}
+          <div class="space-y-2">
+            {#each $searchResults.snipsels as s (s.id)}
+              <div class="flex w-full items-center gap-3 px-1 py-2">
+                <button class="min-w-0 flex flex-1 items-start gap-3 text-left" type="button" onclick={() => openSnipsel(s)}>
+                  <div class="min-w-0 flex-1">
+                    <div class="line-clamp-2 text-lg font-medium text-slate-900">{s.content_markdown || '(No content)'}</div>
+                    <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
+                      <span class="font-semibold uppercase tracking-tight" style={`color: ${getAccent()}`}>{s.type}</span>
+                      {#if s.collection_title}
+                        <span class="opacity-30">|</span>
+                        <span class="flex items-center gap-1">
+                          <span class="opacity-70">{s.collection_icon}</span>
+                          <span>{s.collection_title}</span>
+                        </span>
+                      {/if}
+                      <span class="opacity-30">|</span>
+                      <span>{formatDate(s.modified_at)}</span>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
     </div>
   {:else}
     <div class="py-12 text-center text-slate-500">
