@@ -11,7 +11,7 @@ export type View =
   | { type: 'search' }
   | { type: 'todos' }
   | { type: 'calendar' }
-  | { type: 'settings' }
+  | { type: 'notifications' }
   | { type: 'snipsel'; id: string; returnTo?: string };
 
 export const currentView = writable<View>({ type: 'loading' });
@@ -32,10 +32,9 @@ export const searchQuery = writable('');
 export const searchResults = writable<SearchResponse | null>(null);
 export const searchError = writable<string | null>(null);
 
-export function requestNewSnipsel() {
-  newSnipselRequest.update((n) => n + 1);
-}
+export const notificationsStore = writable<import('./api').Notification[]>([]);
 
+export function requestNewSnipsel() {
 export function getTodayDate(): string {
   return toLocalIsoDay(new Date());
 }

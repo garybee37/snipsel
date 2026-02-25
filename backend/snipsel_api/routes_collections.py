@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Attachment, Collection, CollectionFavorite, CollectionShare, CollectionSnipsel, Snipsel, User
+from snipsel_api.models import Attachment, Collection, CollectionFavorite, CollectionShare, CollectionSnipsel, Snipsel, User, Notification
 from snipsel_api.permissions import can_read_collection, can_write_collection, get_collection_access_level
 from snipsel_api.routes_attachments import _resolve_attachment_path, _resolve_thumbnail_path
 from snipsel_api.routes_snipsels import _sync_backlinks, _sync_tags_mentions
@@ -708,6 +708,14 @@ def create_share(collection_id: str):
         created_by_user_id=user.id,
     )
     db.session.add(s)
+
+    n = Notification(
+        user_id=shared_with_user_id,
+        message=f"{user.username} shared collection '{c.title}' with you.",
+        collection_id=collection_id
+    )
+    db.session.add(n)
+
     db.session.commit()
     return json_response({"share": {"id": s.id}}, status=201)
 

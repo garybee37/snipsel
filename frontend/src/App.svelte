@@ -12,6 +12,7 @@
     searchError,
     searchQuery,
     searchResults,
+    notificationsStore,
   } from './lib/stores';
   import {
     getCurrentUrl,
@@ -32,6 +33,7 @@
   import SnipselDetail from './routes/SnipselDetail.svelte';
   import CollectionSettings from './routes/CollectionSettings.svelte';
   import TagsMentions from './routes/TagsMentions.svelte';
+  import Notifications from './routes/Notifications.svelte';
 
   let initialized = $state(false);
 
@@ -202,6 +204,15 @@
     }
   }
 
+  async function fetchNotifications() {
+    try {
+      const res = await api.notifications.list();
+      notificationsStore.set(res.notifications);
+    } catch {
+      // ignore
+    }
+  }
+
   $effect(() => {
     if (!initialized) {
       initSession();
@@ -230,6 +241,7 @@
   $effect(() => {
     if (initialized && $currentUser && $currentView.type === 'loading') {
       applyInitialRoute();
+      fetchNotifications();
     }
   });
 
@@ -349,6 +361,34 @@
           }}
         />
         <button
+          class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {$currentView.type === 'notifications'
+            ? 'bg-[#4f46e5]/10 text-[#4f46e5]'
+            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
+          type="button"
+          onclick={() => currentView.set({ type: 'notifications' })}
+          aria-label="Notifications"
+          title="Notifications"
+        >
+          {#if $notificationsStore.filter(n => !n.is_read).length > 0}
+            <span class="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#4f46e5] px-1 text-xs font-bold text-white shadow-sm ring-2 ring-white">
+              {$notificationsStore.filter(n => !n.is_read).length}
+            </span>
+          {/if}
+          <svg
+            class="h-5 w-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </button>
+        <button
           class="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {$currentView.type === 'settings'
             ? 'bg-[#4f46e5]/10 text-[#4f46e5]'
             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
@@ -357,7 +397,6 @@
           aria-label="Settings"
           title="Settings"
         >
-          <svg
             class="h-5 w-5"
             viewBox="0 0 24 24"
             fill="none"
@@ -396,6 +435,8 @@
       <Calendar />
     {:else if $currentView.type === 'settings'}
       <Settings />
+    {:else if $currentView.type === 'notifications'}
+      <Notifications />
     {:else if $currentView.type === 'snipsel'}
       <SnipselDetail snipselId={$currentView.id} />
     {:else if $currentView.type === 'collection_settings'}

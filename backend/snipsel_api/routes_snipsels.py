@@ -17,7 +17,8 @@ from snipsel_api.models import (
     SnipselMention,
     SnipselTag,
     Tag,
-    Collection,
+    User,
+    Notification
 )
 
 
@@ -480,6 +481,10 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel) -> None:
     tag_names = extract_tags(text)
     mention_names = extract_mentions(text)
 
+    old_mention_names = set(db.session.execute(
+        db.select(Mention.name).join(SnipselMention, SnipselMention.mention_id == Mention.id)
+        .where(SnipselMention.snipsel_id == snipsel.id)
+    ).scalars().all())
     existing_tags = (
         db.session.execute(
             db.select(Tag).where(Tag.owner_user_id == user_id, Tag.name.in_(tag_names))
@@ -518,6 +523,18 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel) -> None:
     for m in m_by_name.values():
         db.session.add(SnipselMention(snipsel_id=snipsel.id, mention_id=m.id))
 
+    for name in set(mention_names):
+        if name not in old_mention_names:
+            mentioned_user = db.session.execute(db.select(User).where(User.username == name)).scalar_one_or_none()
+            if mentioned_user and mentioned_user.id != user_id:
+                author = db.session.get(User, user_id)
+                author_name = author.username if author else "Someone"
+                n = Notification(
+                    user_id=mentioned_user.id,
+                    message=f"{author_name} mentioned you in a snipsel.",
+                    snipsel_id=snipsel.id
+                )
+                db.session.add(n)
 
 def _sync_backlinks(*, user_id: str, snipsel: Snipsel) -> None:
     db.session.execute(db.delete(SnipselLink).where(SnipselLink.from_snipsel_id == snipsel.id))

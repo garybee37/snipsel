@@ -9,7 +9,7 @@ export type Route =
   | { v: 'search'; q?: string }
   | { v: 'todos' }
   | { v: 'calendar' }
-  | { v: 'settings' }
+  | { v: 'notifications' }
   | { v: 'loading' };
 
 const KNOWN_VIEWS = new Set<Route['v']>([
@@ -22,6 +22,7 @@ const KNOWN_VIEWS = new Set<Route['v']>([
   'todos',
   'calendar',
   'settings',
+  'notifications',
   'loading',
 ]);
 
@@ -78,8 +79,8 @@ export function routeToView(route: Route): View {
   if (route.v === 'todos') return { type: 'todos' };
   if (route.v === 'calendar') return { type: 'calendar' };
   if (route.v === 'settings') return { type: 'settings' };
+  if (route.v === 'notifications') return { type: 'notifications' };
   return { type: 'loading' };
-}
 
 export function viewToRoute(view: View): Route {
   if (view.type === 'collections') return { v: 'collections' };
@@ -91,8 +92,8 @@ export function viewToRoute(view: View): Route {
   if (view.type === 'todos') return { v: 'todos' };
   if (view.type === 'calendar') return { v: 'calendar' };
   if (view.type === 'settings') return { v: 'settings' };
+  if (view.type === 'notifications') return { v: 'notifications' };
   return { v: 'loading' };
-}
 
 export function routeToUrl(route: Route, pathname = location.pathname): string {
   const sp = new URLSearchParams();
