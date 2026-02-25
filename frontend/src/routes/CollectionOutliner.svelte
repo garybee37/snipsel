@@ -1128,7 +1128,7 @@
       {/each}
 
       <button
-        class="mt-6 h-24 w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-left text-base text-slate-400 hover:bg-slate-50"
+        class="mt-6 flex h-24 w-full items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-base text-slate-400 hover:bg-slate-50"
         type="button"
         aria-label="Add new snipsel"
         onclick={() => {
@@ -1139,11 +1139,13 @@
           createSnipselFromUserGesture();
         }}
         disabled={!canWrite()}
-      ></button>
+      >
+        add new snipsel
+      </button>
 
       {#if hideDoneTasks && hiddenDoneCount($sortedItems) > 0}
         <div class="mt-3 text-center text-sm text-slate-500">
-          {hiddenDoneCount($sortedItems)} erledigte Aufgaben ausgeblendet
+          {hiddenDoneCount($sortedItems)} completed tasks hidden
         </div>
       {/if}
     </div>
