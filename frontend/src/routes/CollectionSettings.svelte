@@ -255,14 +255,14 @@
 
         <div class="mt-4 space-y-4">
           <div class="flex gap-3">
-            <label class="block flex-1">
-              <span class="mb-1.5 block text-sm font-medium text-slate-700">Title</span>
-              <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={title} />
-            </label>
-
             <label class="block">
               <span class="mb-1.5 block text-sm font-medium text-slate-700">Icon</span>
               <input class="w-20 rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xl shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={icon} />
+            </label>
+
+            <label class="block flex-1">
+              <span class="mb-1.5 block text-sm font-medium text-slate-700">Title</span>
+              <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={title} />
             </label>
           </div>
 
