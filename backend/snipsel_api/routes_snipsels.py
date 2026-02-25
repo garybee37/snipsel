@@ -530,9 +530,10 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel) -> None:
                 if snipsel.type == "task" or can_read_snipsel_via_collections(mentioned_user.id, snipsel.id):
                     author = db.session.get(User, user_id)
                     author_name = author.username if author else "Someone"
+                    msg = f"{author_name} assigned a task to you." if snipsel.type == "task" else f"{author_name} mentioned you in a snipsel."
                     n = Notification(
                         user_id=mentioned_user.id,
-                        message=f"{author_name} mentioned you in a snipsel.",
+                        message=msg,
                         snipsel_id=snipsel.id
                     )
                     db.session.add(n)
