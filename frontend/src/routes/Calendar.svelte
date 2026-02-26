@@ -142,47 +142,50 @@
     </h2>
   </div>
 
-  <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
-    <div class="flex items-stretch divide-x divide-black/5">
-      <button
-        class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-        type="button"
-        onclick={() => (cursor = addMonths(cursor, -1))}
-      >
-        Prev
-      </button>
-      <button
-        class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-        type="button"
-        onclick={() => (cursor = new Date())}
-      >
-        Today
-      </button>
-      <button
-        class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-        type="button"
-        onclick={() => (cursor = addMonths(cursor, 1))}
-      >
-        Next
-      </button>
-      <div class="relative flex-1 group transition-colors hover:bg-slate-50">
-        <div class="flex h-full items-center justify-center text-slate-600 pointer-events-none">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <input 
-          type="month" 
-          class="absolute inset-0 w-full h-full cursor-pointer opacity-0" 
-          value={toMonthValue(cursor)} 
-          onchange={handleMonthChange}
-          onclick={(e) => {
-            if ('showPicker' in e.currentTarget) {
-              try { (e.currentTarget as any).showPicker(); } catch (err) { console.error(err); }
-            }
-          }}
-        />
+  <div class="flex items-center gap-2">
+    <div class="flex-1 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+      <div class="flex items-stretch divide-x divide-black/5">
+        <button
+          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          type="button"
+          onclick={() => (cursor = addMonths(cursor, -1))}
+        >
+          Prev
+        </button>
+        <button
+          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          type="button"
+          onclick={() => (cursor = new Date())}
+        >
+          Today
+        </button>
+        <button
+          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          type="button"
+          onclick={() => (cursor = addMonths(cursor, 1))}
+        >
+          Next
+        </button>
       </div>
+    </div>
+
+    <div class="relative h-[46px] w-[46px] flex-shrink-0 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-colors">
+      <div class="flex h-full items-center justify-center text-slate-600 pointer-events-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <input 
+        type="month" 
+        class="absolute inset-0 w-full h-full cursor-pointer opacity-0" 
+        value={toMonthValue(cursor)} 
+        onchange={handleMonthChange}
+        onclick={(e) => {
+          if ('showPicker' in e.currentTarget) {
+            try { (e.currentTarget as any).showPicker(); } catch (err) { console.error(err); }
+          }
+        }}
+      />
     </div>
   </div>
 
