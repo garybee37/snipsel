@@ -213,6 +213,17 @@ def search():
         done_val = task_done_filter if task_done_filter is not None else False
         stmt = stmt.where(Snipsel.task_done.is_(done_val))
     if q:
+        # Split search query into terms and require ALL terms to match (AND search)
+        terms = q.split()
+        for term in terms:
+            like = f"%{term}%"
+            stmt = stmt.where(
+                db.or_(
+                    Snipsel.content_markdown.ilike(like),
+                    Snipsel.external_url.ilike(like),
+                    Snipsel.external_label.ilike(like),
+                )
+            )
         like = f"%{q}%"
         stmt = stmt.where(
             db.or_(
