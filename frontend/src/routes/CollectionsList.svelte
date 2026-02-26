@@ -406,11 +406,6 @@
                     >archived</span
                   >
                 {/if}
-                {#if c.is_template}
-                  <span class="rounded-full px-2 py-0.5 font-medium" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
-                    >template</span
-                  >
-                {/if}
               </div>
             </div>
           </button>
@@ -418,14 +413,10 @@
           <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 flex h-11 items-center px-1">
             {#if filter === 'shared'}
               <div
-                class="grid h-10 w-10 place-items-center text-lg"
+                class="grid h-10 w-10 place-items-center text-lg text-slate-400"
                 aria-label={c.access_level === 'owner' && c.shared_out ? 'Shared by you' : 'Shared with you'}
                 title={c.access_level === 'owner' && c.shared_out ? 'Shared by you' : 'Shared with you'}
-                style={
-                  c.access_level === 'owner' && c.shared_out
-                    ? `color: ${getAccent()}`
-                    : undefined
-                }
+                style={c.access_level === 'owner' && c.shared_out ? `color: ${getAccent()}` : undefined}
               >
                 {#if c.access_level === 'owner' && c.shared_out}
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -439,6 +430,27 @@
               </div>
               <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
             {/if}
+
+            {#if c.is_template}
+              <div class="grid h-9 w-9 place-items-center text-slate-400" title="Template">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="9" y1="21" x2="9" y2="9" />
+                </svg>
+              </div>
+              <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
+            {/if}
+
+            {#if c.is_passcode_protected}
+              <div class="grid h-9 w-9 place-items-center text-slate-400" title="Passcode protected" style={`color: ${getAccent()}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
+            {/if}
+
             <button
               class="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-slate-50 transition-colors"
               type="button"
