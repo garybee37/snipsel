@@ -243,6 +243,7 @@ export const api = {
         archived?: boolean;
         is_template?: boolean;
         default_snipsel_type?: string | null;
+        is_passcode_protected?: boolean;
       }
     ) =>
       requestJson<{ collection: Collection }>(`/api/collections/${id}`, {

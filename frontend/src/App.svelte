@@ -37,6 +37,7 @@
   import CollectionSettings from './routes/CollectionSettings.svelte';
   import TagsMentions from './routes/TagsMentions.svelte';
   import Notifications from './routes/Notifications.svelte';
+  import PasscodeModal from './lib/PasscodeModal.svelte';
 
   let initialized = $state(false);
 
@@ -48,6 +49,7 @@
   let lastUserId: string | null = $state(null);
 
   let isSwitchingCollection = $state(false);
+  let pendingPasscodeCollectionId = $state<string | null>(null);
 
   let lastCollectionId: string | null = $state(null);
 
@@ -205,11 +207,15 @@
       const res = await api.collections.get(id);
       await pruneEmptySnipsels(res.collection.id);
       currentCollection.set(res.collection);
-    } catch {
-      currentCollection.set(null);
-      collectionAnchor.set(null);
-      currentView.set({ type: 'collections' });
-      replaceUrl(routeToUrl({ v: 'collections' }));
+    } catch (err: any) {
+      if (err?.error?.code === 'passcode_required') {
+        pendingPasscodeCollectionId = id;
+      } else {
+        currentCollection.set(null);
+        collectionAnchor.set(null);
+        currentView.set({ type: 'collections' });
+        replaceUrl(routeToUrl({ v: 'collections' }));
+      }
     } finally {
       isLoading.set(false);
       isSwitchingCollection = false;
@@ -643,6 +649,21 @@
       <CollectionSettings collectionId={$currentView.id} />
     {/if}
   </main>
+
+  {#if pendingPasscodeCollectionId !== null}
+    <PasscodeModal
+      collectionId={pendingPasscodeCollectionId}
+      onSuccess={() => {
+        const id = pendingPasscodeCollectionId!;
+        pendingPasscodeCollectionId = null;
+        openCollectionById(id);
+      }}
+      onCancel={() => {
+        pendingPasscodeCollectionId = null;
+        currentView.set({ type: 'collections' });
+      }}
+    />
+  {/if}
 
   {#if $currentUser}
     <nav class="pointer-events-none fixed bottom-0 left-0 right-0 z-10">

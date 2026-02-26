@@ -82,6 +82,19 @@
     }
   }
 
+  async function togglePasscodeProtection() {
+    if (!$currentCollection || $currentCollection.access_level !== 'owner') return;
+    if (!$currentUser?.passcode_set) return;
+
+    try {
+      const next = !$currentCollection.is_passcode_protected;
+      const res = await api.collections.update($currentCollection.id, { is_passcode_protected: next });
+      currentCollection.set(res.collection);
+    } catch (err) {
+      console.error('Failed to toggle passcode protection:', err);
+    }
+  }
+
   function closeTemplateMenu() {
     showTemplateMenu = false;
   }
@@ -1125,7 +1138,9 @@
           showSharedByYou ||
           showSharedWithYou ||
           $currentCollection.is_template ||
-          $currentCollection.archived
+          $currentCollection.archived ||
+          $currentCollection.is_passcode_protected ||
+          ($currentCollection.access_level === 'owner' && $currentUser?.passcode_set)
       )}
 
       {#if showStatusPill}
@@ -1211,6 +1226,49 @@
             >
               <title>Archived</title>
               <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
+          {/if}
+
+          {#if $currentCollection.access_level === 'owner'}
+            <button
+              type="button"
+              class="flex items-center justify-center transition-colors hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+              disabled={!$currentUser?.passcode_set}
+              onclick={togglePasscodeProtection}
+              title={$currentUser?.passcode_set ? ($currentCollection.is_passcode_protected ? 'Unlock collection' : 'Lock collection') : 'Set a passcode in settings to lock collections'}
+              aria-label={$currentCollection.is_passcode_protected ? 'Unlock collection' : 'Lock collection'}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill={$currentCollection.is_passcode_protected ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                stroke-width="2"
+                style={$currentCollection.is_passcode_protected ? `color: ${getHeaderColor()}` : ''}
+              >
+                {#if $currentCollection.is_passcode_protected}
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                {:else}
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                {/if}
+              </svg>
+            </button>
+          {:else if $currentCollection.is_passcode_protected}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-label="Passcode protected"
+              style={`color: ${getHeaderColor()}`}
+            >
+              <title>Passcode protected</title>
+              <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           {/if}
         </div>
