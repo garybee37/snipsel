@@ -11,8 +11,10 @@ from snipsel_api.permissions import can_read_collection, can_write_collection, c
 from snipsel_api.models import (
     CollectionSnipsel,
     Collection,
+    CollectionShare,
     Mention,
     Snipsel,
+    SnipselCollectionRef,
     SnipselLink,
     SnipselMention,
     SnipselTag,
@@ -40,7 +42,7 @@ def _touch_collections_for_snipsel(*, snipsel_id: str, modified_by_id: str) -> N
     )
 
 from sqlalchemy.orm import joinedload
-from snipsel_api.utils_text import extract_mentions, extract_tags
+from snipsel_api.utils_text import extract_collection_refs, extract_mentions, extract_tags
 
 snipsels_bp = Blueprint("snipsels", __name__)
 
@@ -545,6 +547,31 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel, newly_became_task: bo
                         snipsel_id=snipsel.id
                     )
                     db.session.add(n)
+
+    # Sync collection refs ([[Collection Title]] wiki-links)
+    ref_titles = extract_collection_refs(text)
+    db.session.execute(db.delete(SnipselCollectionRef).where(SnipselCollectionRef.snipsel_id == snipsel.id))
+    for title in ref_titles:
+        # Look up accessible collections by title (case-insensitive)
+        matched = db.session.execute(
+            db.select(Collection)
+            .outerjoin(
+                CollectionShare,
+                db.and_(
+                    CollectionShare.collection_id == Collection.id,
+                    CollectionShare.shared_with_user_id == user_id,
+                ),
+            )
+            .where(
+                Collection.deleted_at.is_(None),
+                db.or_(Collection.owner_user_id == user_id, CollectionShare.permission.in_(["read", "write"])),
+                db.func.lower(Collection.title) == title.lower(),
+            )
+            .limit(1)
+        ).scalars().first()
+        if matched:
+            db.session.add(SnipselCollectionRef(snipsel_id=snipsel.id, collection_id=matched.id))
+
 def _sync_backlinks(*, user_id: str, snipsel: Snipsel) -> None:
     db.session.execute(db.delete(SnipselLink).where(SnipselLink.from_snipsel_id == snipsel.id))
 
