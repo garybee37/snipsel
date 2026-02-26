@@ -10,6 +10,10 @@
   let templateCollections = $state<Collection[]>([]);
   let dayTemplateId = $state<string>('');
   let isBusy = $state(false);
+  let showPasscodeForm = $state(false);
+  let passcode = $state('');
+  let passwordConfirm = $state('');
+  let passcodeError = $state('');
 
   function clampByte(n: number): number {
     return Math.max(0, Math.min(255, Math.round(n)));
@@ -93,6 +97,26 @@
       const id = dayTemplateId.trim() || null;
       const res = await api.updateMe({ day_collection_template_id: id });
       currentUser.set(res.user);
+    } finally {
+      isBusy = false;
+    }
+  }
+  async function savePasscode() {
+    if (passcode.length < 4) {
+      passcodeError = 'Passcode must be at least 4 digits';
+      return;
+    }
+    isBusy = true;
+    passcodeError = '';
+    try {
+      await api.passcode.set({ passcode, password_confirm: passwordConfirm });
+      const res = await api.me();
+      currentUser.set(res.user);
+      showPasscodeForm = false;
+      passcode = '';
+      passwordConfirm = '';
+    } catch (e: any) {
+      passcodeError = e.error?.message || 'Failed to set passcode';
     } finally {
       isBusy = false;
     }
@@ -216,6 +240,86 @@
       </div>
     </div>
 
+    <!-- Security -->
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="flex items-center gap-2 text-xs uppercase text-slate-500">
+        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <span>Security</span>
+      </div>
+      
+      {#if !showPasscodeForm}
+        <div class="mt-3 flex items-center justify-between gap-4">
+          <div>
+            <div class="text-sm font-medium text-slate-900">Personal Passcode</div>
+            <div class="text-xs text-slate-500">
+              {$currentUser?.passcode_set ? 'Passcode is active.' : 'Set a passcode to protect sensitive collections.'}
+            </div>
+          </div>
+          <button
+            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+            style={`color: ${getAccent()}`}
+            type="button"
+            onclick={() => { showPasscodeForm = true; passcodeError = ''; }}
+            disabled={isBusy}
+          >
+            {$currentUser?.passcode_set ? 'Change' : 'Set Passcode'}
+          </button>
+        </div>
+      {:else}
+        <div class="mt-4 space-y-4">
+          <div>
+            <label for="new-passcode" class="block text-sm font-medium text-slate-700">New 4-digit passcode</label>
+            <input
+              id="new-passcode"
+              type="password"
+              inputmode="numeric"
+              maxlength="12"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+              bind:value={passcode}
+              oninput={(e) => passcode = e.currentTarget.value.replace(/\D/g, '')}
+              placeholder="••••"
+            />
+          </div>
+          <div>
+            <label for="password-confirm" class="block text-sm font-medium text-slate-700">Confirm account password</label>
+            <input
+              id="password-confirm"
+              type="password"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+              bind:value={passwordConfirm}
+              placeholder="Your account password"
+            />
+          </div>
+          
+          {#if passcodeError}
+            <div class="text-xs font-medium text-red-600">{passcodeError}</div>
+          {/if}
+          
+          <div class="flex items-center gap-2 pt-2">
+            <button
+              class="flex-1 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
+              style={`background-color: ${getAccent()}`}
+              type="button"
+              onclick={savePasscode}
+              disabled={isBusy || !passcode || !passwordConfirm}
+            >
+              Save Passcode
+            </button>
+            <button
+              class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+              type="button"
+              onclick={() => { showPasscodeForm = false; passcode = ''; passwordConfirm = ''; }}
+              disabled={isBusy}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      {/if}
+    </div>
     <div class="py-4 text-center text-xs text-slate-400">
       More settings coming soon.
     </div>

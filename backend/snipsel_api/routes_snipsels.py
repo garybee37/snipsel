@@ -7,7 +7,14 @@ from flask import Blueprint, request
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.permissions import can_read_collection, can_write_collection, can_read_snipsel_via_collections, can_write_snipsel_via_collections
+from snipsel_api.permissions import (
+    can_read_collection,
+    can_write_collection,
+    can_read_snipsel_via_collections,
+    can_write_snipsel_via_collections,
+    is_passcode_unlocked,
+)
+
 from snipsel_api.models import (
     CollectionSnipsel,
     Collection,
@@ -53,6 +60,14 @@ def list_collection_snipsels(collection_id: str):
     user = current_user()
     if not can_read_collection(user.id, collection_id):
         raise api_error(404, "not_found", "Collection not found")
+
+    c = db.session.get(Collection, collection_id)
+    if not c or c.deleted_at is not None:
+        raise api_error(404, "not_found", "Collection not found")
+
+    if c.is_passcode_protected and not is_passcode_unlocked(collection_id):
+        raise api_error(403, "passcode_required", "This collection is passcode protected")
+
     items = (
         db.session.execute(
             db.select(CollectionSnipsel)
