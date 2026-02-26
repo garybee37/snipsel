@@ -1053,27 +1053,84 @@
           aria-label="Collection status"
         >
           {#if $currentCollection.is_favorite}
-            <span class="leading-none" aria-label="Favorite" title="Favorite">♥</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-slate-700 fill-current"
+              viewBox="0 0 24 24"
+              aria-label="Favorite"
+            >
+              <title>Favorite</title>
+              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
           {/if}
 
           {#if showSharedByYou}
-            <span class="leading-none" aria-label="Shared by you" title="Shared by you">⇪</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-slate-700"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-label="Shared by you"
+            >
+              <title>Shared by you</title>
+              <path d="M7 11l5-5m0 0l5 5m-5-5v12" />
+            </svg>
           {/if}
           {#if showSharedWithYou}
-            <span class="leading-none" aria-label="Shared with you" title="Shared with you">⇩</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-slate-700"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-label="Shared with you"
+            >
+              <title>Shared with you</title>
+              <path d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+            </svg>
           {/if}
 
           {#if $currentCollection.is_template}
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-slate-700"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-label="Template"
+            >
               <title>Template</title>
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <line x1="3" y1="9" x2="21" y2="9"/>
-              <line x1="9" y1="21" x2="9" y2="9"/>
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="3" y1="9" x2="21" y2="9" />
+              <line x1="9" y1="21" x2="9" y2="9" />
             </svg>
           {/if}
 
           {#if $currentCollection.archived}
-            <span class="leading-none" aria-label="Archived" title="Archived">⧗</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-slate-700"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-label="Archived"
+            >
+              <title>Archived</title>
+              <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
           {/if}
         </div>
       {/if}
