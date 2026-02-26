@@ -350,14 +350,20 @@ def _write_thumbnail(src: Path, dst: Path) -> None:
     if Image is None:
         return
     with Image.open(src) as im:
-        # Apply EXIF orientation before resizing (handles rotation from phone photos)
-        im = ImageOps.exif_transpose(im)
-        im.thumbnail((512, 512))
-        im = im.convert("RGB")
-        im.save(dst, format="JPEG", quality=80)
-    if Image is None:
-        return
-    with Image.open(src) as im:
+        # Handle EXIF orientation for phone photos (iPhone, etc.)
+        try:
+            exif = im.getexif()
+            if exif:
+                orientation = exif.get(0x0112)  # Orientation tag
+                if orientation == 3:
+                    im = im.rotate(180, expand=True)
+                elif orientation == 6:
+                    im = im.rotate(270, expand=True)
+                elif orientation == 8:
+                    im = im.rotate(90, expand=True)
+        except Exception:
+            pass  # EXIF handling is best-effort
+        
         im.thumbnail((512, 512))
         im = im.convert("RGB")
         im.save(dst, format="JPEG", quality=80)
