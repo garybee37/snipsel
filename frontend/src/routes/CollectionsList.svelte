@@ -8,7 +8,7 @@
   let newIcon = '🗒';
   let busy = false;
 
-  type Filter = 'all' | 'favorites' | 'day' | 'mine' | 'shared' | 'templates';
+  type Filter = 'all' | 'favorites' | 'day' | 'mine' | 'shared' | 'templates' | 'archive';
   let filter: Filter = 'favorites';
   let titleFilter = '';
 
@@ -75,7 +75,6 @@
       if (key === 'name') {
         return cmpString(a.title, b.title) * dir;
       }
-      // modified
       const ta = Date.parse(a.modified_at);
       const tb = Date.parse(b.modified_at);
       if (ta === tb) return cmpString(a.title, b.title);
@@ -85,6 +84,8 @@
   }
 
   function matchesFilter(c: Collection, f: Filter): boolean {
+    if (f === 'archive') return Boolean(c.archived);
+    if (c.archived && f !== 'all') return false;
     if (f === 'favorites') return Boolean(c.is_favorite);
     if (f === 'day') return Boolean(c.list_for_day);
     if (f === 'mine') return c.access_level === 'owner' && !c.list_for_day && !c.is_template;
@@ -201,67 +202,98 @@
     </div>
 
     <div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
-      <div class="overflow-hidden rounded-full border border-slate-200 bg-white">
-        <div class="grid grid-cols-6">
+      <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+        <div class="grid grid-cols-7">
           <button
-            class="px-3 py-3 text-sm font-medium transition-colors {filter === 'all'
+            class="grid place-items-center py-3 text-sm transition-colors {filter === 'all'
               ? 'text-slate-900'
               : 'text-slate-600 hover:text-slate-900'}"
             type="button"
             onclick={() => (filter = 'all')}
             style={filter === 'all' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+            title="All"
           >
-            All
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.921-.755 1.688-1.54 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.784.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
           </button>
           <button
-            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'favorites'
+            class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'favorites'
               ? 'text-slate-900'
               : 'text-slate-600 hover:text-slate-900'}"
             type="button"
             onclick={() => (filter = 'favorites')}
             style={filter === 'favorites' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+            title="Favs"
           >
-            Favs
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
           </button>
           <button
-            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'day'
+            class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'day'
               ? 'text-slate-900'
               : 'text-slate-600 hover:text-slate-900'}"
             type="button"
             onclick={() => (filter = 'day')}
             style={filter === 'day' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+            title="Days"
           >
-            Days
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
           </button>
           <button
-            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'mine'
+            class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'mine'
               ? 'text-slate-900'
               : 'text-slate-600 hover:text-slate-900'}"
             type="button"
             onclick={() => (filter = 'mine')}
             style={filter === 'mine' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+            title="My"
           >
-            My
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
           </button>
           <button
-            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'shared'
+            class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'shared'
               ? 'text-slate-900'
               : 'text-slate-600 hover:text-slate-900'}"
             type="button"
             onclick={() => (filter = 'shared')}
             style={filter === 'shared' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+            title="Shared"
           >
-            Shared
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
           </button>
           <button
-            class="border-l border-black/5 px-3 py-3 text-sm font-medium transition-colors {filter === 'templates'
+            class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'templates'
               ? 'text-slate-900'
               : 'text-slate-600 hover:text-slate-900'}"
             type="button"
             onclick={() => (filter = 'templates')}
             style={filter === 'templates' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+            title="Templates"
           >
-            Templates
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 h-2a1 1 0 01-1-1v-6z" />
+            </svg>
+          </button>
+          <button
+            class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'archive'
+              ? 'text-slate-900'
+              : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => (filter = 'archive')}
+            style={filter === 'archive' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+            title="Archive"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
           </button>
         </div>
       </div>
@@ -275,7 +307,7 @@
         />
 
         <div class="ml-auto flex items-center gap-2">
-          <div class="overflow-hidden rounded-full border border-slate-200 bg-white">
+          <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
             <div class="flex">
               <button
                 class="px-4 py-2 text-sm font-medium {sortKey === 'modified'
@@ -301,7 +333,7 @@
           </div>
 
           <button
-            class="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white/80 text-lg text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-white"
+            class="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white/80 text-lg text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-white transition-all"
             type="button"
             aria-label={sortDir === 'asc' ? 'Sort ascending' : 'Sort descending'}
             title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
@@ -345,7 +377,7 @@
           {busy ? 'Creating...' : 'Create Collection'}
         </button>
         <button
-          class="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-medium text-slate-600 shadow-sm ring-1 ring-black/5 hover:bg-slate-50"
+          class="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-medium text-slate-600 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-all"
           type="button"
           onclick={() => (showCreate = false)}
         >
@@ -356,30 +388,30 @@
   {/if}
 
   {#if $isLoading}
-    <div class="py-8 text-center text-sm text-slate-500">Loading...</div>
+    <div class="py-8 text-center text-sm text-slate-500 font-medium">Loading collections...</div>
   {:else if filtered.length === 0}
-    <div class="py-8 text-center text-sm text-slate-500">No collections yet</div>
+    <div class="py-8 text-center text-sm text-slate-500 font-medium">No collections found</div>
   {:else}
     <div class="space-y-2">
       {#each filtered as c}
-        <div class="flex w-full items-center gap-3 px-1 py-2">
+        <div class="flex w-full items-center gap-3 px-1 py-2 group">
           <button class="flex flex-1 items-center gap-3 text-left" type="button" onclick={() => openCollection(c)}>
-            <span class="text-3xl">{c.icon}</span>
+            <span class="text-3xl transition-transform group-hover:scale-110">{c.icon}</span>
             <div class="min-w-0 flex-1">
-              <div class="truncate text-lg font-medium">{c.title}</div>
+              <div class="truncate text-lg font-medium text-slate-800">{c.title}</div>
               <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-slate-500">
                 {#if c.access_level === 'read' || c.access_level === 'write'}
-                  <span class="rounded px-1.5 py-0.5" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
+                  <span class="rounded-full px-2 py-0.5 font-medium" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
                     >shared</span
                   >
                 {/if}
                 {#if c.archived}
-                  <span class="rounded px-1.5 py-0.5" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
+                  <span class="rounded-full px-2 py-0.5 font-medium" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
                     >archived</span
                   >
                 {/if}
                 {#if c.is_template}
-                  <span class="rounded px-1.5 py-0.5" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
+                  <span class="rounded-full px-2 py-0.5 font-medium" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
                     >template</span
                   >
                 {/if}
@@ -387,46 +419,60 @@
             </div>
           </button>
 
-          <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
-            <div class="flex">
-              {#if filter === 'shared'}
-                <div
-                  class="grid h-11 w-12 place-items-center text-lg"
-                  aria-label={c.access_level === 'owner' && c.shared_out ? 'Shared by you' : 'Shared with you'}
-                  title={c.access_level === 'owner' && c.shared_out ? 'Shared by you' : 'Shared with you'}
-                  style={
-                    c.access_level === 'owner' && c.shared_out
-                      ? `color: ${getAccent()}`
-                      : undefined
-                  }
-                >
-                  {#if c.access_level === 'owner' && c.shared_out}
-                    ⇪
-                  {:else}
-                    ⇩
-                  {/if}
-                </div>
+          <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 flex h-11 items-center px-1">
+            {#if filter === 'shared'}
+              <div
+                class="grid h-10 w-10 place-items-center text-lg"
+                aria-label={c.access_level === 'owner' && c.shared_out ? 'Shared by you' : 'Shared with you'}
+                title={c.access_level === 'owner' && c.shared_out ? 'Shared by you' : 'Shared with you'}
+                style={
+                  c.access_level === 'owner' && c.shared_out
+                    ? `color: ${getAccent()}`
+                    : undefined
+                }
+              >
+                {#if c.access_level === 'owner' && c.shared_out}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                  </svg>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                  </svg>
+                {/if}
+              </div>
+              <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
+            {/if}
+            <button
+              class="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-slate-50 transition-colors"
+              type="button"
+              aria-label={c.is_favorite ? 'Unfavorite' : 'Favorite'}
+              title={c.is_favorite ? 'Unfavorite' : 'Favorite'}
+              onclick={() => toggleFavorite(c)}
+              style={c.is_favorite ? `color: ${getAccent()}` : undefined}
+            >
+              {#if c.is_favorite}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
               {/if}
-              <button
-                class="grid h-11 w-12 place-items-center text-lg text-slate-700 hover:bg-black/5"
-                type="button"
-                aria-label={c.is_favorite ? 'Unfavorite' : 'Favorite'}
-                title={c.is_favorite ? 'Unfavorite' : 'Favorite'}
-                onclick={() => toggleFavorite(c)}
-                style={c.is_favorite ? `color: ${getAccent()}` : undefined}
-              >
-                {c.is_favorite ? '♥' : '♡'}
-              </button>
-              <button
-                class="grid h-11 w-12 place-items-center border-l border-black/5 text-lg text-slate-700 hover:bg-black/5"
-                type="button"
-                aria-label="Edit collection"
-                title="Edit"
-                onclick={() => editCollection(c)}
-              >
-                ⓘ
-              </button>
-            </div>
+            </button>
+            <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
+            <button
+              class="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-slate-50 transition-colors"
+              type="button"
+              aria-label="Edit collection"
+              title="Edit"
+              onclick={() => editCollection(c)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
           </div>
         </div>
       {/each}
