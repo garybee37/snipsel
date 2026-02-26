@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Attachment, Collection, CollectionFavorite, CollectionShare, CollectionSnipsel, Snipsel, User, Notification, SnipselCollectionRef
+from snipsel_api.models import Attachment, Collection, CollectionFavorite, CollectionShare, CollectionSnipsel, Snipsel, User, Notification, SnipselCollectionRef, CollectionVisit
 from snipsel_api.permissions import can_read_collection, can_write_collection, get_collection_access_level
 from snipsel_api.routes_attachments import _resolve_attachment_path, _resolve_thumbnail_path
 from snipsel_api.routes_snipsels import _sync_backlinks, _sync_tags_mentions
@@ -512,6 +512,14 @@ def get_collection(collection_id: str):
         j["shared_by_username"] = (
             db.session.execute(db.select(User.username).where(User.id == c.owner_user_id)).scalars().first()
         )
+    # Record visit
+    visit = db.session.get(CollectionVisit, (user.id, c.id))
+    if visit:
+        visit.visited_at = datetime.utcnow()
+    else:
+        db.session.add(CollectionVisit(user_id=user.id, collection_id=c.id))
+    db.session.commit()
+
     return json_response({"collection": j})
 
 
@@ -586,6 +594,26 @@ def delete_collection(collection_id: str):
         c.list_for_day = None
     db.session.commit()
     return json_response({"ok": True})
+
+
+@collections_bp.get("/recent")
+@require_auth
+def list_recent_collections():
+    user = current_user()
+    stmt = (
+        db.select(Collection)
+        .join(CollectionVisit, CollectionVisit.collection_id == Collection.id)
+        .where(CollectionVisit.user_id == user.id, Collection.deleted_at.is_(None))
+        .order_by(CollectionVisit.visited_at.desc())
+        .limit(20)
+    )
+    items = db.session.execute(stmt).scalars().all()
+    return json_response({
+        "collections": [
+            {"id": c.id, "title": c.title, "icon": c.icon}
+            for c in items
+        ]
+    })
 
 
 def _get_owned_collection(user_id: str, collection_id: str) -> Collection:

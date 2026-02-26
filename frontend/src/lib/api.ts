@@ -261,6 +261,7 @@ export const api = {
         body: JSON.stringify({ template_collection_id: templateCollectionId }),
       }),
     listBacklinks: (id: string) => requestJson<{ backlinks: CollectionBacklink[] }>(`/api/collections/${id}/backlinks`),
+    listRecent: () => requestJson<{ collections: Array<{ id: string; title: string; icon: string }> }>('/api/collections/recent'),
   },
 
   users: {

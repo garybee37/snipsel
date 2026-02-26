@@ -35,6 +35,7 @@ export const searchError = writable<string | null>(null);
 export const searchType = writable<string | undefined>(undefined);
 
 export const notificationsStore = writable<import('./api').Notification[]>([]);
+export const recentCollectionsStore = writable<Array<{ id: string; title: string; icon: string }>>([]);
 
 export function requestNewSnipsel() {
   newSnipselRequest.update((n) => n + 1);

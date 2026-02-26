@@ -302,3 +302,14 @@ class Notification(db.Model):
     user = relationship("User")
     snipsel = relationship("Snipsel")
     collection = relationship("Collection")
+
+
+class CollectionVisit(db.Model):
+    __tablename__ = "collection_visits"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    collection_id: Mapped[str] = mapped_column(ForeignKey("collections.id"), primary_key=True)
+    visited_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+    user = relationship("User")
+    collection = relationship("Collection")

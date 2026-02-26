@@ -15,6 +15,7 @@
     searchResults,
     notificationsStore,
     searchType,
+    recentCollectionsStore,
   } from './lib/stores';
   import {
     getCurrentUrl,
@@ -49,6 +50,17 @@
   let isSwitchingCollection = $state(false);
 
   let lastCollectionId: string | null = $state(null);
+
+  let showRecentPopup = $state(false);
+  async function toggleRecentPopup() {
+    if (!showRecentPopup) {
+      try {
+        const res = await api.collections.listRecent();
+        recentCollectionsStore.set(res.collections);
+      } catch { /* ignore */ }
+    }
+    showRecentPopup = !showRecentPopup;
+  }
 
   async function pruneEmptySnipsels(collectionId: string) {
     try {
@@ -467,6 +479,61 @@
             }
           }}
         />
+        <div class="relative">
+          <button
+            class="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {showRecentPopup
+              ? 'bg-black/10 text-slate-900'
+              : 'text-slate-600 hover:bg-black/5 hover:text-slate-900'}"
+            type="button"
+            onclick={toggleRecentPopup}
+            onfocusout={(e) => {
+              if (e.relatedTarget instanceof HTMLElement && e.currentTarget.parentElement?.contains(e.relatedTarget)) return;
+              showRecentPopup = false;
+            }}
+            aria-label="Recent collections"
+            title="Recent"
+          >
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+          
+          {#if showRecentPopup}
+            <div class="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md pointer-events-auto">
+              <div class="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50/50 border-b border-slate-100 text-left">Recently visited</div>
+              <div class="max-h-80 overflow-y-auto py-1">
+                {#if $recentCollectionsStore.length === 0}
+                  <div class="px-4 py-3 text-sm text-slate-500 italic text-left">No recent history</div>
+                {:else}
+                  {#each $recentCollectionsStore as rc (rc.id)}
+                    <button
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 transition-colors"
+                      type="button"
+                      onclick={(e) => {
+                        e.stopPropagation();
+                        showRecentPopup = false;
+                        currentView.set({ type: 'collection', id: rc.id });
+                      }}
+                    >
+                      <span class="text-xl shrink-0">{rc.icon}</span>
+                      <span class="truncate font-medium text-slate-800">{rc.title}</span>
+                    </button>
+                  {/each}
+                {/if}
+              </div>
+            </div>
+          {/if}
+        </div>
+
         <button
           class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {$currentView.type === 'notifications'
             ? 'bg-black/10 text-slate-900'
