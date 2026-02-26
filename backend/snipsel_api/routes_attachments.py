@@ -125,6 +125,43 @@ def download_attachment(attachment_id: str):
 def download_thumbnail(attachment_id: str):
     user = current_user()
     att = db.session.get(Attachment, attachment_id)
+    if not att:
+        raise api_error(404, "not_found", "Thumbnail not found")
+
+    snipsel = db.session.get(Snipsel, att.snipsel_id)
+    if not snipsel or snipsel.deleted_at is not None:
+        raise api_error(404, "not_found", "Thumbnail not found")
+
+    can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
+    if not can_read:
+        uname = (getattr(user, "username", "") or "").strip().casefold()
+        if not uname:
+            raise api_error(404, "not_found", "Thumbnail not found")
+        is_mentioned = (
+            (db.session.execute(
+                db.select(db.func.count())
+                .select_from(SnipselMention)
+                .join(Mention, Mention.id == SnipselMention.mention_id)
+                .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
+            ).scalar() or 0)
+            > 0
+        )
+        if not is_mentioned:
+            raise api_error(404, "not_found", "Thumbnail not found")
+
+    # Try to resolve or regenerate thumbnail
+    path = _resolve_thumbnail_path(att)
+    if not path:
+        raise api_error(404, "not_found", "Thumbnail file missing")
+
+    try:
+        return send_file(str(path), as_attachment=False)
+    except FileNotFoundError:
+        raise api_error(404, "not_found", "Thumbnail file missing")
+@require_auth
+def download_thumbnail(attachment_id: str):
+    user = current_user()
+    att = db.session.get(Attachment, attachment_id)
     if not att or not att.thumbnail_path:
         raise api_error(404, "not_found", "Thumbnail not found")
 
@@ -232,27 +269,25 @@ def _resolve_attachment_path(att: Attachment) -> Path | None:
 
 
 def _resolve_thumbnail_path(att: Attachment) -> Path | None:
-    if not att.thumbnail_path:
-        return None
-
     upload_dir = Path(current_app.config.get("SNIPSEL_UPLOAD_DIR", "./uploads"))
     expected = f"{att.id}_thumb.jpg"
 
     backend_dir = Path(current_app.root_path).resolve().parent
 
     candidates: list[Path] = []
-    p = Path(att.thumbnail_path)
-    if p.is_absolute():
-        candidates.append(p)
-    else:
-        candidates.extend(
-            [
-                Path(current_app.instance_path) / p,
-                Path(current_app.root_path) / p,
-                backend_dir / p,
-                Path.cwd() / p,
-            ]
-        )
+    if att.thumbnail_path:
+        p = Path(att.thumbnail_path)
+        if p.is_absolute():
+            candidates.append(p)
+        else:
+            candidates.extend(
+                [
+                    Path(current_app.instance_path) / p,
+                    Path(current_app.root_path) / p,
+                    backend_dir / p,
+                    Path.cwd() / p,
+                ]
+            )
 
     candidates.extend(
         [
@@ -266,6 +301,35 @@ def _resolve_thumbnail_path(att: Attachment) -> Path | None:
     )
 
     found = _first_existing(candidates)
+
+    # If thumbnail file is missing but original exists, regenerate it
+    if not found:
+        # Find original image
+        original_candidates = []
+        if att.storage_path:
+            sp = Path(att.storage_path)
+            if sp.is_absolute():
+                original_candidates.append(sp)
+            else:
+                original_candidates.extend(
+                    [
+                        Path(current_app.instance_path) / att.storage_path,
+                        Path(current_app.root_path) / att.storage_path,
+                        backend_dir / att.storage_path,
+                        Path.cwd() / att.storage_path,
+                        upload_dir / att.storage_path,
+                        upload_dir / f"{att.id}_{att.filename}",
+                    ]
+                )
+
+        original = _first_existing(original_candidates)
+        if original and original.exists():
+            thumb_path = upload_dir / expected
+            _write_thumbnail(original, thumb_path)
+            att.thumbnail_path = str(thumb_path)
+            db.session.commit()
+            found = thumb_path
+
     if found and att.thumbnail_path != str(found):
         att.thumbnail_path = str(found)
         db.session.commit()
