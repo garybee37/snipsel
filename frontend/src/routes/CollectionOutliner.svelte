@@ -1020,9 +1020,9 @@
   />
 
   <div class="relative">
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
       <div
-        class="relative h-28 w-full bg-cover bg-center"
+        class="relative h-28 w-full bg-cover bg-center rounded-t-[calc(0.75rem-1px)] overflow-hidden"
         style={$currentCollection?.header_image_url
           ? `background-image: url('${$currentCollection.header_image_url}'); background-color: ${getHeaderColor()}`
           : `background-color: ${getHeaderColor()}`}
