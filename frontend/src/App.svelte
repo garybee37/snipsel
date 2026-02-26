@@ -51,6 +51,7 @@
 
   let lastCollectionId: string | null = $state(null);
 
+  let recentContainerRef: HTMLDivElement | undefined = $state();
   let showRecentPopup = $state(false);
   async function toggleRecentPopup() {
     if (!showRecentPopup) {
@@ -61,6 +62,17 @@
     }
     showRecentPopup = !showRecentPopup;
   }
+
+  $effect(() => {
+    if (!showRecentPopup) return;
+    const onClick = (e: MouseEvent) => {
+      if (recentContainerRef && !recentContainerRef.contains(e.target as Node)) {
+        showRecentPopup = false;
+      }
+    };
+    window.addEventListener('mousedown', onClick);
+    return () => window.removeEventListener('mousedown', onClick);
+  });
 
   async function pruneEmptySnipsels(collectionId: string) {
     try {
@@ -479,17 +491,14 @@
             }
           }}
         />
-        <div class="relative">
+        <div bind:this={recentContainerRef} class="relative">
           <button
             class="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {showRecentPopup
               ? 'bg-black/10 text-slate-900'
               : 'text-slate-600 hover:bg-black/5 hover:text-slate-900'}"
             type="button"
             onclick={toggleRecentPopup}
-            onfocusout={(e) => {
-              if (e.relatedTarget instanceof HTMLElement && e.currentTarget.parentElement?.contains(e.relatedTarget)) return;
-              showRecentPopup = false;
-            }}
+          >
             aria-label="Recent collections"
             title="Recent"
           >
