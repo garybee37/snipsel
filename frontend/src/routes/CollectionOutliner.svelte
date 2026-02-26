@@ -63,6 +63,25 @@
   let showTypeMenu = $state(false);
   let showScrollTop = $state(false);
 
+  let showEmojiPicker = $state(false);
+  const commonEmojis = [
+    '🗒', '📅', '✅', '📌', '💡', '🏷', '📁', '🏠', '🚀', '🎨', 
+    '🛠', '⚙️', '🔒', '🔑', '🌍', '📊', '📈', '💬', '👥', '👤', 
+    '⭐', '❤️', '🔥', '⚡', '🌈', '☀', '🌙', '☁', '🍎', '🍔', 
+    '🍕', '🍺', '☕', '⚽', '🎮', '🎵', '📷', '✈️', '🚗', '💡'
+  ];
+
+  async function updateIcon(icon: string) {
+    if (!$currentCollection || !canWrite()) return;
+    try {
+      const res = await api.collections.update($currentCollection.id, { icon });
+      currentCollection.set(res.collection);
+      showEmojiPicker = false;
+    } catch (err) {
+      console.error('Failed to update icon:', err);
+    }
+  }
+
   function closeTemplateMenu() {
     showTemplateMenu = false;
   }
@@ -972,6 +991,7 @@
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   });
+
   function formatModifiedAt(iso: string) {
     const d = new Date(iso);
     const now = new Date();
@@ -989,7 +1009,6 @@
     }
     return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
   }
-
 </script>
 
 <div class="space-y-3">
@@ -1010,11 +1029,55 @@
       ></div>
 
       <div class="relative px-4 py-3">
-        <div
-          class="absolute left-4 top-0 -translate-y-1/2 grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm"
-          aria-hidden="true"
-        >
-          <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
+        <div class="absolute left-4 top-0 -translate-y-1/2 z-10">
+          <button
+            class="grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-colors disabled:hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            type="button"
+            onclick={() => canWrite() && (showEmojiPicker = !showEmojiPicker)}
+            disabled={!canWrite()}
+            aria-label="Change collection icon"
+          >
+            <span class="text-4xl leading-none">{$currentCollection?.icon}</span>
+          </button>
+
+          {#if showEmojiPicker}
+            <div 
+              class="absolute left-0 top-full mt-2 z-50 w-64 p-2 rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md"
+              onfocusout={(e) => {
+                const related = e.relatedTarget as Node | null;
+                if (related instanceof HTMLElement && e.currentTarget.contains(related)) return;
+                showEmojiPicker = false;
+              }}
+            >
+              <div class="grid grid-cols-8 gap-1 overflow-y-auto max-h-48 p-1 text-center">
+                {#each commonEmojis as emoji}
+                  <button
+                    class="grid h-7 w-7 place-items-center rounded hover:bg-slate-100 transition-colors text-lg"
+                    type="button"
+                    onclick={() => updateIcon(emoji)}
+                  >
+                    {emoji}
+                  </button>
+                {/each}
+              </div>
+              <div class="mt-2 border-t border-slate-100 pt-2 px-1">
+                <input
+                  type="text"
+                  placeholder="Custom emoji..."
+                  maxlength="4"
+                  class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  onkeydown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = (e.currentTarget as HTMLInputElement).value.trim();
+                      if (val) updateIcon(val);
+                    } else if (e.key === 'Escape') {
+                      showEmojiPicker = false;
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          {/if}
         </div>
 
         {#if taskProgress().total > 0}
