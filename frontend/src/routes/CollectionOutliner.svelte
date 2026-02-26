@@ -48,6 +48,7 @@
 
   let templates = $state<Array<{ id: string; title: string; icon: string }>>([]);
   let showTemplateMenu = $state(false);
+  
   type AutocompleteSuggestion = { id: string; label: string; icon?: string; type: 'collection' | 'tag' | 'mention' };
   let suggestions = $state<AutocompleteSuggestion[]>([]);
   let showAutocomplete = $state(false);
@@ -61,6 +62,7 @@
 
   let showTypeMenu = $state(false);
   let showScrollTop = $state(false);
+
   function closeTemplateMenu() {
     showTemplateMenu = false;
   }
@@ -424,6 +426,9 @@
             showAutocomplete = false;
           }
         }, 200);
+      } else {
+        showAutocomplete = false;
+        suggestions = [];
       }
     }
   }
@@ -858,7 +863,7 @@
 
   function renderMarkdown(text: string | null): string {
     if (!text) return '';
-    const html = md.render(text).trim();
+    const html = md.render(text.trim()).trim();
     const tokenBg = getToolboxBg();
     const tokenFg = getHeaderColor();
     return html.replace(
@@ -1200,7 +1205,7 @@
             {/if}
 
             {#if item.snipsel.type !== 'task'}
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" aria-hidden="true"></div>
+              <div class="absolute left-[1.125rem] top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" aria-hidden="true"></div>
             {/if}
             <div
               class="rounded px-4 py-3 {selectedIds.has(item.snipsel_id)
@@ -1330,231 +1335,230 @@
       {/if}
     </div>
   {/if}
-
-  {#if selectedIds.size > 0}
-    <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pb-4">
-      <div
-        class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl px-3 py-3 text-slate-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md"
-        style={`background-color: ${getToolboxBg()}`}
-      >
-
-         <input
-           bind:this={attachmentsInputRef}
-           class="hidden"
-           type="file"
-           multiple
-           onchange={uploadAttachmentsSelected}
-           disabled={uploadingAttachments}
-         />
-
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Move up"
-          title="Move up"
-          onclick={lpMoveTop.onclick}
-          onpointerdown={lpMoveTop.onpointerdown}
-          onpointerup={lpMoveTop.onpointerup}
-          onpointercancel={lpMoveTop.onpointercancel}
-          onpointerleave={lpMoveTop.onpointerleave}
-          oncontextmenu={lpMoveTop.oncontextmenu}
-          disabled={!canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-        </button>
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Move down"
-          title="Move down"
-          onclick={lpMoveBottom.onclick}
-          onpointerdown={lpMoveBottom.onpointerdown}
-          onpointerup={lpMoveBottom.onpointerup}
-          onpointercancel={lpMoveBottom.onpointercancel}
-          onpointerleave={lpMoveBottom.onpointerleave}
-          oncontextmenu={lpMoveBottom.oncontextmenu}
-          disabled={!canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Outdent"
-          title="Outdent"
-          onclick={lpOutdentToZero.onclick}
-          onpointerdown={lpOutdentToZero.onpointerdown}
-          onpointerup={lpOutdentToZero.onpointerup}
-          onpointercancel={lpOutdentToZero.onpointercancel}
-          onpointerleave={lpOutdentToZero.onpointerleave}
-          oncontextmenu={lpOutdentToZero.oncontextmenu}
-          disabled={!canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H9m0 0 4-4m-4 4 4 4M3 5v14"/></svg>
-        </button>
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Indent"
-          title="Indent"
-          onclick={() => adjustIndentSelected(1)}
-          disabled={!canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h12m0 0-4-4m4 4-4 4M21 5v14"/></svg>
-        </button>
-
-        <div class="relative">
-          <button
-            class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-            type="button"
-            aria-label="Change type"
-            title="Change type"
-            onclick={() => (showTypeMenu = !showTypeMenu)}
-            disabled={!canWrite()}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
-          </button>
-          {#if showTypeMenu}
-            <div class="absolute bottom-12 right-0 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
-              <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('text')}>
-                Note
-              </button>
-              <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('image')}>
-                Image
-              </button>
-              <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('attachment')}>
-                File
-              </button>
-              <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('task')}>
-                Task
-              </button>
-              <button
-                class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
-                type="button"
-                onclick={closeTypeMenu}
-              >
-                Cancel
-              </button>
-            </div>
-          {/if}
-        </div>
-
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Copy"
-          title="Copy"
-          onclick={copySelected}
-          disabled={!canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-        </button>
-
-        <div class="relative">
-          <button
-            class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-            type="button"
-            aria-label="Insert template"
-            title="Insert template"
-            onclick={() => (showTemplateMenu = !showTemplateMenu)}
-            disabled={!canWrite()}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-          </button>
-          {#if showTemplateMenu}
-            <div class="absolute bottom-12 right-0 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
-              {#if templates.length === 0}
-                <div class="px-3 py-2 text-sm text-slate-500">No templates</div>
-              {:else}
-                {#each templates as t (t.id)}
-                  <button
-                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50"
-                    type="button"
-                    onclick={() => insertTemplateSelected(t.id)}
-                  >
-                    <span class="text-base" aria-hidden="true">{t.icon}</span>
-                    <span class="min-w-0 flex-1 truncate">{t.title}</span>
-                  </button>
-                {/each}
-              {/if}
-              <button
-                class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
-                type="button"
-                onclick={closeTemplateMenu}
-              >
-                Cancel
-              </button>
-            </div>
-          {/if}
-        </div>
-
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Add attachments"
-          title="Add attachments"
-          onclick={() => attachmentsInputRef?.click()}
-          disabled={uploadingAttachments || !canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-        </button>
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Move"
-          title="Move"
-          onclick={moveSelectedToCollection}
-          disabled={!canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4M2 12h20M6 8l-4 4 4 4"/></svg>
-        </button>
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Add to collection"
-          title="Add to collection"
-          onclick={addSelectedToCollection}
-          disabled={!canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
-        </button>
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
-          type="button"
-          aria-label="Info"
-          title="Info"
-          onclick={openDetailSelected}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-        </button>
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-red-600/90 text-lg text-white hover:bg-red-600"
-          type="button"
-          aria-label="Delete"
-          title="Delete"
-          onclick={deleteSelected}
-          disabled={!canWrite()}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5v6m4-6v6"/></svg>
-        </button>
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md text-lg text-slate-600 hover:bg-black/5 hover:text-slate-900"
-          type="button"
-          aria-label="Clear selection"
-          title="Clear selection"
-          onclick={() => {
-            clearSelection();
-            closeTypeMenu();
-            closeTemplateMenu();
-          }}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-    </div>
-  {/if}
 </div>
+
+{#if selectedIds.size > 0}
+  <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pb-4">
+    <div
+      class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl px-3 py-3 text-slate-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md"
+      style={`background-color: ${getToolboxBg()}`}
+    >
+
+       <input
+         bind:this={attachmentsInputRef}
+         class="hidden"
+         type="file"
+         multiple
+         onchange={uploadAttachmentsSelected}
+         disabled={uploadingAttachments}
+       />
+
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Move up"
+        title="Move up"
+        onclick={lpMoveTop.onclick}
+        onpointerdown={lpMoveTop.onpointerdown}
+        onpointerup={lpMoveTop.onpointerup}
+        onpointercancel={lpMoveTop.onpointercancel}
+        onpointerleave={lpMoveTop.onpointerleave}
+        oncontextmenu={lpMoveTop.oncontextmenu}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Move down"
+        title="Move down"
+        onclick={lpMoveBottom.onclick}
+        onpointerdown={lpMoveBottom.onpointerdown}
+        onpointerup={lpMoveBottom.onpointerup}
+        onpointercancel={lpMoveBottom.onpointercancel}
+        onpointerleave={lpMoveBottom.onpointerleave}
+        oncontextmenu={lpMoveBottom.oncontextmenu}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Outdent"
+        title="Outdent"
+        onclick={lpOutdentToZero.onclick}
+        onpointerdown={lpOutdentToZero.onpointerdown}
+        onpointerup={lpOutdentToZero.onpointerup}
+        onpointercancel={lpOutdentToZero.onpointercancel}
+        onpointerleave={lpOutdentToZero.onpointerleave}
+        oncontextmenu={lpOutdentToZero.oncontextmenu}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H9m0 0 4-4m-4 4 4 4M3 5v14"/></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Indent"
+        title="Indent"
+        onclick={() => adjustIndentSelected(1)}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h12m0 0-4-4m4 4-4 4M21 5v14"/></svg>
+      </button>
+
+      <div class="relative">
+        <button
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+          type="button"
+          aria-label="Change type"
+          title="Change type"
+          onclick={() => (showTypeMenu = !showTypeMenu)}
+          disabled={!canWrite()}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+        </button>
+        {#if showTypeMenu}
+          <div class="absolute bottom-12 right-0 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
+            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('text')}>
+              Note
+            </button>
+            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('image')}>
+              Image
+            </button>
+            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('attachment')}>
+              File
+            </button>
+            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('task')}>
+              Task
+            </button>
+            <button
+              class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
+              type="button"
+              onclick={closeTypeMenu}
+            >
+              Cancel
+            </button>
+          </div>
+        {/if}
+      </div>
+
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Copy"
+        title="Copy"
+        onclick={copySelected}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+      </button>
+
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Insert template"
+        title="Insert template"
+        onclick={() => (showTemplateMenu = !showTemplateMenu)}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      </button>
+      {#if showTemplateMenu}
+        <div class="absolute bottom-12 right-0 w-64 max-h-80 overflow-y-auto rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
+          <div class="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">Templates</div>
+          {#if templates.length === 0}
+            <div class="px-3 py-4 text-sm text-slate-500 italic">No templates found</div>
+          {:else}
+            {#each templates as t (t.id)}
+              <button
+                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                type="button"
+                onclick={() => insertTemplateSelected(t.id)}
+              >
+                <span class="text-xl">{t.icon}</span>
+                <span class="truncate font-medium">{t.title}</span>
+              </button>
+            {/each}
+          {/if}
+          <button
+            class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
+            type="button"
+            onclick={closeTemplateMenu}
+          >
+            Cancel
+          </button>
+        </div>
+      {/if}
+
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Upload files"
+        title="Upload files"
+        onclick={() => attachmentsInputRef?.click()}
+        disabled={uploadingAttachments || !canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Move"
+        title="Move"
+        onclick={moveSelectedToCollection}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4M2 12h20M6 8l-4 4 4 4"/></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Add to collection"
+        title="Add to collection"
+        onclick={addSelectedToCollection}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        type="button"
+        aria-label="Info"
+        title="Info"
+        onclick={openDetailSelected}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-red-600/90 text-lg text-white hover:bg-red-600"
+        type="button"
+        aria-label="Delete"
+        title="Delete"
+        onclick={deleteSelected}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5v6m4-6v6"/></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md text-lg text-slate-600 hover:bg-black/5 hover:text-slate-900"
+        type="button"
+        aria-label="Clear selection"
+        title="Clear selection"
+        onclick={() => {
+          clearSelection();
+          closeTypeMenu();
+          closeTemplateMenu();
+        }}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+{/if}
 
 {#if showScrollTop}
   <div class="fixed bottom-24 left-0 right-0 z-10 flex justify-center pointer-events-none">
