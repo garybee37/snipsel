@@ -111,6 +111,7 @@ export type CollectionItem = {
   position: number;
   indent: number;
   snipsel: Snipsel;
+  collection_refs?: Array<{ title: string; collection_id: string }>;
 };
 
 export type SearchSnipselHit = {

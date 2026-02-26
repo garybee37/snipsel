@@ -1,0 +1,31 @@
+Task 6: Render [[wiki-links]] as clickable collection chips
+============================================================
+
+## Changes Made
+
+### Backend: routes_snipsels.py
+- `_collection_item_json()` now queries `SnipselCollectionRef` for each collection item
+- Returns `collection_refs` array with `{title, collection_id}` objects in API response
+
+### Frontend: api.ts
+- Added `collection_refs?: Array<{ title: string; collection_id: string }>` to `CollectionItem` type
+
+### Frontend: CollectionOutliner.svelte
+- Added `renderWithWikiLinks()` function that:
+  - Calls existing `renderMarkdown()` for token highlighting
+  - Builds a case-insensitive map from ref titles → collection IDs
+  - Replaces `[[Title]]` patterns with:
+    - Known refs: blue/accent chip with 📎 icon, data-collection-id attribute
+    - Unknown refs: gray `[[Unknown]]` text, not clickable
+- Updated template to use `renderWithWikiLinks()` instead of `renderMarkdown()`
+- Added click handler on content div to intercept `[data-collection-id]` clicks → navigates to collection
+
+## Verification
+
+```
+$ cd frontend && npm run check
+svelte-check found 0 errors and 0 warnings
+
+$ python -m py_compile backend/snipsel_api/routes_snipsels.py
+(no errors)
+```

@@ -838,6 +838,24 @@
     );
   }
 
+  function renderWithWikiLinks(content: string, refs: Array<{title: string; collection_id: string}> | undefined): string {
+    let html = renderMarkdown(content);
+    const refMap = new Map<string, string>();
+    if (refs) {
+      for (const r of refs) {
+        refMap.set(r.title.toLowerCase(), r.collection_id);
+      }
+    }
+    html = html.replace(/\[\[([^\]]+)\]\]/g, (_match, title: string) => {
+      const collectionId = refMap.get(title.toLowerCase());
+      if (collectionId) {
+        return `<a class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 hover:bg-slate-200 cursor-pointer" data-collection-id="${collectionId}">📎 ${title}</a>`;
+      }
+      return `<span class="text-slate-400 text-xs">[[${title}]]</span>`;
+    });
+    return html;
+  }
+
   function isImageAttachment(a: Attachment): boolean {
     return Boolean(a.mime_type?.startsWith('image/') || a.has_thumbnail);
   }
@@ -1153,12 +1171,22 @@
                 : 'hover:bg-slate-50'}"
               role="button"
               tabindex="0"
-              onclick={() => startEdit(item)}
+              onclick={(e) => {
+                const target = (e.target as HTMLElement).closest('[data-collection-id]');
+                if (target) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const id = target.getAttribute('data-collection-id');
+                  if (id) currentView.set({ type: 'collection', id });
+                  return;
+                }
+                startEdit(item);
+              }}
               onkeydown={(e) => e.key === 'Enter' && startEdit(item)}
             >
               {#if item.snipsel.content_markdown}
                   <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-headings:my-2 prose-h1:text-xl prose-h2:text-xl prose-h3:text-lg">
-                    {@html renderMarkdown(item.snipsel.content_markdown)}
+                    {@html renderWithWikiLinks(item.snipsel.content_markdown, item.collection_refs)}
                   </div>
               {:else}
                 <span class="text-sm italic text-slate-400">Empty snipsel</span>

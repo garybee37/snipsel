@@ -621,10 +621,17 @@ def _snipsel_json(s: Snipsel) -> dict:
 
 
 def _collection_item_json(cs: CollectionSnipsel) -> dict:
+    refs = db.session.execute(
+        db.select(SnipselCollectionRef).where(SnipselCollectionRef.snipsel_id == cs.snipsel_id)
+    ).scalars().all()
     return {
         "collection_id": cs.collection_id,
         "snipsel_id": cs.snipsel_id,
         "position": cs.position,
         "indent": cs.indent,
         "snipsel": _snipsel_json(cs.snipsel),
+        "collection_refs": [
+            {"title": r.collection.title, "collection_id": r.collection_id}
+            for r in refs
+        ],
     }
