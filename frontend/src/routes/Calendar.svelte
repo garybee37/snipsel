@@ -115,18 +115,47 @@
   }
 
   const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  function handleMonthChange(e: Event) {
+    const val = (e.currentTarget as HTMLInputElement).value; // YYYY-MM
+    if (!val) return;
+    const [y, m] = val.split('-').map(Number);
+    cursor = new Date(y, m - 1, 1);
+  }
+
+  function toMonthValue(d: Date) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
 </script>
 
 <div class="space-y-4">
-  <h2 class="flex items-center gap-2 text-2xl font-semibold">
-    <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <path d="M16 2v4" />
-      <path d="M8 2v4" />
-      <path d="M3 10h18" />
-    </svg>
-    <span>{monthLabel(cursor)}</span>
-  </h2>
+  <div class="flex items-center justify-between gap-3">
+    <h2 class="flex items-center gap-2 text-2xl font-semibold">
+      <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M16 2v4" />
+        <path d="M8 2v4" />
+        <path d="M3 10h18" />
+      </svg>
+      <span>{monthLabel(cursor)}</span>
+    </h2>
+
+    <div class="relative overflow-hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-colors">
+      <input 
+        type="month" 
+        class="absolute inset-0 cursor-pointer opacity-0" 
+        value={toMonthValue(cursor)} 
+        onchange={handleMonthChange}
+      />
+      <div class="flex items-center gap-2 text-sm font-medium text-slate-600 pointer-events-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span>Jump to...</span>
+      </div>
+    </div>
+  </div>
 
   <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
     <div class="grid grid-cols-3">
