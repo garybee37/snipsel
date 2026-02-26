@@ -16,7 +16,7 @@
   import { currentUser } from '../lib/session';
   import { getCurrentUrl } from '../lib/router';
 
-  const md = new MarkdownIt({ html: false, linkify: true, breaks: true });
+  const md = new MarkdownIt({ html: false, linkify: true, breaks: false });
 
   let textareaRef: HTMLTextAreaElement | undefined = $state();
   let editContainerRef: HTMLDivElement | undefined = $state();
