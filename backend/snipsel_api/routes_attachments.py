@@ -5,7 +5,7 @@ import uuid
 from pathlib import Path
 
 from flask import Blueprint, current_app, request, send_file
-from PIL import Image, ImageOps
+from PIL import Image
 
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
