@@ -580,6 +580,39 @@ def _get_owned_collection(user_id: str, collection_id: str) -> Collection:
         raise api_error(404, "not_found", "Collection not found")
     return c
 
+@collections_bp.get("/autocomplete")
+@require_auth
+def autocomplete_collections():
+    user = current_user()
+    q = (request.args.get("q") or "").strip()
+    if not q:
+        return json_response({"collections": []})
+
+    stmt = (
+        db.select(Collection)
+        .outerjoin(
+            CollectionShare,
+            db.and_(
+                CollectionShare.collection_id == Collection.id,
+                CollectionShare.shared_with_user_id == user.id,
+            ),
+        )
+        .where(
+            Collection.deleted_at.is_(None),
+            Collection.archived_at.is_(None),
+            db.or_(Collection.owner_user_id == user.id, CollectionShare.permission.in_(["read", "write"])),
+            Collection.title.ilike(f"%{q}%"),
+        )
+        .order_by(Collection.title.asc())
+        .limit(10)
+    )
+    items = db.session.execute(stmt).scalars().all()
+    return json_response({
+        "collections": [
+            {"id": c.id, "title": c.title, "icon": c.icon}
+            for c in items
+        ]
+    })
 
 def _collection_json(c: Collection) -> dict:
     return {
