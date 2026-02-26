@@ -127,13 +127,15 @@ def create_snipsel(collection_id: str):
     db.session.add(s)
     db.session.flush()
 
+    indent = data.get("indent", 0)
+    
     max_pos = (
         db.session.execute(
             db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == collection_id)
         ).scalar()
         or 0
     )
-    cs = CollectionSnipsel(collection_id=collection_id, snipsel_id=s.id, position=max_pos + 1, indent=0)
+    cs = CollectionSnipsel(collection_id=collection_id, snipsel_id=s.id, position=max_pos + 1, indent=indent)
     db.session.add(cs)
 
     _sync_tags_mentions(user_id=user.id, snipsel=s)
@@ -160,13 +162,15 @@ def reference_snipsel(collection_id: str, snipsel_id: str):
     if exists:
         return json_response({"item": _collection_item_json(exists)})
 
+    indent = data.get("indent", 0)
+    
     max_pos = (
         db.session.execute(
             db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == collection_id)
         ).scalar()
         or 0
     )
-    cs = CollectionSnipsel(collection_id=collection_id, snipsel_id=s.id, position=max_pos + 1, indent=0)
+    cs = CollectionSnipsel(collection_id=collection_id, snipsel_id=s.id, position=max_pos + 1, indent=indent)
     db.session.add(cs)
     db.session.execute(
         db.update(Collection)
@@ -206,13 +210,15 @@ def copy_snipsel(collection_id: str, snipsel_id: str):
     db.session.add(s)
     db.session.flush()
 
+    indent = data.get("indent", 0)
+    
     max_pos = (
         db.session.execute(
             db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == collection_id)
         ).scalar()
         or 0
     )
-    cs = CollectionSnipsel(collection_id=collection_id, snipsel_id=s.id, position=max_pos + 1, indent=0)
+    cs = CollectionSnipsel(collection_id=collection_id, snipsel_id=s.id, position=max_pos + 1, indent=indent)
     db.session.add(cs)
     _sync_tags_mentions(user_id=user.id, snipsel=s)
     _sync_backlinks(user_id=user.id, snipsel=s)

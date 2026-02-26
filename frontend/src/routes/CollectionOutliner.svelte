@@ -528,6 +528,15 @@
   async function createSnipsel() {
     if (!$currentCollection) return;
     if (!canWrite()) return;
+    
+    // Get indent from last snipsel
+    let indent = 0;
+    const items = $sortedItems;
+    if (items.length > 0) {
+      const lastItem = items[items.length - 1];
+      indent = lastItem.indent ?? 0;
+    }
+    
     isLoading.set(true);
     try {
       let geo:
@@ -553,6 +562,7 @@
 
       const res = await api.snipsels.create($currentCollection.id, {
         type: $currentCollection.default_snipsel_type || 'text',
+        indent: indent,
         ...(geo ?? {}),
       });
 
@@ -592,6 +602,7 @@
 
       const res = await api.snipsels.create($currentCollection.id, {
         type: $currentCollection.default_snipsel_type || 'text',
+        indent: indent,
         ...(geo ?? {}),
       });
 
