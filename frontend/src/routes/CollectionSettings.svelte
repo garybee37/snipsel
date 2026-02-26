@@ -182,11 +182,19 @@
     if (!collection) return;
     if (!confirm('Delete collection?')) return;
     const id = collection.id;
-    await api.collections.delete(id);
-    collections.update((list) => list.filter((c) => c.id !== id));
-    currentCollection.set(null);
-    collectionAnchor.set(null);
-    currentView.set({ type: 'collections' });
+    try {
+      await api.collections.delete(id);
+      collections.update((list) => list.filter((c) => c.id !== id));
+      currentCollection.set(null);
+      collectionAnchor.set(null);
+      currentView.set({ type: 'collections' });
+    } catch (e: any) {
+      if (e.error?.code === 'has_backlinks') {
+        alert('Cannot delete collection because it is referenced in other snipsels. Remove the links first.');
+      } else {
+        alert('Failed to delete collection: ' + (e.error?.message || 'Unknown error'));
+      }
+    }
   }
 
   function goBack() {

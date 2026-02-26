@@ -566,6 +566,20 @@ def update_collection(collection_id: str):
 def delete_collection(collection_id: str):
     user = current_user()
     c = _get_owned_collection(user.id, collection_id)
+
+    # Check for backlinks
+    has_backlinks = db.session.execute(
+        db.select(db.func.count(SnipselCollectionRef.snipsel_id))
+        .join(Snipsel, Snipsel.id == SnipselCollectionRef.snipsel_id)
+        .where(
+            SnipselCollectionRef.collection_id == collection_id,
+            Snipsel.deleted_at.is_(None)
+        )
+    ).scalar() or 0
+
+    if has_backlinks > 0:
+        raise api_error(400, "has_backlinks", "Cannot delete collection because it is referenced in snipsels.")
+
     c.deleted_at = datetime.utcnow()
     c.deleted_by_id = user.id
     if c.list_for_day is not None:
