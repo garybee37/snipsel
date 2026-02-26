@@ -5,7 +5,7 @@ import uuid
 from pathlib import Path
 
 from flask import Blueprint, current_app, request, send_file
-from PIL import Image
+from PIL import Image, ImageOps
 
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
@@ -283,6 +283,14 @@ def _first_existing(paths: list[Path]) -> Path | None:
 
 
 def _write_thumbnail(src: Path, dst: Path) -> None:
+    if Image is None:
+        return
+    with Image.open(src) as im:
+        # Apply EXIF orientation before resizing (handles rotation from phone photos)
+        im = ImageOps.exif_transpose(im)
+        im.thumbnail((512, 512))
+        im = im.convert("RGB")
+        im.save(dst, format="JPEG", quality=80)
     if Image is None:
         return
     with Image.open(src) as im:
