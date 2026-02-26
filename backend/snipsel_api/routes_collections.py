@@ -641,6 +641,11 @@ def update_collection(collection_id: str):
         c.archived_at = datetime.utcnow() if archived else None
     if "is_template" in data:
         c.is_template = bool(data.get("is_template"))
+    if "is_passcode_protected" in data:
+        c.is_passcode_protected = bool(data.get("is_passcode_protected"))
+    if "default_snipsel_type" in data:
+
+        c.is_template = bool(data.get("is_template"))
     if "default_snipsel_type" in data:
         c.default_snipsel_type = (
             data.get("default_snipsel_type") or ""
