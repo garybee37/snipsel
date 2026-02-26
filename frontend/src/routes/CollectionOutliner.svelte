@@ -1200,7 +1200,7 @@
             {/if}
 
             {#if item.snipsel.type !== 'task'}
-              <div class="absolute left-2.5 top-[1.35rem] h-1 w-1 rounded-full bg-slate-400" aria-hidden="true"></div>
+              <div class="absolute left-4 top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" aria-hidden="true"></div>
             {/if}
             <div
               class="rounded px-4 py-3 {selectedIds.has(item.snipsel_id)
