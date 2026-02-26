@@ -230,6 +230,10 @@ export const api = {
     unfavorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'DELETE' }),
     delete: (id: string) =>
       requestJson<{ ok: true }>(`/api/collections/${id}`, { method: 'DELETE' }),
+    autocomplete: (q: string) =>
+      requestJson<{ collections: Array<{ id: string; title: string; icon: string }> }>(
+        `/api/collections/autocomplete?q=${encodeURIComponent(q)}`
+      ),
 
     listShares: (id: string) =>
       requestJson<{ shares: CollectionShare[] }>(`/api/collections/${id}/shares`),

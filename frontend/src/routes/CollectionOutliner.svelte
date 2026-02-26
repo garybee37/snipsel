@@ -48,6 +48,11 @@
 
   let templates = $state<Array<{ id: string; title: string; icon: string }>>([]);
   let showTemplateMenu = $state(false);
+  let wikiSuggestions = $state<Array<{ id: string; title: string; icon: string }>>([]);
+  let showWikiPopup = $state(false);
+  let wikiQuery = $state('');
+  let wikiSelectedIndex = $state(0);
+  let wikiDebounce: ReturnType<typeof setTimeout> | null = null;
 
   let shareCount = $state(0);
 
@@ -292,6 +297,31 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
+    if (showWikiPopup) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        wikiSelectedIndex = Math.min(wikiSelectedIndex + 1, wikiSuggestions.length - 1);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        wikiSelectedIndex = Math.max(wikiSelectedIndex - 1, 0);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const sel = wikiSuggestions[wikiSelectedIndex];
+        if (sel) insertWikiLink(sel);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        showWikiPopup = false;
+        wikiSuggestions = [];
+        return;
+      }
+    }
+
     if (e.key === 'Tab') {
       e.preventDefault();
       if (e.shiftKey) {
@@ -316,36 +346,81 @@
     if (!el) return;
 
     const atEnd = (el.selectionStart ?? 0) === el.value.length && (el.selectionEnd ?? 0) === el.value.length;
-    if (!atEnd) return;
+    if (atEnd && editContent.endsWith('\n\n\n')) {
+      const currentId = $editingSnipselId;
+      const currentItem = currentId ? $sortedItems.find((i) => i.snipsel_id === currentId) : null;
+      if (!currentId || !currentItem) return;
 
-    if (!editContent.endsWith('\n\n\n')) return;
+      creatingFromTripleEmptyLines = true;
+      try {
+        // Remove the 3 empty lines.
+        const nextContent = editContent.slice(0, -3);
+        editContent = nextContent;
 
-    const currentId = $editingSnipselId;
-    const currentItem = currentId ? $sortedItems.find((i) => i.snipsel_id === currentId) : null;
-    if (!currentId || !currentItem) return;
+        // Persist current snipsel update immediately so we don't lose edits when switching focus.
+        const contentToSave = nextContent.trim().length === 0 ? null : nextContent;
+        itemsMutationSeq += 1;
+        await api.snipsels.update(currentId, { content_markdown: contentToSave });
+        collectionItems.update((items) =>
+          items.map((i) =>
+            i.snipsel_id === currentId
+              ? { ...i, snipsel: { ...i.snipsel, content_markdown: contentToSave } }
+              : i
+          )
+        );
 
-    creatingFromTripleEmptyLines = true;
-    try {
-      // Remove the 3 empty lines.
-      const nextContent = editContent.slice(0, -3);
-      editContent = nextContent;
-
-      // Persist current snipsel update immediately so we don't lose edits when switching focus.
-      const contentToSave = nextContent.trim().length === 0 ? null : nextContent;
-      itemsMutationSeq += 1;
-      await api.snipsels.update(currentId, { content_markdown: contentToSave });
-      collectionItems.update((items) =>
-        items.map((i) =>
-          i.snipsel_id === currentId
-            ? { ...i, snipsel: { ...i.snipsel, content_markdown: contentToSave } }
-            : i
-        )
-      );
-
-      await createSnipselAfterPosition(currentItem.position, currentItem.indent);
-    } finally {
-      creatingFromTripleEmptyLines = false;
+        await createSnipselAfterPosition(currentItem.position, currentItem.indent);
+      } finally {
+        creatingFromTripleEmptyLines = false;
+      }
     }
+
+    // Wiki-link autocomplete: detect [[ trigger
+    const el2 = textareaRef;
+    if (el2) {
+      const cursor = el2.selectionStart ?? 0;
+      const before = editContent.slice(0, cursor);
+      const match = /\[\[([^\[\]]*)$/.exec(before);
+      if (match) {
+        const q = match[1];
+        wikiQuery = q;
+        wikiSelectedIndex = 0;
+        if (wikiDebounce) clearTimeout(wikiDebounce);
+        wikiDebounce = setTimeout(async () => {
+          if (q.length >= 0) {
+            try {
+              const res = await api.collections.autocomplete(q);
+              if (wikiQuery !== q) return;
+              wikiSuggestions = res.collections;
+              showWikiPopup = wikiSuggestions.length > 0;
+            } catch {
+              showWikiPopup = false;
+            }
+          }
+        }, 200);
+      } else {
+        showWikiPopup = false;
+        wikiSuggestions = [];
+      }
+    }
+  }
+
+  function insertWikiLink(c: { id: string; title: string; icon: string }) {
+    const el = textareaRef;
+    if (!el) return;
+    const cursor = el.selectionStart ?? 0;
+    const before = editContent.slice(0, cursor);
+    const after = editContent.slice(cursor);
+    // Replace [[query with [[Title]]
+    const newBefore = before.replace(/\[\[([^\[\]]*)$/, `[[${c.title}]]`);
+    editContent = newBefore + after;
+    showWikiPopup = false;
+    wikiSuggestions = [];
+    // Move cursor after inserted text
+    setTimeout(() => {
+      el.selectionStart = el.selectionEnd = newBefore.length;
+      el.focus();
+    }, 0);
   }
 
   function autosizeTextarea() {
@@ -359,6 +434,8 @@
     if (creatingFromTripleEmptyLines) return;
     const related = e.relatedTarget as Node | null;
     if (related && editContainerRef?.contains(related)) return;
+    showWikiPopup = false;
+    wikiSuggestions = [];
     if (!saving) saveEdit();
   }
 
@@ -985,7 +1062,7 @@
           {#if item.snipsel_id === $editingSnipselId}
             <div
               bind:this={editContainerRef}
-              class="rounded-lg bg-slate-50 px-4 py-3 ring-1 ring-indigo-200 shadow-sm"
+              class="relative rounded-lg bg-slate-50 px-4 py-3 ring-1 ring-indigo-200 shadow-sm"
               onfocusout={handleEditFocusOut}
             >
               <textarea
@@ -996,6 +1073,23 @@
                 oninput={handleEditInput}
                 onkeydown={handleKeydown}
               ></textarea>
+              {#if showWikiPopup && wikiSuggestions.length > 0}
+                <div class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md">
+                  {#each wikiSuggestions as suggestion, i (suggestion.id)}
+                    <button
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors {i === wikiSelectedIndex ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50'}"
+                      type="button"
+                      onmousedown={(e) => {
+                        e.preventDefault();
+                        insertWikiLink(suggestion);
+                      }}
+                    >
+                      <span class="text-base">{suggestion.icon}</span>
+                      <span class="truncate font-medium">{suggestion.title}</span>
+                    </button>
+                  {/each}
+                </div>
+              {/if}
             </div>
           {:else}
             {#if item.snipsel.type === 'task'}
