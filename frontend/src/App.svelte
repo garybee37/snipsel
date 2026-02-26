@@ -670,6 +670,51 @@
       <div class="mx-auto max-w-3xl px-4 pt-2" style="padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);">
         <div class="pointer-events-auto mx-auto flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-slate-700 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
           <button
+            class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'calendar'
+              ? 'bg-black/10 text-slate-900'
+              : 'hover:bg-black/5 hover:text-slate-900'}"
+            type="button"
+            onclick={() => currentView.set({ type: 'calendar' })}
+            aria-label="Calendar"
+            title="Calendar"
+          >
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M16 2v4" />
+              <path d="M8 2v4" />
+              <path d="M3 10h18" />
+            </svg>
+          </button>
+
+          <button
+            class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'todos'
+              ? 'bg-black/10 text-slate-900'
+              : 'hover:bg-black/5 hover:text-slate-900'}"
+            type="button"
+            onclick={() => currentView.set({ type: 'todos' })}
+            aria-label="Todos"
+            title="Todos"
+          >
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+            </svg>
+          </button>
+
+          <button
+            class="grid h-12 w-12 place-items-center rounded-full transition-all hover:-translate-y-0.5 hover:shadow-lg"
+            style={`background-color: ${getAccent()}; color: white`}
+            type="button"
+            onclick={onNewSnipsel}
+            aria-label="New snipsel (today)"
+            title="New snipsel (today)"
+          >
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+
+          <button
             class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'collections'
               ? 'bg-black/10 text-slate-900'
               : 'hover:bg-black/5 hover:text-slate-900'}"
@@ -701,51 +746,7 @@
               <path d="M16 4l-2 16" />
             </svg>
           </button>
-
-          <button
-            class="grid h-12 w-12 place-items-center rounded-full transition-all hover:-translate-y-0.5 hover:shadow-lg"
-            style={`background-color: ${getAccent()}; color: white`}
-            type="button"
-            onclick={onNewSnipsel}
-            aria-label="New snipsel (today)"
-            title="New snipsel (today)"
-          >
-            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
-
-          <button
-            class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'calendar'
-              ? 'bg-black/10 text-slate-900'
-              : 'hover:bg-black/5 hover:text-slate-900'}"
-            type="button"
-            onclick={() => currentView.set({ type: 'calendar' })}
-            aria-label="Calendar"
-            title="Calendar"
-          >
-            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <path d="M16 2v4" />
-              <path d="M8 2v4" />
-              <path d="M3 10h18" />
-            </svg>
-          </button>
-
-          <button
-            class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'todos'
-              ? 'bg-black/10 text-slate-900'
-              : 'hover:bg-black/5 hover:text-slate-900'}"
-            type="button"
-            onclick={() => currentView.set({ type: 'todos' })}
-            aria-label="Todos"
-            title="Todos"
-          >
-            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M9 11l3 3L22 4" />
-              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-            </svg>
-          </button>
+          
         </div>
       </div>
     </nav>
