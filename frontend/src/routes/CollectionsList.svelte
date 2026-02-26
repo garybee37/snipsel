@@ -442,15 +442,6 @@
               <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
             {/if}
 
-            {#if c.is_passcode_protected}
-              <div class="grid h-9 w-9 place-items-center text-slate-400" title="Passcode protected" style={`color: ${getAccent()}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
-            {/if}
-
             <button
               class="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-slate-50 transition-colors"
               type="button"
