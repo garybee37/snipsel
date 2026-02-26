@@ -972,6 +972,24 @@
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   });
+  function formatModifiedAt(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const yesterdayStart = todayStart - 86400000;
+    const itemDate = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+    const timeStr = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+    if (itemDate === todayStart) {
+      return timeStr;
+    }
+    if (itemDate === yesterdayStart) {
+      return `Yesterday, ${timeStr}`;
+    }
+    return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
 </script>
 
 <div class="space-y-3">
@@ -1028,7 +1046,7 @@
     </div>
     {#if $currentCollection}
       <div class="mt-1 flex items-center justify-end gap-1.5 px-1 text-[10px] text-slate-400">
-        <span>Last modified: {new Date($currentCollection.modified_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+        <span>Last modified: {formatModifiedAt($currentCollection.modified_at)}</span>
         {#if $currentCollection.modified_by_username && $currentCollection.modified_by_id !== $currentUser?.id}
           <span>by {$currentCollection.modified_by_username}</span>
         {/if}
