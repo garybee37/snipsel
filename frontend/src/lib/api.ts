@@ -427,5 +427,8 @@ export const api = {
       const qs = sp.toString();
       return requestJson<{ mentions: TagCount[] }>(`/api/mentions${qs ? `?${qs}` : ''}`);
     },
+    getIncomingDayMentions: (day: string) => {
+      return requestJson<{ snipsels: SearchSnipselHit[] }>(`/api/search/mentions/incoming?day=${encodeURIComponent(day)}`);
+    },
   },
 };

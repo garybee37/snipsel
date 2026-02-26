@@ -1,6 +1,6 @@
 <script lang="ts">
   import MarkdownIt from 'markdown-it';
-  import { api, type Attachment, type CollectionItem } from '../lib/api';
+  import { api, type Attachment, type CollectionItem, type SearchSnipselHit } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
   import {
     collectionItems,
@@ -38,6 +38,10 @@
   let anchorHighlightId = $state<string | null>(null);
 
   let lastCollectionId = $state<string | null>(null);
+
+  // Incoming mentions from other users' daily collections
+  let incomingMentions = $state<SearchSnipselHit[]>([]);
+  let incomingMentionsLoading = $state(false);
 
   function canWrite(): boolean {
     return $currentCollection?.access_level !== 'read';
@@ -275,6 +279,22 @@
       collectionItems.set(res.items);
     } finally {
       isLoading.set(false);
+    }
+  }
+
+  async function loadIncomingMentions() {
+    if (!$currentCollection?.list_for_day) {
+      incomingMentions = [];
+      return;
+    }
+    incomingMentionsLoading = true;
+    try {
+      const res = await api.mentions.getIncomingDayMentions($currentCollection.list_for_day);
+      incomingMentions = res.snipsels;
+    } catch {
+      incomingMentions = [];
+    } finally {
+      incomingMentionsLoading = false;
     }
   }
 
@@ -953,7 +973,10 @@
       editingSnipselId.set(null);
     }
 
-    if ($currentCollection) loadItems();
+    if ($currentCollection) {
+      loadItems();
+      loadIncomingMentions();
+    }
   });
 
   $effect(() => {
@@ -1479,6 +1502,38 @@
           {/if}
         </div>
       {/each}
+
+      {#if incomingMentions.length > 0}
+        <div class="mt-6 border-t border-slate-200 pt-4">
+          <h3 class="mb-3 text-sm font-medium text-slate-500">
+            Mentioned by others on this day
+          </h3>
+          <div class="space-y-2">
+            {#each incomingMentions as snip (snip.id)}
+              <div
+                class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
+              >
+                {#if snip.created_by_username}
+                  <div class="mb-1 text-xs font-medium text-slate-500">
+                    @{snip.created_by_username}
+                  </div>
+                {/if}
+                {#if snip.content_markdown}
+                  <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 whitespace-pre-wrap">
+                    {@html renderMarkdown(snip.content_markdown)}
+                  </div>
+                {:else}
+                  <span class="text-sm italic text-slate-400">Empty snipsel</span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        </div>
+      {:else if incomingMentionsLoading && $currentCollection?.list_for_day}
+        <div class="mt-6 border-t border-slate-200 pt-4">
+          <div class="text-sm text-slate-400">Loading mentions...</div>
+        </div>
+      {/if}
 
       <button
         class="mt-6 flex h-24 w-full items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-base text-slate-400 hover:bg-slate-50"

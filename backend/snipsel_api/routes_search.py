@@ -366,3 +366,104 @@ def search():
             ],
         }
     )
+
+
+
+
+@search_bp.get("/search/mentions/incoming")
+@require_auth
+def get_incoming_day_mentions():
+    """Get snipsels from other users' daily collections on a specific day that mention the current user."""
+    user = current_user()
+    day_str = request.args.get("day")
+    if not day_str:
+        raise api_error(400, "invalid_input", "day parameter is required")
+    
+    try:
+        day_parsed = date.fromisoformat(day_str)
+    except ValueError:
+        raise api_error(400, "invalid_input", "day must be in YYYY-MM-DD format")
+    
+    if not getattr(user, "username", None):
+        return json_response({"snipsels": []})
+    
+    uname = str(user.username).casefold()
+    
+    # DEBUG: Check what users exist and what mentions exist
+    print(f"[DEBUG] user={user.username}, uname={uname}, day={day_parsed}")
+    
+    # First check: how many mentions exist for this user?
+    mentions_for_user = db.session.execute(
+        db.select(Mention).where(Mention.name == uname)
+    ).all()
+    print(f"[DEBUG] Mentions for '{uname}': {len(mentions_for_user)}")
+    
+    # Second check: how many daily collections exist for this day?
+    daily_collections = db.session.execute(
+        db.select(Collection, User.username)
+        .join(User, User.id == Collection.owner_user_id)
+        .where(
+            Collection.deleted_at.is_(None),
+            Collection.list_for_day == day_parsed,
+            Collection.owner_user_id != user.id,
+        )
+    ).all()
+    print(f"[DEBUG] Daily collections for {day_parsed}: {len(daily_collections)}")
+    for c, owner in daily_collections[:3]:
+        print(f"[DEBUG]   - collection {c.id} owned by {owner}")
+    
+    # Find snipsels from OTHER users' daily collections on this day that mention the current user
+    
+    # Find snipsels from OTHER users' daily collections on this day that mention the current user
+    # Note: We don't require the collection to be shared - we just need to find any daily
+    # collection from another user on the same day that mentions the current user
+    stmt = (
+        db.select(
+            Snipsel,
+            CollectionSnipsel.collection_id,
+            CollectionSnipsel.position,
+            Collection.owner_user_id,
+            User.username.label("owner_username"),
+        )
+        .join(SnipselMention, SnipselMention.snipsel_id == Snipsel.id)
+        .join(Mention, Mention.id == SnipselMention.mention_id)
+        .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
+        .join(Collection, Collection.id == CollectionSnipsel.collection_id)
+        .join(User, User.id == Collection.owner_user_id)
+        .where(
+            Snipsel.deleted_at.is_(None),
+            Collection.deleted_at.is_(None),
+            Collection.list_for_day == day_parsed,
+            Collection.owner_user_id != user.id,
+            Mention.name == uname,
+        )
+        .distinct()
+    )
+    
+    rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(100)).all()
+    print(f"[DEBUG] Found {len(rows)} snipsels mentioning {uname}")
+    
+    if rows:
+        return json_response(
+            {
+                "snipsels": [
+                    {
+                        "id": s.id,
+                        "type": s.type,
+                        "content_markdown": s.content_markdown,
+                        "task_done": s.task_done,
+                        "done_at": s.done_at.isoformat() + "Z" if s.done_at else None,
+                        "external_url": s.external_url,
+                        "external_label": s.external_label,
+                        "internal_target_snipsel_id": s.internal_target_snipsel_id,
+                        "created_at": s.created_at.isoformat() + "Z",
+                        "modified_at": s.modified_at.isoformat() + "Z",
+                        "collection_id": collection_id,
+                        "created_by_username": owner_username,
+                        "position": int(position) if position is not None else None,
+                    }
+                    for s, collection_id, position, owner_user_id, owner_username in rows
+                ]
+            }
+        )
+    return json_response({"snipsels": []})
