@@ -1222,7 +1222,7 @@
               onkeydown={(e) => e.key === 'Enter' && startEdit(item)}
             >
               {#if item.snipsel.content_markdown}
-                  <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-headings:my-2 prose-h1:text-xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap">
+                  <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap">
                     {@html renderWithWikiLinks(item.snipsel.content_markdown, item.collection_refs)}
                   </div>
               {:else}
