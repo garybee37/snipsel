@@ -498,10 +498,9 @@
               : 'text-slate-600 hover:bg-black/5 hover:text-slate-900'}"
             type="button"
             onclick={toggleRecentPopup}
-          >
-            aria-label="Recent collections"
-            title="Recent"
-          >
+          aria-label="Recent collections"
+          title="Recent"
+        >
             <svg
               class="h-5 w-5"
               viewBox="0 0 24 24"
