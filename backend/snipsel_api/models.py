@@ -243,6 +243,17 @@ class SnipselLink(db.Model):
     __table_args__ = (Index("ix_snipsel_links_to", "to_snipsel_id"),)
 
 
+class SnipselCollectionRef(db.Model):
+    __tablename__ = "snipsel_collection_refs"
+
+    snipsel_id: Mapped[str] = mapped_column(ForeignKey("snipsels.id"), primary_key=True)
+    collection_id: Mapped[str] = mapped_column(ForeignKey("collections.id"), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+    snipsel = relationship("Snipsel")
+    collection = relationship("Collection")
+
+
 class Attachment(db.Model):
     __tablename__ = "attachments"
 
