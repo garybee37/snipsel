@@ -214,8 +214,12 @@ def search():
         stmt = stmt.where(Snipsel.task_done.is_(done_val))
     if q:
         # Split search query into terms and require ALL terms to match (AND search)
+        # Also replace + with space to handle URL-encoded spaces
+        q = q.replace('+', ' ')
         terms = q.split()
         for term in terms:
+            if not term:
+                continue
             like = f"%{term}%"
             stmt = stmt.where(
                 db.or_(
@@ -224,14 +228,6 @@ def search():
                     Snipsel.external_label.ilike(like),
                 )
             )
-        like = f"%{q}%"
-        stmt = stmt.where(
-            db.or_(
-                Snipsel.content_markdown.ilike(like),
-                Snipsel.external_url.ilike(like),
-                Snipsel.external_label.ilike(like),
-            )
-        )
 
     if tag:
         stmt = stmt.join(SnipselTag, SnipselTag.snipsel_id == Snipsel.id).join(Tag, Tag.id == SnipselTag.tag_id)
