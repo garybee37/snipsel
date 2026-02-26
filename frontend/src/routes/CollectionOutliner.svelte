@@ -1532,11 +1532,41 @@
                     @{snip.created_by_username}
                   </div>
                 {/if}
+
+                {#if snip.attachments && snip.attachments.length > 0 && snip.type === 'image'}
+                  {@const images = snip.attachments.filter((a) => a.mime_type?.startsWith('image/') || a.has_thumbnail)}
+                  {#if images.length > 0}
+                    <div class="mb-2 grid grid-cols-3 gap-1">
+                      {#each images.slice(0, 9) as a (a.id)}
+                        <button
+                          class="aspect-square overflow-hidden rounded"
+                          type="button"
+                          aria-label="View image"
+                          onclick={(e) => {
+                            e.stopPropagation();
+                            openImageModal(a.id, a.filename);
+                          }}
+                        >
+                          <img
+                            class="h-full w-full object-cover"
+                            src={a.has_thumbnail ? api.attachments.thumbnailUrl(a.id) : api.attachments.downloadUrl(a.id)}
+                            alt={a.filename}
+                            loading="lazy"
+                          />
+                        </button>
+                      {/each}
+                    </div>
+                    {#if images.length > 9}
+                      <div class="mt-2 text-sm text-slate-400">+{images.length - 9} more</div>
+                    {/if}
+                  {/if}
+                {/if}
+
                 {#if snip.content_markdown}
                   <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 whitespace-pre-wrap">
                     {@html renderMarkdown(snip.content_markdown)}
                   </div>
-                {:else}
+                {:else if !snip.attachments}
                   <span class="text-sm italic text-slate-400">Empty snipsel</span>
                 {/if}
               </div>

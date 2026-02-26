@@ -9,7 +9,7 @@ from sqlalchemy import literal
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Collection, CollectionShare, CollectionSnipsel, Mention, Snipsel, SnipselMention, SnipselTag, Tag, User
+from snipsel_api.models import Attachment, Collection, CollectionShare, CollectionSnipsel, Mention, Snipsel, SnipselMention, SnipselTag, Tag, User
 
 search_bp = Blueprint("search", __name__)
 
@@ -451,6 +451,25 @@ def get_incoming_day_mentions():
     print(f"[DEBUG] Found {len(rows)} snipsels mentioning {uname}")
     
     if rows:
+        # Fetch attachments for all snipsels
+        snipsel_ids = [s.id for s, _, _, _, _ in rows]
+        attachments = (
+            db.session.execute(
+                db.select(Attachment).where(Attachment.snipsel_id.in_(snipsel_ids))
+            ).scalars().all()
+        )
+        attachments_by_snipsel = {}
+        for a in attachments:
+            if a.snipsel_id not in attachments_by_snipsel:
+                attachments_by_snipsel[a.snipsel_id] = []
+            attachments_by_snipsel[a.snipsel_id].append({
+                "id": a.id,
+                "filename": a.filename,
+                "mime_type": a.mime_type,
+                "size_bytes": a.size_bytes,
+                "has_thumbnail": a.thumbnail_path is not None,
+            })
+        
         return json_response(
             {
                 "snipsels": [
@@ -468,6 +487,7 @@ def get_incoming_day_mentions():
                         "collection_id": collection_id,
                         "created_by_username": owner_username,
                         "position": int(position) if position is not None else None,
+                        "attachments": attachments_by_snipsel.get(s.id, []),
                     }
                     for s, collection_id, position, owner_user_id, owner_username in rows
                 ]

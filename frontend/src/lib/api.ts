@@ -143,6 +143,7 @@ export type SearchSnipselHit = {
   has_collection_access?: boolean;
   has_write_access?: boolean;
   can_toggle_task_done?: boolean;
+  attachments?: Attachment[];
 };
 
 export type SearchCollectionHit = {
