@@ -35,8 +35,17 @@ export type Collection = {
   modified_by_id?: string;
   modified_by_username?: string | null;
 };
-
 export type UserLite = { id: string; username: string };
+
+export type CollectionBacklink = {
+  snipsel_id: string;
+  snipsel_content: string;
+  collection_id: string;
+  collection_title: string;
+  collection_icon: string;
+  position: number;
+};
+
 
 export type CollectionShare = {
   id: string;
@@ -251,6 +260,7 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ template_collection_id: templateCollectionId }),
       }),
+    listBacklinks: (id: string) => requestJson<{ backlinks: CollectionBacklink[] }>(`/api/collections/${id}/backlinks`),
   },
 
   users: {

@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Attachment, Collection, CollectionFavorite, CollectionShare, CollectionSnipsel, Snipsel, User, Notification
+from snipsel_api.models import Attachment, Collection, CollectionFavorite, CollectionShare, CollectionSnipsel, Snipsel, User, Notification, SnipselCollectionRef
 from snipsel_api.permissions import can_read_collection, can_write_collection, get_collection_access_level
 from snipsel_api.routes_attachments import _resolve_attachment_path, _resolve_thumbnail_path
 from snipsel_api.routes_snipsels import _sync_backlinks, _sync_tags_mentions
@@ -614,6 +614,64 @@ def autocomplete_collections():
         ]
     })
 
+@collections_bp.get("/<collection_id>/backlinks")
+@require_auth
+def list_collection_backlinks(collection_id: str):
+    user = current_user()
+    if not can_read_collection(user.id, collection_id):
+        raise api_error(403, "forbidden", "You do not have access to this collection")
+
+    accessible_ids = (
+        db.session.execute(
+            db.select(Collection.id)
+            .outerjoin(
+                CollectionShare,
+                db.and_(
+                    CollectionShare.collection_id == Collection.id,
+                    CollectionShare.shared_with_user_id == user.id,
+                ),
+            )
+            .where(
+                Collection.deleted_at.is_(None),
+                db.or_(Collection.owner_user_id == user.id, CollectionShare.permission.in_(["read", "write"])),
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    stmt = (
+        db.select(
+            Snipsel,
+            Collection.id.label("parent_collection_id"),
+            Collection.title.label("parent_collection_title"),
+            Collection.icon.label("parent_collection_icon"),
+            CollectionSnipsel.position.label("snipsel_position"),
+        )
+        .join(SnipselCollectionRef, SnipselCollectionRef.snipsel_id == Snipsel.id)
+        .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
+        .join(Collection, Collection.id == CollectionSnipsel.collection_id)
+        .where(
+            SnipselCollectionRef.collection_id == collection_id,
+            Snipsel.deleted_at.is_(None),
+            Collection.deleted_at.is_(None),
+            Collection.id.in_(accessible_ids),
+        )
+        .order_by(Collection.title.asc(), CollectionSnipsel.position.asc())
+    )
+
+    rows = db.session.execute(stmt).all()
+    out = []
+    for s, pid, ptitle, picon, pos in rows:
+        out.append({
+            "snipsel_id": s.id,
+            "snipsel_content": (s.content_markdown or "")[:100],
+            "collection_id": pid,
+            "collection_title": ptitle,
+            "collection_icon": picon,
+            "position": pos,
+        })
+    return json_response({"backlinks": out})
 def _collection_json(c: Collection) -> dict:
     return {
         "id": c.id,

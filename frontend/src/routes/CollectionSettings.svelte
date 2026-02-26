@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, type Collection, type CollectionShare, type UserLite } from '../lib/api';
+  import { api, type Collection, type CollectionShare, type UserLite, type CollectionBacklink } from '../lib/api';
   import { collectionAnchor, collections, currentCollection, currentView, isLoading } from '../lib/stores';
   import { currentUser } from '../lib/session';
 
@@ -23,6 +23,7 @@
   let shareUserId = $state('');
   let sharePermission = $state<'read' | 'write'>('read');
   let sharingBusy = $state(false);
+  let backlinks = $state<CollectionBacklink[]>([]);
 
   const DEFAULT_ACCENT = '#4f46e5';
   type Rgb = { r: number; g: number; b: number };
@@ -82,12 +83,14 @@
       isFavorite = Boolean(collection.is_favorite);
       defaultSnipselType = collection.default_snipsel_type ?? '';
 
-      const [uRes, sRes] = await Promise.all([
+      const [uRes, sRes, blRes] = await Promise.all([
         api.users.list(),
         api.collections.listShares(collectionId),
+        api.collections.listBacklinks(collectionId),
       ]);
       users = uRes.users;
       shares = sRes.shares;
+      backlinks = blRes.backlinks;
     } finally {
       isLoading.set(false);
     }
@@ -188,6 +191,10 @@
 
   function goBack() {
     currentView.set({ type: 'collection', id: collectionId });
+  }
+  function openBacklink(bl: CollectionBacklink) {
+    collectionAnchor.set({ collectionId: bl.collection_id, snipselId: bl.snipsel_id, pos: bl.position });
+    currentView.set({ type: 'collection', id: bl.collection_id });
   }
 
   load();
@@ -409,6 +416,28 @@
           {/if}
         </div>
       </div>
+
+      <!-- Backlinks -->
+      {#if backlinks.length > 0}
+        <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+          <div class="text-xs font-medium uppercase text-slate-500">Linked in</div>
+          <div class="mt-4 space-y-2">
+            {#each backlinks as bl (bl.snipsel_id + bl.collection_id)}
+              <button
+                class="flex w-full items-start gap-3 rounded-lg border border-slate-100 bg-white/50 p-3 text-left transition-all hover:bg-white hover:shadow-sm"
+                type="button"
+                onclick={() => openBacklink(bl)}
+              >
+                <span class="text-xl shrink-0 leading-none">{bl.collection_icon}</span>
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-sm font-semibold text-slate-900">{bl.collection_title}</div>
+                  <div class="truncate text-xs text-slate-500 mt-0.5">{bl.snipsel_content}</div>
+                </div>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
 
       <!-- Actions -->
       <div class="flex flex-col gap-2 pt-4">
