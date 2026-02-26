@@ -178,6 +178,16 @@
     currentCollection.update((c) => (c?.id === res.collection.id ? res.collection : c));
   }
 
+  async function togglePasscodeProtection() {
+    if (!collection) return;
+    if (!$currentUser?.passcode_set) return;
+    const next = !Boolean(collection.is_passcode_protected);
+    const res = await api.collections.update(collection.id, { is_passcode_protected: next });
+    collection = res.collection;
+    collections.update((list) => list.map((c) => (c.id === res.collection.id ? res.collection : c)));
+    currentCollection.update((c) => (c?.id === res.collection.id ? res.collection : c));
+  }
+
   async function deleteCollection() {
     if (!collection) return;
     if (!confirm('Delete collection?')) return;
@@ -264,6 +274,26 @@
                 <line x1="3" y1="9" x2="21" y2="9"/>
                 <line x1="9" y1="21" x2="9" y2="9"/>
               </svg>
+            </button>
+
+            <button
+              class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 disabled:opacity-30 disabled:cursor-not-allowed"
+              type="button"
+              aria-label={collection?.is_passcode_protected ? 'Remove passcode protection' : 'Enable passcode protection'}
+              title={$currentUser?.passcode_set ? (collection?.is_passcode_protected ? 'Protected — click to remove' : 'Protect with passcode') : 'Set a passcode in Settings first'}
+              onclick={togglePasscodeProtection}
+              disabled={!$currentUser?.passcode_set}
+              style={collection?.is_passcode_protected ? `color: ${getAccent()}` : undefined}
+            >
+              {#if collection?.is_passcode_protected}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                </svg>
+              {/if}
             </button>
           </div>
         </div>
