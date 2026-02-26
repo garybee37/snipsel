@@ -101,6 +101,7 @@
       isBusy = false;
     }
   }
+
   async function savePasscode() {
     if (passcode.length < 4) {
       passcodeError = 'Passcode must be at least 4 digits';
@@ -184,7 +185,7 @@
       </div>
     </div>
 
-    <!-- Templates -->
+    <!-- Day Template -->
     <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
       <div class="text-xs uppercase text-slate-500">Day template</div>
       <div class="mt-3">
@@ -195,9 +196,6 @@
             class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" 
             bind:value={dayTemplateId}
           >
-            class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" 
-            bind:value={dayTemplateId}
-          >
             <option value="">No template</option>
             {#each templateCollections as c (c.id)}
               <option value={c.id}>
@@ -205,17 +203,15 @@
               </option>
             {/each}
           </select>
-          <div class="flex gap-2">
-            <button
-              class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
-              style={`color: ${getAccent()}`}
-              type="button"
-              onclick={saveDayTemplate}
-              disabled={isBusy}
-            >
-              Save
-            </button>
-          </div>
+          <button
+            class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+            style={`color: ${getAccent()}`}
+            type="button"
+            onclick={saveDayTemplate}
+            disabled={isBusy}
+          >
+            Save
+          </button>
         </div>
       </div>
     </div>
@@ -243,7 +239,16 @@
     <!-- Security -->
     <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
       <div class="flex items-center gap-2 text-xs uppercase text-slate-500">
-        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg 
+          class="h-3 w-3 transition-colors" 
+          viewBox="0 0 24 24" 
+          fill={$currentUser?.passcode_set ? 'currentColor' : 'none'} 
+          stroke="currentColor" 
+          stroke-width="2.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          style={$currentUser?.passcode_set ? `color: ${getAccent()}` : 'color: #94a3b8'}
+        >
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
@@ -259,7 +264,7 @@
             </div>
           </div>
           <button
-            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all"
             style={`color: ${getAccent()}`}
             type="button"
             onclick={() => { showPasscodeForm = true; passcodeError = ''; }}
@@ -269,7 +274,7 @@
           </button>
         </div>
       {:else}
-        <div class="mt-4 space-y-4">
+        <div class="mt-4 space-y-4 transition-all">
           <div>
             <label for="new-passcode" class="block text-sm font-medium text-slate-700">New 4-digit passcode</label>
             <input
@@ -300,16 +305,16 @@
           
           <div class="flex items-center gap-2 pt-2">
             <button
-              class="flex-1 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
+              class="flex-1 rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-50 transition-all"
               style={`background-color: ${getAccent()}`}
               type="button"
               onclick={savePasscode}
-              disabled={isBusy || !passcode || !passwordConfirm}
+              disabled={isBusy || passcode.length < 4 || !passwordConfirm}
             >
               Save Passcode
             </button>
             <button
-              class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+              class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all"
               type="button"
               onclick={() => { showPasscodeForm = false; passcode = ''; passwordConfirm = ''; }}
               disabled={isBusy}
@@ -320,6 +325,7 @@
         </div>
       {/if}
     </div>
+
     <div class="py-4 text-center text-xs text-slate-400">
       More settings coming soon.
     </div>
