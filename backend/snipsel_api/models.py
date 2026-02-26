@@ -49,6 +49,9 @@ class User(db.Model):
 
     carry_over_open_tasks: Mapped[bool] = mapped_column(default=True, nullable=False)
 
+    passcode_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    passcode_failed_attempts: Mapped[int] = mapped_column(default=0, nullable=False)
+
 
 class Collection(db.Model):
     __tablename__ = "collections"
@@ -62,6 +65,8 @@ class Collection(db.Model):
     header_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     is_template: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    is_passcode_protected: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     default_snipsel_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
 

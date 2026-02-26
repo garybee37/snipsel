@@ -168,6 +168,59 @@ def password_reset_confirm():
     return json_response({"ok": True})
 
 
+@auth_bp.post("/passcode/set")
+@require_auth
+def set_passcode():
+    enforce_json()
+    user = current_user()
+    data = request.get_json() or {}
+    passcode = (data.get("passcode") or "").strip()
+    password_confirm = data.get("password_confirm") or ""
+
+    if not passcode or not password_confirm:
+        raise api_error(400, "invalid_input", "passcode and password_confirm are required")
+
+    if not passcode.isdigit() or not (4 <= len(passcode) <= 12):
+        raise api_error(400, "invalid_input", "passcode must be 4-12 digits")
+
+    if not check_password_hash(user.password_hash, password_confirm):
+        raise api_error(401, "invalid_credentials", "Invalid password confirmation")
+
+    user.passcode_hash = generate_password_hash(passcode)
+    user.passcode_failed_attempts = 0
+    db.session.commit()
+    return json_response({"ok": True})
+
+
+@auth_bp.post("/passcode/verify")
+@require_auth
+def verify_passcode():
+    enforce_json()
+    user = current_user()
+    data = request.get_json() or {}
+    passcode = (data.get("passcode") or "").strip()
+    collection_id = data.get("collection_id")
+
+    if not user.passcode_hash:
+        raise api_error(400, "no_passcode_set", "No passcode set for this user")
+
+    if not check_password_hash(user.passcode_hash, passcode):
+        user.passcode_failed_attempts += 1
+        db.session.commit()
+        if user.passcode_failed_attempts >= 5:
+            session.clear()
+            raise api_error(401, "force_logout", "Too many failed attempts")
+        else:
+            raise api_error(401, "invalid_passcode", "Invalid passcode", details={"attempts_remaining": 5 - user.passcode_failed_attempts})
+
+    user.passcode_failed_attempts = 0
+    session["passcode_verified_at"] = datetime.utcnow().isoformat()
+    session["passcode_verified_collection_id"] = collection_id
+    db.session.commit()
+
+    unlocked_until = (datetime.utcnow() + timedelta(minutes=2)).isoformat() + "Z"
+    return json_response({"ok": True, "unlocked_until": unlocked_until})
+
 def _user_json(user: User) -> dict:
     return {
         "id": user.id,
@@ -176,5 +229,6 @@ def _user_json(user: User) -> dict:
         "default_collection_header_color": user.default_collection_header_color,
         "carry_over_open_tasks": user.carry_over_open_tasks,
         "day_collection_template_id": getattr(user, "day_collection_template_id", None),
+        "passcode_set": user.passcode_hash is not None,
         "created_at": user.created_at.isoformat() + "Z",
     }

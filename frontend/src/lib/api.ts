@@ -14,6 +14,7 @@ export type User = {
   default_collection_header_color?: string | null;
   carry_over_open_tasks?: boolean;
   day_collection_template_id?: string | null;
+  passcode_set?: boolean;
 };
 
 export type Collection = {
@@ -32,6 +33,7 @@ export type Collection = {
   access_level?: 'owner' | 'write' | 'read';
   shared_by_username?: string | null;
   shared_out?: boolean;
+  is_passcode_protected?: boolean;
   modified_by_id?: string;
   modified_by_username?: string | null;
 };
@@ -186,6 +188,18 @@ export const api = {
       body: JSON.stringify(input),
     }),
   logout: () => requestJson<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
+  passcode: {
+    set: (input: { passcode: string; password_confirm: string }) =>
+      requestJson<{ ok: true }>('/api/auth/passcode/set', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    verify: (input: { passcode: string; collection_id: string }) =>
+      requestJson<{ ok: true; unlocked_until: string }>('/api/auth/passcode/verify', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+  },
   me: () => requestJson<{ user: User }>('/api/auth/me'),
   updateMe: (input: {
     default_collection_header_color?: string | null;

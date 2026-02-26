@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+from flask import session
+
 from snipsel_api.extensions import db
 from snipsel_api.models import Collection, CollectionShare, CollectionSnipsel
 
@@ -84,3 +87,25 @@ def can_write_snipsel_via_collections(user_id: str, snipsel_id: str) -> bool:
         or 0
     )
     return count > 0
+
+PASSCODE_GRACE_MINUTES = 2
+
+def is_passcode_unlocked(collection_id: str) -> bool:
+    """Returns True if the current session has a valid passcode unlock for this collection."""
+    verified_at_str = session.get("passcode_verified_at")
+    verified_cid = session.get("passcode_verified_collection_id")
+    
+    # Sticky unlock: always allow if this is the active collection
+    if verified_cid == collection_id:
+        return True
+    
+    # Grace period: allow if verified within the last 2 minutes
+    if verified_at_str:
+        try:
+            verified_at = datetime.fromisoformat(verified_at_str)
+            if datetime.utcnow() - verified_at < timedelta(minutes=PASSCODE_GRACE_MINUTES):
+                return True
+        except ValueError:
+            pass
+    
+    return False

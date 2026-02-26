@@ -837,6 +837,7 @@ def _collection_json(c: Collection) -> dict:
         "is_template": getattr(c, "is_template", False),
         "default_snipsel_type": c.default_snipsel_type,
         "archived": c.archived_at is not None,
+        "is_passcode_protected": bool(c.is_passcode_protected),
         "list_for_day": c.list_for_day.isoformat() if c.list_for_day else None,
         "created_at": c.created_at.isoformat() + "Z",
         "modified_at": c.modified_at.isoformat() + "Z",
