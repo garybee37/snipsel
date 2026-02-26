@@ -140,46 +140,45 @@
       </svg>
       <span>{monthLabel(cursor)}</span>
     </h2>
-
-    <div class="relative overflow-hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-colors">
-      <input 
-        type="month" 
-        class="absolute inset-0 cursor-pointer opacity-0" 
-        value={toMonthValue(cursor)} 
-        onchange={handleMonthChange}
-      />
-      <div class="flex items-center gap-2 text-sm font-medium text-slate-600 pointer-events-none">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <span>Jump to...</span>
-      </div>
-    </div>
   </div>
 
   <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
-    <div class="grid grid-cols-3">
+    <div class="flex items-stretch divide-x divide-black/5">
       <button
-        class="px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+        class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
         type="button"
         onclick={() => (cursor = addMonths(cursor, -1))}
       >
         Prev
       </button>
       <button
-        class="border-l border-black/5 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+        class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
         type="button"
         onclick={() => (cursor = new Date())}
       >
         Today
       </button>
       <button
-        class="border-l border-black/5 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+        class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
         type="button"
         onclick={() => (cursor = addMonths(cursor, 1))}
       >
         Next
       </button>
+      <div class="relative flex-1 group transition-colors hover:bg-slate-50">
+        <input 
+          type="month" 
+          class="absolute inset-0 cursor-pointer opacity-0" 
+          value={toMonthValue(cursor)} 
+          onchange={handleMonthChange}
+        />
+        <div class="flex h-full items-center justify-center gap-2 px-4 text-sm font-medium text-slate-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>Jump to...</span>
+        </div>
+      </div>
     </div>
   </div>
 
