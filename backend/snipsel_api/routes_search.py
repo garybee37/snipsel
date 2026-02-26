@@ -19,8 +19,9 @@ search_bp = Blueprint("search", __name__)
 def list_tags():
     user = current_user()
     scope = (request.args.get("scope") or "my").strip().lower()
-    if scope not in {"my", "shared"}:
-        raise api_error(400, "invalid_input", "scope must be my or shared")
+    q = (request.args.get("q") or "").strip().lower()
+    if scope not in {"my", "shared", "all"}:
+        raise api_error(400, "invalid_input", "scope must be my, shared or all")
 
     accessible_collection_ids = (
         db.session.execute(
@@ -49,13 +50,14 @@ def list_tags():
             .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
             .where(
                 CollectionSnipsel.collection_id.in_(accessible_collection_ids) if accessible_collection_ids else db.false(),
-                Tag.owner_user_id == user.id if scope == "my" else Tag.owner_user_id != user.id,
+                Tag.owner_user_id == user.id if scope == "my" else Tag.owner_user_id != user.id if scope == "shared" else db.true(),
                 Snipsel.deleted_at.is_(None),
+                Tag.name.ilike(f"%{q}%") if q else db.true(),
             )
             .group_by(Tag.name)
             .order_by(Tag.name.asc())
-        )
-        .all()
+            .limit(10 if q else None)
+        ).all()
     )
     return json_response(
         {
@@ -73,8 +75,9 @@ def list_tags():
 def list_mentions():
     user = current_user()
     scope = (request.args.get("scope") or "my").strip().lower()
-    if scope not in {"my", "shared"}:
-        raise api_error(400, "invalid_input", "scope must be my or shared")
+    q = (request.args.get("q") or "").strip().lower()
+    if scope not in {"my", "shared", "all"}:
+        raise api_error(400, "invalid_input", "scope must be my, shared or all")
 
     accessible_collection_ids = (
         db.session.execute(
@@ -103,13 +106,14 @@ def list_mentions():
             .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
             .where(
                 CollectionSnipsel.collection_id.in_(accessible_collection_ids) if accessible_collection_ids else db.false(),
-                Mention.owner_user_id == user.id if scope == "my" else Mention.owner_user_id != user.id,
+                Mention.owner_user_id == user.id if scope == "my" else Mention.owner_user_id != user.id if scope == "shared" else db.true(),
                 Snipsel.deleted_at.is_(None),
+                Mention.name.ilike(f"%{q}%") if q else db.true(),
             )
             .group_by(Mention.name)
             .order_by(Mention.name.asc())
-        )
-        .all()
+            .limit(10 if q else None)
+        ).all()
     )
     return json_response(
         {

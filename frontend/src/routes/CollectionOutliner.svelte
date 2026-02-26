@@ -48,11 +48,12 @@
 
   let templates = $state<Array<{ id: string; title: string; icon: string }>>([]);
   let showTemplateMenu = $state(false);
-  let wikiSuggestions = $state<Array<{ id: string; title: string; icon: string }>>([]);
-  let showWikiPopup = $state(false);
-  let wikiQuery = $state('');
-  let wikiSelectedIndex = $state(0);
-  let wikiDebounce: ReturnType<typeof setTimeout> | null = null;
+  type AutocompleteSuggestion = { id: string; label: string; icon?: string; type: 'collection' | 'tag' | 'mention' };
+  let suggestions = $state<AutocompleteSuggestion[]>([]);
+  let showAutocomplete = $state(false);
+  let autocompleteSelectedIndex = $state(0);
+  let autocompleteQuery = $state('');
+  let autocompleteDebounce: ReturnType<typeof setTimeout> | null = null;
 
   let shareCount = $state(0);
 
@@ -297,27 +298,27 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
-    if (showWikiPopup) {
+    if (showAutocomplete) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        wikiSelectedIndex = Math.min(wikiSelectedIndex + 1, wikiSuggestions.length - 1);
+        autocompleteSelectedIndex = Math.min(autocompleteSelectedIndex + 1, suggestions.length - 1);
         return;
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        wikiSelectedIndex = Math.max(wikiSelectedIndex - 1, 0);
+        autocompleteSelectedIndex = Math.max(autocompleteSelectedIndex - 1, 0);
         return;
       }
       if (e.key === 'Enter') {
         e.preventDefault();
-        const sel = wikiSuggestions[wikiSelectedIndex];
-        if (sel) insertWikiLink(sel);
+        const sel = suggestions[autocompleteSelectedIndex];
+        if (sel) insertAutocomplete(sel);
         return;
       }
       if (e.key === 'Escape') {
         e.preventDefault();
-        showWikiPopup = false;
-        wikiSuggestions = [];
+        showAutocomplete = false;
+        suggestions = [];
         return;
       }
     }
@@ -375,48 +376,77 @@
       }
     }
 
-    // Wiki-link autocomplete: detect [[ trigger
+    // Autocomplete: detect [[, #, or @ trigger
     const el2 = textareaRef;
     if (el2) {
       const cursor = el2.selectionStart ?? 0;
       const before = editContent.slice(0, cursor);
-      const match = /\[\[([^\[\]]*)$/.exec(before);
-      if (match) {
-        const q = match[1];
-        wikiQuery = q;
-        wikiSelectedIndex = 0;
-        if (wikiDebounce) clearTimeout(wikiDebounce);
-        wikiDebounce = setTimeout(async () => {
-          if (q.length >= 0) {
-            try {
+
+      const wikiMatch = /\[\[([^\[\]]*)$/.exec(before);
+      const tagMatch = /(?:^|\s)#(\w*)$/.exec(before);
+      const mentionMatch = /(?:^|\s)@(\w*)$/.exec(before);
+
+      let q = '';
+      let type: 'collection' | 'tag' | 'mention' | null = null;
+
+      if (wikiMatch) {
+        q = wikiMatch[1];
+        type = 'collection';
+      } else if (tagMatch) {
+        q = tagMatch[1];
+        type = 'tag';
+      } else if (mentionMatch) {
+        q = mentionMatch[1];
+        type = 'mention';
+      }
+
+      if (type) {
+        autocompleteQuery = q;
+        autocompleteSelectedIndex = 0;
+        if (autocompleteDebounce) clearTimeout(autocompleteDebounce);
+        autocompleteDebounce = setTimeout(async () => {
+          try {
+            let results: AutocompleteSuggestion[] = [];
+            if (type === 'collection') {
               const res = await api.collections.autocomplete(q);
-              if (wikiQuery !== q) return;
-              wikiSuggestions = res.collections;
-              showWikiPopup = wikiSuggestions.length > 0;
-            } catch {
-              showWikiPopup = false;
+              results = res.collections.map((c) => ({ id: c.id, label: c.title, icon: c.icon, type: 'collection' }));
+            } else if (type === 'tag') {
+              const res = await api.tags.list('all', q);
+              results = res.tags.map((t) => ({ id: t.name, label: t.name, type: 'tag' }));
+            } else if (type === 'mention') {
+              const res = await api.mentions.list('all', q);
+              results = res.mentions.map((m) => ({ id: m.name, label: m.name, type: 'mention' }));
             }
+            if (autocompleteQuery !== q) return;
+            suggestions = results;
+            showAutocomplete = suggestions.length > 0;
+          } catch {
+            showAutocomplete = false;
           }
         }, 200);
-      } else {
-        showWikiPopup = false;
-        wikiSuggestions = [];
       }
     }
   }
 
-  function insertWikiLink(c: { id: string; title: string; icon: string }) {
+  function insertAutocomplete(suggestion: AutocompleteSuggestion) {
     const el = textareaRef;
     if (!el) return;
     const cursor = el.selectionStart ?? 0;
     const before = editContent.slice(0, cursor);
     const after = editContent.slice(cursor);
-    // Replace [[query with [[Title]]
-    const newBefore = before.replace(/\[\[([^\[\]]*)$/, `[[${c.title}]]`);
+
+    let newBefore = before;
+    if (suggestion.type === 'collection') {
+      newBefore = before.replace(/\[\[([^\[\]]*)$/, `[[${suggestion.label}]]`);
+    } else if (suggestion.type === 'tag') {
+      newBefore = before.replace(/#(\w*)$/, `#${suggestion.label} `);
+    } else if (suggestion.type === 'mention') {
+      newBefore = before.replace(/@(\w*)$/, `@${suggestion.label} `);
+    }
+
     editContent = newBefore + after;
-    showWikiPopup = false;
-    wikiSuggestions = [];
-    // Move cursor after inserted text
+    showAutocomplete = false;
+    suggestions = [];
     setTimeout(() => {
       el.selectionStart = el.selectionEnd = newBefore.length;
       el.focus();
@@ -434,8 +464,8 @@
     if (creatingFromTripleEmptyLines) return;
     const related = e.relatedTarget as Node | null;
     if (related && editContainerRef?.contains(related)) return;
-    showWikiPopup = false;
-    wikiSuggestions = [];
+    showAutocomplete = false;
+    suggestions = [];
     if (!saving) saveEdit();
   }
 
@@ -919,17 +949,17 @@
     }, 0);
   });
 
-  $effect(() => {
-    void editContent;
-    autosizeTextarea();
-  });
-
   function taskProgress() {
     const tasks = $sortedItems.filter((i) => i.snipsel.type === 'task');
     const total = tasks.length;
     const done = tasks.filter((i) => Boolean(i.snipsel.task_done)).length;
     return { total, done, ratio: total > 0 ? done / total : 0 };
   }
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   $effect(() => {
     const onScroll = () => {
       showScrollTop = window.scrollY > 300;
@@ -937,10 +967,6 @@
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   });
-
-  function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
 </script>
 
 <div class="space-y-3">
@@ -1093,19 +1119,25 @@
                 oninput={handleEditInput}
                 onkeydown={handleKeydown}
               ></textarea>
-              {#if showWikiPopup && wikiSuggestions.length > 0}
+              {#if showAutocomplete && suggestions.length > 0}
                 <div class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md">
-                  {#each wikiSuggestions as suggestion, i (suggestion.id)}
+                  {#each suggestions as suggestion, i (suggestion.id + suggestion.type)}
                     <button
-                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors {i === wikiSelectedIndex ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50'}"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors {i === autocompleteSelectedIndex ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50'}"
                       type="button"
                       onmousedown={(e) => {
                         e.preventDefault();
-                        insertWikiLink(suggestion);
+                        insertAutocomplete(suggestion);
                       }}
                     >
-                      <span class="text-base">{suggestion.icon}</span>
-                      <span class="truncate font-medium">{suggestion.title}</span>
+                      {#if suggestion.icon}
+                        <span class="text-base">{suggestion.icon}</span>
+                      {:else if suggestion.type === 'tag'}
+                        <span class="text-xs text-slate-400 font-mono">#</span>
+                      {:else if suggestion.type === 'mention'}
+                        <span class="text-xs text-slate-400 font-mono">@</span>
+                      {/if}
+                      <span class="truncate font-medium">{suggestion.label}</span>
                     </button>
                   {/each}
                 </div>

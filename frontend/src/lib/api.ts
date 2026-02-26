@@ -383,16 +383,22 @@ export const api = {
   },
 
   tags: {
-    list: (scope?: 'my' | 'shared') => {
-      const qs = scope ? `?scope=${encodeURIComponent(scope)}` : '';
-      return requestJson<{ tags: TagCount[] }>(`/api/tags${qs}`);
+    list: (scope?: 'my' | 'shared' | 'all', q?: string) => {
+      const sp = new URLSearchParams();
+      if (scope) sp.set('scope', scope);
+      if (q) sp.set('q', q);
+      const qs = sp.toString();
+      return requestJson<{ tags: TagCount[] }>(`/api/tags${qs ? `?${qs}` : ''}`);
     },
   },
 
   mentions: {
-    list: (scope?: 'my' | 'shared') => {
-      const qs = scope ? `?scope=${encodeURIComponent(scope)}` : '';
-      return requestJson<{ mentions: TagCount[] }>(`/api/mentions${qs}`);
+    list: (scope?: 'my' | 'shared' | 'all', q?: string) => {
+      const sp = new URLSearchParams();
+      if (scope) sp.set('scope', scope);
+      if (q) sp.set('q', q);
+      const qs = sp.toString();
+      return requestJson<{ mentions: TagCount[] }>(`/api/mentions${qs ? `?${qs}` : ''}`);
     },
   },
 };
