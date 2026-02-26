@@ -858,7 +858,7 @@
 
   function renderMarkdown(text: string | null): string {
     if (!text) return '';
-    const html = md.render(text);
+    const html = md.render(text).trim();
     const tokenBg = getToolboxBg();
     const tokenFg = getHeaderColor();
     return html.replace(
