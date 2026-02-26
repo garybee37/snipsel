@@ -917,11 +917,14 @@
     const html = md.render(text.trim()).trim();
     const tokenBg = getToolboxBg();
     const tokenFg = getHeaderColor();
-    return html.replace(
-      /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
-      (m, p1, token) =>
-        `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${tokenFg}">${token}</mark>`
-    ).replace(/>\s+</g, '><');
+    return html
+      .replace(
+        /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
+        (m, p1, token) =>
+          `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${tokenFg}">${token}</mark>`
+      )
+      .replace(/<a /g, `<a style="color:${tokenFg}; text-decoration:underline" `)
+      .replace(/>\s+</g, '><');
   }
 
   function renderWithWikiLinks(content: string, refs: Array<{title: string; collection_id: string}> | undefined): string {
