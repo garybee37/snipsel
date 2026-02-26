@@ -1138,8 +1138,7 @@
           showSharedWithYou ||
           $currentCollection.is_template ||
           $currentCollection.archived ||
-          $currentCollection.is_passcode_protected ||
-          (level === 'owner' && $currentUser?.passcode_set)
+          $currentCollection.is_passcode_protected
       )}
 
       {#if showStatusPill}
@@ -1228,43 +1227,17 @@
             </svg>
           {/if}
 
-          {#if level === 'owner'}
-            <button
-              type="button"
-              class="flex items-center justify-center transition-colors hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
-              disabled={!$currentUser?.passcode_set}
-              onclick={togglePasscodeProtection}
-              title={$currentUser?.passcode_set ? ($currentCollection.is_passcode_protected ? 'Remove protection' : 'Protect with passcode') : 'Set a passcode in Settings first'}
-              aria-label={$currentCollection.is_passcode_protected ? 'Remove protection' : 'Protect with passcode'}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill={$currentCollection.is_passcode_protected ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                stroke-width="2"
-                style={$currentCollection.is_passcode_protected ? `color: ${getHeaderColor()}` : 'color: #94a3b8'}
-              >
-                {#if $currentCollection.is_passcode_protected}
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                {:else}
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                {/if}
-              </svg>
-            </button>
-          {:else if $currentCollection.is_passcode_protected}
+          {#if $currentCollection.is_passcode_protected}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4"
+              class="h-4 w-4 text-slate-700"
               viewBox="0 0 24 24"
-              fill="currentColor"
+              fill="none"
               stroke="currentColor"
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
               aria-label="Passcode protected"
-              style={`color: ${getHeaderColor()}`}
             >
               <title>Passcode protected</title>
               <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
