@@ -846,10 +846,12 @@
         refMap.set(r.title.toLowerCase(), r.collection_id);
       }
     }
+    const tokenBg = getToolboxBg();
+    const tokenFg = getHeaderColor();
     html = html.replace(/\[\[([^\]]+)\]\]/g, (_match, title: string) => {
       const collectionId = refMap.get(title.toLowerCase());
       if (collectionId) {
-        return `<a class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 hover:bg-slate-200 cursor-pointer" data-collection-id="${collectionId}">📎 ${title}</a>`;
+        return `<a class="snip-token cursor-pointer" style="background-color:${tokenBg}; color:${tokenFg}" data-collection-id="${collectionId}">[[${title}]]</a>`;
       }
       return `<span class="text-slate-400 text-xs">[[${title}]]</span>`;
     });
