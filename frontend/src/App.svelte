@@ -62,6 +62,13 @@
     }
     showRecentPopup = !showRecentPopup;
   }
+  async function clearRecent() {
+    if (!confirm('Clear recently visited history?')) return;
+    try {
+      await api.collections.clearRecent();
+      recentCollectionsStore.set([]);
+    } catch { /* ignore */ }
+  }
 
   $effect(() => {
     if (!showRecentPopup) return;
@@ -536,6 +543,17 @@
                       <span class="truncate font-medium text-slate-800">{rc.title}</span>
                     </button>
                   {/each}
+                {/if}
+                {#if $recentCollectionsStore.length > 0}
+                  <div class="border-t border-slate-100 mt-1 p-1">
+                    <button
+                      class="w-full rounded-lg px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                      type="button"
+                      onclick={(e) => { e.stopPropagation(); clearRecent(); }}
+                    >
+                      Clear history
+                    </button>
+                  </div>
                 {/if}
               </div>
             </div>

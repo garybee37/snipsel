@@ -615,6 +615,16 @@ def list_recent_collections():
         ]
     })
 
+@collections_bp.delete("/recent")
+@require_auth
+def clear_recent_collections():
+    user = current_user()
+    db.session.execute(
+        db.delete(CollectionVisit).where(CollectionVisit.user_id == user.id)
+    )
+    db.session.commit()
+    return json_response({"ok": True})
+
 
 def _get_owned_collection(user_id: str, collection_id: str) -> Collection:
     c = db.session.get(Collection, collection_id)
