@@ -870,7 +870,7 @@
       /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
       (m, p1, token) =>
         `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${tokenFg}">${token}</mark>`
-    );
+    ).replace(/>\s+</g, '><');
   }
 
   function renderWithWikiLinks(content: string, refs: Array<{title: string; collection_id: string}> | undefined): string {
