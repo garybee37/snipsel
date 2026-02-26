@@ -133,10 +133,10 @@
       const res = await api.collections.update(collection.id, {
         title: title.trim(),
         icon: icon.trim(),
-        header_image_url: headerImageUrl.trim() || undefined,
-        header_color: headerColor.trim() || undefined,
+        header_image_url: headerImageUrl.trim() || null,
+        header_color: headerColor.trim() || null,
         is_template: Boolean(collection.is_template),
-        default_snipsel_type: defaultSnipselType.trim() || undefined,
+        default_snipsel_type: defaultSnipselType.trim() || null,
       });
       collection = res.collection;
       collections.update((list) => list.map((c) => (c.id === res.collection.id ? res.collection : c)));

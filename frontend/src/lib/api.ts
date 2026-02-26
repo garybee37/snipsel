@@ -211,9 +211,9 @@ export const api = {
     create: (input: {
       title: string;
       icon?: string;
-      header_image_url?: string;
-      header_color?: string;
-      default_snipsel_type?: string;
+      header_image_url?: string | null;
+      header_color?: string | null;
+      default_snipsel_type?: string | null;
     }) =>
       requestJson<{ collection: Collection }>('/api/collections', {
         method: 'POST',
@@ -224,11 +224,11 @@ export const api = {
       input: {
         title?: string;
         icon?: string;
-        header_image_url?: string;
-        header_color?: string;
+        header_image_url?: string | null;
+        header_color?: string | null;
         archived?: boolean;
         is_template?: boolean;
-        default_snipsel_type?: string;
+        default_snipsel_type?: string | null;
       }
     ) =>
       requestJson<{ collection: Collection }>(`/api/collections/${id}`, {
@@ -299,9 +299,9 @@ export const api = {
         type?: string;
         content_markdown?: string | null;
         task_done?: boolean;
-        external_url?: string;
-        external_label?: string;
-        internal_target_snipsel_id?: string;
+        external_url?: string | null;
+        external_label?: string | null;
+        internal_target_snipsel_id?: string | null;
       }
     ) =>
       requestJson<{ snipsel: Snipsel }>(`/api/snipsels/${snipselId}`, {
