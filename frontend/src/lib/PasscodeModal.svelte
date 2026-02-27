@@ -98,15 +98,15 @@
   role="dialog"
   aria-modal="true"
 >
-  <div class="mx-4 w-full max-w-sm rounded-2xl border border-slate-200 bg-white/95 p-8 shadow-2xl ring-1 ring-black/5 backdrop-blur-md">
+  <div class="mx-4 w-full max-w-sm rounded-2xl border border-slate-200 bg-white/95 p-8 shadow-2xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10">
     <div class="mb-6 flex flex-col items-center">
-      <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+      <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
       </div>
-      <h2 class="text-xl font-bold text-slate-900">Protected Collection</h2>
-      <p class="mt-1 text-center text-sm text-slate-500">Enter your 4-digit passcode to unlock this collection.</p>
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Protected Collection</h2>
+      <p class="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">Enter your 4-digit passcode to unlock this collection.</p>
     </div>
 
     <div class="flex justify-center gap-3" onpaste={handlePaste}>
@@ -117,7 +117,7 @@
           inputmode="numeric"
           maxlength="1"
           value={digit}
-          class="h-16 w-14 rounded-xl border-2 border-slate-200 bg-white text-center text-2xl font-bold focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+          class="h-16 w-14 rounded-xl border-2 border-slate-200 bg-white text-center text-2xl font-bold focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:text-white"
           disabled={loading}
           oninput={(e) => handleInput(i, e)}
           onkeydown={(e) => handleKeyDown(i, e)}
@@ -127,9 +127,9 @@
 
     {#if error}
       <div class="mt-4 text-center">
-        <p class="text-sm font-medium text-red-600">{error}</p>
+        <p class="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
         {#if attemptsRemaining !== null}
-          <p class="mt-1 text-xs text-red-500">{attemptsRemaining} attempts remaining</p>
+          <p class="mt-1 text-xs text-red-500 dark:text-red-300">{attemptsRemaining} attempts remaining</p>
         {/if}
       </div>
     {/if}
@@ -137,7 +137,7 @@
     <div class="mt-8 flex flex-col gap-3">
       <button
         type="button"
-        class="flex h-12 items-center justify-center rounded-xl bg-indigo-600 font-semibold text-white transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+        class="flex h-12 items-center justify-center rounded-xl bg-indigo-600 font-semibold text-white transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
         onclick={handleSubmit}
         disabled={loading || digits.some(d => !d)}
       >
@@ -153,7 +153,7 @@
       
       <button
         type="button"
-        class="h-12 rounded-xl font-medium text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none disabled:opacity-50"
+        class="h-12 rounded-xl font-medium text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none disabled:opacity-50 dark:text-slate-400 dark:hover:bg-white/5"
         onclick={onCancel}
         disabled={loading}
       >

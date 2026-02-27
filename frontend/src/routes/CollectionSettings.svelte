@@ -65,7 +65,9 @@
   }
 
   function getAccentTint(): string {
-    const base = { r: 255, g: 255, b: 255 };
+    const isDark = document.documentElement.classList.contains('dark');
+    const baseColor = isDark ? '#1e293b' : '#ffffff';
+    const base = hexToRgb(baseColor) ?? { r: 255, g: 255, b: 255 };
     const accent = hexToRgb(getAccent());
     const mixed = accent ? mixRgb(base, accent, 0.14) : base;
     return rgba(mixed, 0.96);
@@ -221,7 +223,7 @@
 <div class="space-y-4">
   <div class="flex items-center justify-between gap-3">
     <button
-      class="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur-md hover:bg-white"
+      class="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur-md hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-300 dark:ring-white/10 dark:hover:bg-slate-900"
       type="button"
       onclick={goBack}
       aria-label="Back"
@@ -231,12 +233,12 @@
     </button>
 
     <div
-      class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium shadow-sm ring-1 ring-black/5 backdrop-blur-md"
+      class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10"
       style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
     >
       <span class="text-xs uppercase tracking-wide">Collection</span>
       <span class="opacity-70">·</span>
-      <span class="font-semibold text-slate-800">Settings</span>
+      <span class="font-semibold text-slate-800 dark:text-slate-200">Settings</span>
     </div>
   </div>
 
@@ -245,12 +247,12 @@
   {:else}
     <div class="space-y-3">
       <!-- General Info -->
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
         <div class="flex items-center justify-between gap-2">
           <div class="text-xs font-medium uppercase text-slate-500">General</div>
-          <div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm ring-1 ring-black/5">
+          <div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-800/80">
             <button
-              class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5"
+              class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/5"
               type="button"
               aria-label={isFavorite ? 'Unfavorite' : 'Favorite'}
               title={isFavorite ? 'Unfavorite' : 'Favorite'}
@@ -262,7 +264,7 @@
               </svg>
             </button>
             <button
-              class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5"
+              class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/5"
               type="button"
               aria-label={collection?.is_template ? 'Unset template' : 'Mark as template'}
               title={collection?.is_template ? 'Template' : 'Not a template'}
@@ -276,7 +278,7 @@
               </svg>
             </button>
             <button
-              class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors dark:text-slate-300 dark:hover:bg-white/5"
               type="button"
               aria-label={collection?.is_passcode_protected ? 'Remove passcode protection' : 'Enable passcode protection'}
               title={$currentUser?.passcode_set ? (collection?.is_passcode_protected ? 'Protected — click to remove' : 'Protect with passcode') : 'Set a passcode in Settings first'}
@@ -305,22 +307,22 @@
         <div class="mt-4 space-y-4">
           <div class="flex gap-3">
             <label class="block">
-              <span class="mb-1.5 block text-sm font-medium text-slate-700">Icon</span>
-              <input class="w-20 rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xl shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={icon} />
+              <span class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Icon</span>
+              <input class="w-20 rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xl shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10" bind:value={icon} />
             </label>
 
             <label class="block flex-1">
-              <span class="mb-1.5 block text-sm font-medium text-slate-700">Title</span>
-              <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={title} />
+              <span class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Title</span>
+              <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10" bind:value={title} />
             </label>
           </div>
 
           <div class="block">
-            <span class="mb-2 block text-sm font-medium text-slate-700">Default snipsel type</span>
-            <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+            <span class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Default snipsel type</span>
+            <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
               <div class="grid grid-cols-4">
                 <button
-                  class="px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === '' || defaultSnipselType === 'text' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+                  class="px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === '' || defaultSnipselType === 'text' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
                   type="button"
                   onclick={() => (defaultSnipselType = '')}
                   style={defaultSnipselType === '' || defaultSnipselType === 'text' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -328,7 +330,7 @@
                   Note
                 </button>
                 <button
-                  class="border-l border-black/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'image' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+                  class="border-l border-black/5 dark:border-white/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'image' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
                   type="button"
                   onclick={() => (defaultSnipselType = 'image')}
                   style={defaultSnipselType === 'image' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -336,7 +338,7 @@
                   Image
                 </button>
                 <button
-                  class="border-l border-black/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'attachment' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+                  class="border-l border-black/5 dark:border-white/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'attachment' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
                   type="button"
                   onclick={() => (defaultSnipselType = 'attachment')}
                   style={defaultSnipselType === 'attachment' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -344,7 +346,7 @@
                   File
                 </button>
                 <button
-                  class="border-l border-black/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'task' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+                  class="border-l border-black/5 dark:border-white/5 px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === 'task' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
                   type="button"
                   onclick={() => (defaultSnipselType = 'task')}
                   style={defaultSnipselType === 'task' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -358,24 +360,24 @@
       </div>
 
       <!-- Appearance -->
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
         <div class="text-xs font-medium uppercase text-slate-500">Appearance</div>
         <div class="mt-4 space-y-4">
           <label class="block">
-            <span class="mb-1.5 block text-sm font-medium text-slate-700">Header image URL</span>
-            <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={headerImageUrl} placeholder="https://..." />
+            <span class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Header image URL</span>
+            <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10" bind:value={headerImageUrl} placeholder="https://..." />
           </label>
 
           <label class="block">
-            <span class="mb-1.5 block text-sm font-medium text-slate-700">Header color</span>
+            <span class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Header color</span>
             <div class="flex items-center gap-3">
-              <div class="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm ring-1 ring-black/5">
+              <div class="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:ring-white/10">
                 <input class="h-8 w-8 cursor-pointer overflow-hidden rounded border-none bg-transparent" type="color" bind:value={headerColor} />
-                <input class="min-w-0 flex-1 border-none bg-transparent text-sm font-mono text-slate-700 focus:outline-none focus:ring-0" bind:value={headerColor} placeholder="#4f46e5" />
+                <input class="min-w-0 flex-1 border-none bg-transparent text-sm font-mono text-slate-700 dark:text-slate-100 focus:outline-none focus:ring-0" bind:value={headerColor} placeholder="#4f46e5" />
               </div>
               {#if headerColor}
                 <button
-                  class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                   type="button"
                   onclick={() => (headerColor = '')}
                 >
@@ -388,21 +390,21 @@
       </div>
 
       <!-- Sharing -->
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
         <div class="text-xs font-medium uppercase text-slate-500">Sharing</div>
         
         <div class="mt-4 space-y-3">
           <div class="flex flex-col gap-2">
-            <select class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" bind:value={shareUserId} disabled={sharingBusy}>
+            <select class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10" bind:value={shareUserId} disabled={sharingBusy}>
               <option value="">Select user…</option>
               {#each users as u (u.id)}
                 <option value={u.id}>{u.username}</option>
               {/each}
             </select>
             <div class="flex gap-2">
-              <div class="flex flex-1 overflow-hidden rounded-full border border-slate-200 bg-white p-1 shadow-sm ring-1 ring-black/5">
+              <div class="flex flex-1 overflow-hidden rounded-full border border-slate-200 bg-white p-1 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
                 <button
-                  class="flex-1 rounded-full py-1.5 text-xs font-medium transition-all {sharePermission === 'read' ? 'text-white' : 'text-slate-600 hover:bg-slate-50'}"
+                  class="flex-1 rounded-full py-1.5 text-xs font-medium transition-all {sharePermission === 'read' ? 'text-white' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-white/5'}"
                   type="button"
                   onclick={() => (sharePermission = 'read')}
                   disabled={sharingBusy}
@@ -411,7 +413,7 @@
                   Read
                 </button>
                 <button
-                  class="flex-1 rounded-full py-1.5 text-xs font-medium transition-all {sharePermission === 'write' ? 'text-white' : 'text-slate-600 hover:bg-slate-50'}"
+                  class="flex-1 rounded-full py-1.5 text-xs font-medium transition-all {sharePermission === 'write' ? 'text-white' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-white/5'}"
                   type="button"
                   onclick={() => (sharePermission = 'write')}
                   disabled={sharingBusy}
@@ -421,7 +423,7 @@
                 </button>
               </div>
               <button
-                class="rounded-full border border-slate-200 bg-white px-6 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+                class="rounded-full border border-slate-200 bg-white px-6 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-white/5"
                 style={`color: ${getAccent()}`}
                 type="button"
                 onclick={addShare}
@@ -435,13 +437,13 @@
           {#if shares.length > 0}
             <div class="space-y-2 pt-2">
               {#each shares as s (s.id)}
-                <div class="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-white/50 px-3 py-2">
+                <div class="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-white/50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
                   <div class="min-w-0">
-                    <div class="truncate text-sm font-medium text-slate-900">{s.shared_with_username ?? s.shared_with_user_id}</div>
-                    <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">{s.permission}</div>
+                    <div class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{s.shared_with_username ?? s.shared_with_user_id}</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold dark:text-slate-400">{s.permission}</div>
                   </div>
                   <button
-                    class="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    class="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors dark:hover:bg-red-900/20"
                     type="button"
                     aria-label="Remove share"
                     title="Remove"
@@ -461,19 +463,19 @@
 
       <!-- Backlinks -->
       {#if backlinks.length > 0}
-        <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+        <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
           <div class="text-xs font-medium uppercase text-slate-500">Linked in</div>
           <div class="mt-4 space-y-2">
             {#each backlinks as bl (bl.snipsel_id + bl.collection_id)}
               <button
-                class="flex w-full items-start gap-3 rounded-lg border border-slate-100 bg-white/50 p-3 text-left transition-all hover:bg-white hover:shadow-sm"
+                class="flex w-full items-start gap-3 rounded-lg border border-slate-100 bg-white/50 p-3 text-left transition-all hover:bg-white hover:shadow-sm dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                 type="button"
                 onclick={() => openBacklink(bl)}
               >
                 <span class="text-xl shrink-0 leading-none">{bl.collection_icon}</span>
                 <div class="min-w-0 flex-1">
-                  <div class="truncate text-sm font-semibold text-slate-900">{bl.collection_title}</div>
-                  <div class="truncate text-xs text-slate-500 mt-0.5">{bl.snipsel_content}</div>
+                  <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{bl.collection_title}</div>
+                  <div class="truncate text-xs text-slate-500 dark:text-slate-400 mt-0.5">{bl.snipsel_content}</div>
                 </div>
               </button>
             {/each}
@@ -484,7 +486,7 @@
       <!-- Actions -->
       <div class="flex flex-col gap-2 pt-4">
         <button 
-          class="w-full rounded-full border border-slate-200 bg-white px-4 py-3 text-base font-semibold shadow-sm ring-1 ring-black/5 transition-all hover:bg-slate-50 disabled:opacity-50" 
+          class="w-full rounded-full border border-slate-200 bg-white px-4 py-3 text-base font-semibold shadow-sm ring-1 ring-black/5 transition-all hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10 dark:hover:bg-slate-800" 
           style={`color: ${getAccent()}`}
           type="button" 
           onclick={save} 
@@ -495,7 +497,7 @@
         
         <div class="grid grid-cols-2 gap-2">
           <button 
-            class="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50" 
+            class="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300 dark:ring-white/10 dark:hover:bg-slate-800" 
             type="button" 
             onclick={toggleArchive}
           >
@@ -503,7 +505,7 @@
           </button>
           
           <button 
-            class="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-red-600 shadow-sm ring-1 ring-black/5 hover:bg-red-50" 
+            class="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-red-600 shadow-sm ring-1 ring-black/5 hover:bg-red-50 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10 dark:hover:bg-red-900/20" 
             type="button" 
             onclick={deleteCollection}
           >

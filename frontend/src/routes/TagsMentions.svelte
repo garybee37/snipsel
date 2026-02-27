@@ -42,7 +42,9 @@
   }
 
   function getAccentTint(): string {
-    const base = { r: 255, g: 255, b: 255 };
+    const isDark = document.documentElement.classList.contains('dark');
+    const baseColor = isDark ? '#1e293b' : '#ffffff';
+    const base = hexToRgb(baseColor) ?? { r: 255, g: 255, b: 255 };
     const accent = hexToRgb(getAccent());
     const mixed = accent ? mixRgb(base, accent, 0.14) : base;
     return rgba(mixed, 0.96);
@@ -87,8 +89,8 @@
 </script>
 
 <div class="space-y-4">
-  <h2 class="flex items-center gap-2 text-2xl font-semibold">
-    <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <h2 class="flex items-center gap-2 text-2xl font-semibold dark:text-slate-100">
+    <svg class="h-6 w-6 text-slate-700 dark:text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M4 12h16" />
       <path d="M6 8h12" />
       <path d="M6 16h12" />
@@ -99,14 +101,14 @@
   </h2>
 
   <div class="flex items-center gap-2">
-    <div class="flex flex-1 overflow-hidden rounded-full border border-slate-200 bg-white" role="tablist">
+    <div class="flex flex-1 overflow-hidden rounded-full border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900" role="tablist">
       <button
         type="button"
         role="tab"
         aria-selected={mode === 'tags'}
         class="flex-1 px-4 py-3 text-base font-medium transition-colors {mode === 'tags'
           ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         style={mode === 'tags' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
         onclick={() => {
           mode = 'tags';
@@ -122,9 +124,9 @@
         type="button"
         role="tab"
         aria-selected={mode === 'mentions'}
-        class="flex-1 border-l border-black/5 px-4 py-3 text-base font-medium transition-colors {mode === 'mentions'
+        class="flex-1 border-l border-black/5 px-4 py-3 text-base font-medium transition-colors dark:border-white/5 {mode === 'mentions'
           ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         style={mode === 'mentions' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
         onclick={() => {
           mode = 'mentions';
@@ -138,14 +140,14 @@
       </button>
     </div>
 
-    <div class="flex overflow-hidden rounded-full border border-slate-200 bg-white" role="tablist" aria-label="Scope">
+    <div class="flex overflow-hidden rounded-full border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900" role="tablist" aria-label="Scope">
       <button
         type="button"
         role="tab"
         aria-selected={scope === 'my'}
         class="px-4 py-3 text-base font-medium transition-colors {scope === 'my'
           ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         style={scope === 'my' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
         onclick={() => {
           scope = 'my';
@@ -158,9 +160,9 @@
         type="button"
         role="tab"
         aria-selected={scope === 'shared'}
-        class="border-l border-black/5 px-4 py-3 text-base font-medium transition-colors {scope === 'shared'
+        class="border-l border-black/5 px-4 py-3 text-base font-medium transition-colors dark:border-white/5 {scope === 'shared'
           ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         style={scope === 'shared' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
         onclick={() => {
           scope = 'shared';
@@ -181,14 +183,14 @@
       {#each items as it (it.name)}
         <button
           type="button"
-          class="w-full px-2 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+          class="w-full px-2 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-white/5 dark:active:bg-white/10"
           onclick={() => selectToken(it.name)}
         >
           <div class="flex items-center justify-between gap-3">
-            <span class="text-lg font-medium text-slate-900">
-              <span class="text-slate-400" aria-hidden="true">{mode === 'tags' ? '#' : '@'}</span>{it.name}
+            <span class="text-lg font-medium text-slate-900 dark:text-slate-100">
+              <span class="text-slate-400 dark:text-slate-500" aria-hidden="true">{mode === 'tags' ? '#' : '@'}</span>{it.name}
             </span>
-            <span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-600 shadow-sm ring-1 ring-black/5">
+            <span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-600 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:ring-white/10">
               {it.count}
             </span>
           </div>

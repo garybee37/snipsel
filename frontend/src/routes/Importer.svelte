@@ -65,7 +65,9 @@
   }
 
   function getAccentTint(): string {
-    const base = { r: 255, g: 255, b: 255 };
+    const isDark = document.documentElement.classList.contains('dark');
+    const baseColor = isDark ? '#1e293b' : '#ffffff';
+    const base = hexToRgb(baseColor) ?? { r: 255, g: 255, b: 255 };
     const accent = hexToRgb(getAccent());
     const mixed = accent ? mixRgb(base, accent, 0.14) : base;
     return rgba(mixed, 0.96);
@@ -212,7 +214,7 @@ async function startImport() {
 <div class="space-y-4">
   <div class="flex items-center gap-3">
     <button
-      class="grid h-10 w-10 place-items-center rounded-full text-slate-600 transition-colors hover:bg-black/5 hover:text-slate-900"
+      class="grid h-10 w-10 place-items-center rounded-full text-slate-600 transition-colors hover:bg-black/5 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
       onclick={goBack}
       type="button"
       aria-label="Back to settings"
@@ -221,28 +223,28 @@ async function startImport() {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
     </button>
-    <h2 class="text-2xl font-semibold text-slate-900">Import from TwoS</h2>
+    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Import from TwoS</h2>
   </div>
 
   <div class="space-y-3">
     {#if !isLoggedIn}
       <!-- Login Form -->
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
         <div class="mb-6 flex flex-col items-center text-center">
-          <div class="mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-slate-50 text-slate-900 shadow-inner ring-1 ring-black/5">
+          <div class="mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-slate-50 text-slate-900 shadow-inner ring-1 ring-black/5 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/5">
             <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-slate-900">Connect TwoS Account</h3>
-          <p class="mt-1 text-sm text-slate-500">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Connect TwoS Account</h3>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Enter your TwoS credentials to access your lists.
           </p>
         </div>
         
         <div class="space-y-4">
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700" for="username">
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" for="username">
               Username
             </label>
             <input
@@ -250,12 +252,12 @@ async function startImport() {
               type="text"
               bind:value={username}
               placeholder="e.g. john_doe"
-              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10"
             />
           </div>
           
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700" for="password">
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" for="password">
               Password
             </label>
             <input
@@ -263,7 +265,7 @@ async function startImport() {
               type="password"
               bind:value={password}
               placeholder="••••••••"
-              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10"
             />
           </div>
           
@@ -285,15 +287,15 @@ async function startImport() {
       </div>
     {:else}
       <!-- Logged in - show lists -->
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div class="h-2 w-2 rounded-full bg-green-500"></div>
-            <span class="text-sm font-medium text-slate-700">Connected as <span class="font-bold text-slate-900">{username}</span></span>
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Connected as <span class="font-bold text-slate-900 dark:text-slate-100">{username}</span></span>
           </div>
           <button
             onclick={() => { isLoggedIn = false; twoSToken = ''; lists = []; }}
-            class="text-xs font-semibold text-red-600 hover:text-red-700"
+            class="text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
           >
             Disconnect
           </button>
@@ -301,7 +303,7 @@ async function startImport() {
       </div>
       
       <!-- Direct list ID import -->
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
         <div class="text-xs uppercase text-slate-500">Import by ID</div>
         <div class="mt-3 flex gap-2">
           <input
@@ -309,12 +311,12 @@ async function startImport() {
             type="text"
             bind:value={directListId}
             placeholder="Enter TwoS list ID"
-            class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+            class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10"
           />
           <button
             onclick={importDirectList}
             disabled={!directListId || isImporting}
-            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             style={`color: ${getAccent()}`}
           >
             Import
@@ -323,13 +325,13 @@ async function startImport() {
       </div>
 
       <!-- Import Settings -->
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
         <div class="text-xs uppercase text-slate-500">Settings</div>
         <div class="mt-4">
           <label class="flex cursor-pointer items-center gap-3">
             <div 
               class="flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all"
-              style={overwrite ? `background-color: ${getAccent()}; border-color: ${getAccent()}` : 'border-color: #e2e8f0; background-color: white'}
+              style={overwrite ? `background-color: ${getAccent()}; border-color: ${getAccent()}` : 'border-color: #475569; background-color: transparent'}
             >
               <input
                 type="checkbox"
@@ -342,15 +344,15 @@ async function startImport() {
                 </svg>
               {/if}
             </div>
-            <span class="text-xs font-medium text-slate-600">
+            <span class="text-xs font-medium text-slate-600 dark:text-slate-400">
               Overwrite existing collections with the same name
             </span>
           </label>
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
-        <div class="flex flex-col gap-4 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
+        <div class="flex flex-col gap-4 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/5">
           <div class="text-xs uppercase text-slate-500">Your Lists</div>
           <div class="relative flex-1 max-w-sm ml-auto">
             <input
@@ -358,11 +360,11 @@ async function startImport() {
               bind:value={searchQuery}
               onkeydown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Search in TwoS..."
-              class="w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-xs shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+              class="w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-xs shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10"
             />
             <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
               {#if isSearching}
-                <div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500"></div>
+                <div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500 dark:border-white/20 dark:border-t-white/60"></div>
               {:else}
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -373,13 +375,13 @@ async function startImport() {
           <div class="flex gap-3">
             <button
               onclick={selectAll}
-              class="text-xs font-semibold text-slate-500 hover:text-slate-900"
+              class="text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
             >
               Select all
             </button>
             <button
               onclick={deselectAll}
-              class="text-xs font-semibold text-slate-500 hover:text-slate-900"
+              class="text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
             >
               Deselect all
             </button>
@@ -395,7 +397,7 @@ async function startImport() {
           {:else if lists.length > 0}
             {#each lists as list (list.id)}
               <div
-                class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-100 bg-white/50 p-3 transition-colors hover:border-slate-200 hover:bg-white"
+                class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-100 bg-white/50 p-3 transition-colors hover:border-slate-200 hover:bg-white dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:border-white/10"
                 onclick={() => toggleList(list.id)}
                 role="button"
                 tabindex="0"
@@ -403,7 +405,7 @@ async function startImport() {
               >
                 <div 
                   class="flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all"
-                  style={selectedLists.has(list.id) ? `background-color: ${getAccent()}; border-color: ${getAccent()}` : 'border-color: #e2e8f0; background-color: white'}
+                  style={selectedLists.has(list.id) ? `background-color: ${getAccent()}; border-color: ${getAccent()}` : 'border-color: #475569; background-color: transparent'}
                 >
                   {#if selectedLists.has(list.id)}
                     <svg class="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -412,13 +414,13 @@ async function startImport() {
                   {/if}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="truncate text-sm font-medium text-slate-900">{list.name}</div>
+                  <div class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{list.name}</div>
                   {#if list.thingsCount}
                     <div class="text-[10px] font-medium uppercase tracking-wider text-slate-400">{list.thingsCount} things</div>
                   {/if}
                 </div>
                 {#if list.isDaily}
-                  <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                  <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                     Daily
                   </span>
                 {/if}
@@ -452,29 +454,29 @@ async function startImport() {
       {/if}
       
       {#if importResult}
-        <div class="rounded-xl border border-green-200 bg-green-50/50 p-4 shadow-sm backdrop-blur-md">
+        <div class="rounded-xl border border-green-200 bg-green-50/50 p-4 shadow-sm backdrop-blur-md dark:border-green-900/30 dark:bg-green-950/20">
           <div class="flex items-center gap-2">
-            <div class="grid h-6 w-6 place-items-center rounded-full bg-green-100 text-green-600">
+            <div class="grid h-6 w-6 place-items-center rounded-full bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <div class="font-semibold text-green-900">Import complete</div>
+            <div class="font-semibold text-green-900 dark:text-green-100">Import complete</div>
           </div>
           <div class="mt-3 flex gap-4 text-xs">
             <div class="flex flex-col">
-              <span class="text-green-600/70 font-medium">Imported</span>
-              <span class="text-lg font-bold text-green-900">{importResult.imported}</span>
+              <span class="text-green-600/70 font-medium dark:text-green-400/70">Imported</span>
+              <span class="text-lg font-bold text-green-900 dark:text-green-100">{importResult.imported}</span>
             </div>
             <div class="flex flex-col">
-              <span class="text-green-600/70 font-medium">Skipped</span>
-              <span class="text-lg font-bold text-green-900">{importResult.skipped}</span>
+              <span class="text-green-600/70 font-medium dark:text-green-400/70">Skipped</span>
+              <span class="text-lg font-bold text-green-900 dark:text-green-100">{importResult.skipped}</span>
             </div>
           </div>
           {#if importResult.errors.length > 0}
-            <div class="mt-3 rounded-lg bg-red-50 p-3 text-xs">
-              <div class="font-bold text-red-800">Errors</div>
-              <ul class="mt-1 list-inside list-disc space-y-1 text-red-700">
+            <div class="mt-3 rounded-lg bg-red-50 p-3 text-xs dark:bg-red-950/20">
+              <div class="font-bold text-red-800 dark:text-red-300">Errors</div>
+              <ul class="mt-1 list-inside list-disc space-y-1 text-red-700 dark:text-red-400">
                 {#each importResult.errors as err}
                   <li>{err}</li>
                 {/each}

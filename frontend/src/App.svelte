@@ -383,6 +383,21 @@ import Importer from './routes/Importer.svelte';
     return () => clearInterval(intervalId);
   });
 
+  // Theme Effect
+  $effect(() => {
+    const theme = $currentUser?.theme || 'system';
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    function updateTheme() {
+      const isDark = theme === 'dark' || (theme === 'system' && mediaQuery.matches);
+      document.documentElement.classList.toggle('dark', isDark);
+    }
+
+    updateTheme();
+    mediaQuery.addEventListener('change', updateTheme);
+    return () => mediaQuery.removeEventListener('change', updateTheme);
+  });
+
   // Search Effect
   let searchDebounce: ReturnType<typeof setTimeout> | null = null;
   $effect(() => {
@@ -499,20 +514,20 @@ import Importer from './routes/Importer.svelte';
   });
 </script>
 
-<div class="min-h-screen bg-slate-50 text-slate-900">
+<div class="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
   {#if $currentUser}
     <header class="sticky top-4 z-20 mx-auto max-w-3xl px-4 pointer-events-none">
-      <div class="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+      <div class="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/5">
         <button
-          class="flex items-center gap-2 pl-2 pr-1 font-bold text-lg text-slate-800 transition-colors hover:text-indigo-600"
+          class="flex items-center gap-2 pl-2 pr-1 font-bold text-lg text-slate-800 transition-colors hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400"
           type="button"
           onclick={openToday}
         >
-          <img src="/logo.svg" alt="snipsel logo" class="h-6 w-6" />
+          <img src="/logo.svg" alt="snipsel logo" class="h-6 w-6 dark:brightness-110" />
           <span class="hidden sm:inline">snipsel</span>
         </button>
         <input
-          class="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-100/50 px-4 py-2 text-base transition-all focus:border-[#4f46e5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/20"
+          class="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-100/50 px-4 py-2 text-base transition-all focus:border-[#4f46e5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/20 dark:border-white/5 dark:bg-slate-800/50 dark:text-slate-100 dark:focus:border-indigo-500 dark:focus:bg-slate-800"
           placeholder="Search"
           type="search"
           bind:value={$searchQuery}
@@ -531,8 +546,8 @@ import Importer from './routes/Importer.svelte';
         <div bind:this={recentContainerRef} class="relative">
           <button
             class="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {showRecentPopup
-              ? 'bg-black/10 text-slate-900'
-              : 'text-slate-600 hover:bg-black/5 hover:text-slate-900'}"
+              ? 'bg-black/10 text-slate-900 dark:bg-white/10 dark:text-white text-white'
+              : 'text-slate-600 hover:bg-black/5 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100'}"
             type="button"
             onclick={toggleRecentPopup}
           aria-label="Recent collections"
@@ -553,15 +568,15 @@ import Importer from './routes/Importer.svelte';
           </button>
           
           {#if showRecentPopup}
-            <div class="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md pointer-events-auto">
-              <div class="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50/50 border-b border-slate-100 text-left">Recently visited</div>
+            <div class="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md pointer-events-auto dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10">
+              <div class="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50/50 border-b border-slate-100 text-left dark:bg-slate-950/50 dark:border-white/5 dark:text-slate-400">Recently visited</div>
               <div class="max-h-80 overflow-y-auto py-1">
                 {#if $recentCollectionsStore.length === 0}
-                  <div class="px-4 py-3 text-sm text-slate-500 italic text-left">No recent history</div>
+                  <div class="px-4 py-3 text-sm text-slate-500 italic text-left dark:text-slate-400">No recent history</div>
                 {:else}
                   {#each $recentCollectionsStore as rc (rc.id)}
                     <button
-                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 transition-colors"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 transition-colors dark:hover:bg-white/5"
                       type="button"
                       onclick={(e) => {
                         e.stopPropagation();
@@ -570,14 +585,14 @@ import Importer from './routes/Importer.svelte';
                       }}
                     >
                       <span class="text-xl shrink-0">{rc.icon}</span>
-                      <span class="truncate font-medium text-slate-800">{rc.title}</span>
+                      <span class="truncate font-medium text-slate-800 dark:text-slate-200">{rc.title}</span>
                     </button>
                   {/each}
                 {/if}
                 {#if $recentCollectionsStore.length > 0}
-                  <div class="border-t border-slate-100 mt-1 p-1">
+                  <div class="border-t border-slate-100 mt-1 p-1 dark:border-white/5">
                     <button
-                      class="w-full rounded-lg px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                      class="w-full rounded-lg px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 transition-colors"
                       type="button"
                       onclick={(e) => { e.stopPropagation(); clearRecent(); }}
                     >
@@ -592,15 +607,15 @@ import Importer from './routes/Importer.svelte';
 
         <button
           class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {$currentView.type === 'notifications'
-            ? 'bg-black/10 text-slate-900'
-            : 'text-slate-600 hover:bg-black/5 hover:text-slate-900'}"
+            ? 'bg-black/10 text-slate-900 dark:bg-white/10 dark:text-slate-100'
+            : 'text-slate-600 hover:bg-black/5 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100'}"
           type="button"
           onclick={() => currentView.set({ type: 'notifications' })}
           aria-label="Notifications"
           title="Notifications"
         >
           {#if $notificationsStore.filter(n => !n.is_read).length > 0}
-            <span class="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#4f46e5] px-1 text-xs font-bold text-white shadow-sm ring-2 ring-white">
+            <span class="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#4f46e5] px-1 text-xs font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900">
               {$notificationsStore.filter(n => !n.is_read).length}
             </span>
           {/if}
@@ -620,8 +635,8 @@ import Importer from './routes/Importer.svelte';
         </button>
         <button
           class="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors {$currentView.type === 'settings'
-            ? 'bg-black/10 text-slate-900'
-            : 'text-slate-600 hover:bg-black/5 hover:text-slate-900'}"
+            ? 'bg-black/10 text-slate-900 dark:bg-white/10 dark:text-slate-100'
+            : 'text-slate-600 hover:bg-black/5 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100'}"
           onclick={() => currentView.set({ type: 'settings' })}
           aria-label="Settings"
           title="Settings"
@@ -694,11 +709,11 @@ import Importer from './routes/Importer.svelte';
   {#if $currentUser}
     <nav class="pointer-events-none fixed bottom-0 left-0 right-0 z-10">
       <div class="mx-auto max-w-3xl px-4 pt-2" style="padding-bottom: calc(env(safe-area-inset-bottom) + 2rem);">
-        <div class="pointer-events-auto mx-auto flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-slate-700 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+        <div class="pointer-events-auto mx-auto flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-slate-700 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200 dark:ring-white/10">
           <button
             class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'calendar'
-              ? 'bg-black/10 text-slate-900'
-              : 'hover:bg-black/5 hover:text-slate-900'}"
+              ? 'bg-black/10 text-slate-900 dark:bg-white/10 dark:text-slate-100'
+              : 'hover:bg-black/5 hover:text-slate-900 dark:hover:bg-white/5 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => currentView.set({ type: 'calendar' })}
             aria-label="Calendar"
@@ -714,8 +729,8 @@ import Importer from './routes/Importer.svelte';
 
           <button
             class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'todos'
-              ? 'bg-black/10 text-slate-900'
-              : 'hover:bg-black/5 hover:text-slate-900'}"
+              ? 'bg-black/10 text-slate-900 dark:bg-white/10 dark:text-slate-100'
+              : 'hover:bg-black/5 hover:text-slate-900 dark:hover:bg-white/5 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => currentView.set({ type: 'todos' })}
             aria-label="Todos"
@@ -742,8 +757,8 @@ import Importer from './routes/Importer.svelte';
 
           <button
             class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'collections'
-              ? 'bg-black/10 text-slate-900'
-              : 'hover:bg-black/5 hover:text-slate-900'}"
+              ? 'bg-black/10 text-slate-900 dark:bg-white/10 dark:text-slate-100'
+              : 'hover:bg-black/5 hover:text-slate-900 dark:hover:bg-white/5 dark:hover:text-slate-100'}"
             type="button"
             onclick={openCollections}
             aria-label="Collections"
@@ -757,8 +772,8 @@ import Importer from './routes/Importer.svelte';
 
           <button
             class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'tags_mentions'
-              ? 'bg-black/10 text-slate-900'
-              : 'hover:bg-black/5 hover:text-slate-900'}"
+              ? 'bg-black/10 text-slate-900 dark:bg-white/10 dark:text-slate-100'
+              : 'hover:bg-black/5 hover:text-slate-900 dark:hover:bg-white/5 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => currentView.set({ type: 'tags_mentions' })}
             aria-label="Tags and mentions"

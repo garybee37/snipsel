@@ -189,7 +189,9 @@
   }
 
   function getToolboxBg(): string {
-    const base = hexToRgb(TOOLBOX_BASE_COLOR) ?? { r: 255, g: 255, b: 255 };
+    const isDark = document.documentElement.classList.contains('dark');
+    const baseColor = isDark ? '#1e293b' : TOOLBOX_BASE_COLOR;
+    const base = hexToRgb(baseColor) ?? { r: 255, g: 255, b: 255 };
     const header = hexToRgb(getHeaderColor());
     const mixed = header ? mixRgb(base, header, 0.14) : base;
     return rgba(mixed, 0.96);
@@ -1147,9 +1149,9 @@
   />
 
   <div class="relative">
-    <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
       <div
-        class="relative h-28 w-full bg-cover bg-center rounded-t-[calc(0.75rem-1px)] overflow-hidden"
+        class="relative h-28 w-full bg-cover bg-center rounded-t-[calc(0.75rem-1px)] overflow-hidden dark:brightness-75"
         style={$currentCollection?.header_image_url
           ? `background-image: url('${$currentCollection.header_image_url}'); background-color: ${getHeaderColor()}`
           : `background-color: ${getHeaderColor()}`}
@@ -1158,7 +1160,7 @@
       <div class="relative px-4 py-3">
         <div class="absolute left-4 top-0 -translate-y-1/2 z-10">
           <button
-            class="grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-colors disabled:hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            class="grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-colors disabled:hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-slate-900 dark:hover:bg-white/5 dark:disabled:hover:bg-slate-900"
             type="button"
             onclick={() => canWrite() && (showEmojiPicker = !showEmojiPicker)}
             disabled={!canWrite()}
@@ -1169,7 +1171,7 @@
 
           {#if showEmojiPicker}
             <div 
-              class="absolute left-0 top-full mt-2 z-50 w-64 p-2 rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md"
+              class="absolute left-0 top-full mt-2 z-50 w-64 p-2 rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10"
               onfocusout={(e) => {
                 const related = e.relatedTarget as Node | null;
                 if (related instanceof HTMLElement && e.currentTarget.contains(related)) return;
@@ -1179,7 +1181,7 @@
               <div class="grid grid-cols-8 gap-1 overflow-y-auto max-h-48 p-1 text-center">
                 {#each commonEmojis as emoji}
                   <button
-                    class="grid h-7 w-7 place-items-center rounded hover:bg-slate-100 transition-colors text-lg"
+                    class="grid h-7 w-7 place-items-center rounded hover:bg-slate-100 transition-colors text-lg dark:hover:bg-white/10"
                     type="button"
                     onclick={() => updateIcon(emoji)}
                   >
@@ -1187,12 +1189,12 @@
                   </button>
                 {/each}
               </div>
-              <div class="mt-2 border-t border-slate-100 pt-2 px-1">
+              <div class="mt-2 border-t border-slate-100 pt-2 px-1 dark:border-white/5">
                 <input
                   type="text"
                   placeholder="Custom emoji..."
                   maxlength="4"
-                  class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
                   onkeydown={(e) => {
                     if (e.key === 'Enter') {
                       const val = (e.currentTarget as HTMLInputElement).value.trim();
@@ -1209,13 +1211,13 @@
 
         {#if taskProgress().total > 0}
           <button
-            class="absolute left-[5.5rem] right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm backdrop-blur-md"
+            class="absolute left-[5.5rem] right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80"
             type="button"
             aria-label="Toggle done tasks"
             title={hideDoneTasks ? 'Show done tasks' : 'Hide done tasks'}
             onclick={toggleHideDoneTasks}
           >
-            <div class="h-2 w-full overflow-hidden rounded-full bg-black/10">
+            <div class="h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
               <div
                 class="h-full rounded-full"
                 style={`width: ${Math.round(taskProgress().ratio * 100)}%; background-color: ${getHeaderColor()}`}
@@ -1225,7 +1227,7 @@
         {/if}
 
         <button
-          class="pl-20 text-lg font-semibold hover:underline"
+          class="pl-20 text-lg font-semibold hover:underline dark:text-slate-100"
           type="button"
           onclick={() => $currentCollection && currentView.set({ type: 'collection_settings', id: $currentCollection.id })}
         >
@@ -1278,13 +1280,13 @@
 
       {#if showStatusPill}
         <div
-          class="absolute right-4 top-0 z-5 -translate-y-1/2 flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-lg text-slate-800 shadow-sm backdrop-blur-md"
+          class="absolute right-4 top-0 z-5 -translate-y-1/2 flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-lg text-slate-800 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200"
           aria-label="Collection status"
         >
           {#if $currentCollection.is_favorite}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-slate-700 fill-current"
+              class="h-4 w-4 text-slate-700 fill-current dark:text-slate-300"
               viewBox="0 0 24 24"
               aria-label="Favorite"
             >
@@ -1296,7 +1298,7 @@
           {#if showSharedByYou}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-slate-700"
+              class="h-4 w-4 text-slate-700 dark:text-slate-300"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1312,7 +1314,7 @@
           {#if showSharedWithYou}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-slate-700"
+              class="h-4 w-4 text-slate-700 dark:text-slate-300"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1329,7 +1331,7 @@
           {#if $currentCollection.is_template}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-slate-700"
+              class="h-4 w-4 text-slate-700 dark:text-slate-300"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1348,7 +1350,7 @@
           {#if $currentCollection.archived}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-slate-700"
+              class="h-4 w-4 text-slate-700 dark:text-slate-300"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1365,7 +1367,7 @@
           {#if $currentCollection.is_passcode_protected}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-slate-700"
+              class="h-4 w-4 text-slate-700 dark:text-slate-300"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1389,7 +1391,7 @@
     <div class="flex flex-col">
       <div class="py-8 text-center text-base text-slate-500">No snipsels yet</div>
       <button
-        class="mt-2 h-24 w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-left text-base text-slate-400 hover:bg-slate-50"
+        class="mt-2 h-24 w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-left text-base text-slate-400 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Add new snipsel"
         onclick={() => {
@@ -1416,22 +1418,22 @@
           {#if item.snipsel_id === $editingSnipselId}
             <div
               bind:this={editContainerRef}
-              class="relative rounded-lg bg-slate-50 px-4 py-3 ring-1 ring-indigo-200 shadow-sm"
+              class="relative rounded-lg bg-slate-50 px-4 py-3 ring-1 ring-indigo-200 shadow-sm dark:bg-slate-800 dark:ring-indigo-500/50"
               onfocusout={handleEditFocusOut}
             >
               <textarea
                 bind:this={textareaRef}
-                class="w-full resize-none bg-transparent text-lg outline-none"
+                class="w-full resize-none bg-transparent text-lg outline-none dark:text-slate-100"
                 rows="1"
                 bind:value={editContent}
                 oninput={handleEditInput}
                 onkeydown={handleKeydown}
               ></textarea>
               {#if showAutocomplete && suggestions.length > 0}
-                <div class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md">
+                <div class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10">
                   {#each suggestions as suggestion, i (suggestion.id + suggestion.type)}
                     <button
-                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors {i === autocompleteSelectedIndex ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50'}"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors {i === autocompleteSelectedIndex ? 'bg-slate-100 text-slate-900 dark:bg-white/10 dark:text-white' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5'}"
                       type="button"
                       onmousedown={(e) => {
                         e.preventDefault();
@@ -1456,7 +1458,7 @@
               {#if hasChildren(item, $sortedItems)}
                 <button
                   type="button"
-                  class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
+                  class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
                   style="left: calc(0.125rem + {item.indent * 1.25}rem)"
                   onclick={(e) => {
                     e.stopPropagation();
@@ -1464,7 +1466,7 @@
                   }}
                   aria-label={expandedSnipsels.has(item.snipsel_id) ? 'Collapse' : 'Expand'}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -1473,7 +1475,7 @@
               <button
                 type="button"
                 aria-label={item.snipsel.task_done ? 'Mark task not done' : 'Mark task done'}
-                class="absolute top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white"
+                class="absolute top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white dark:border-white/20 dark:bg-slate-800"
                 onclick={(e) => {
                   e.stopPropagation();
                   toggleTaskDone(item);
@@ -1528,7 +1530,7 @@
               {#if hasChildren(item, $sortedItems)}
                 <button
                   type="button"
-                  class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
+                  class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
                   style="left: calc(1.625rem + {item.indent * 1.25}rem)"
                   onclick={(e) => {
                     e.stopPropagation();
@@ -1550,8 +1552,8 @@
             {/if}
             <div
               class="rounded px-4 py-3 {selectedIds.has(item.snipsel_id)
-                ? 'bg-slate-100'
-                : 'hover:bg-slate-50'}"
+                ? 'bg-slate-100 dark:bg-white/5'
+                : 'hover:bg-slate-50 dark:hover:bg-white/[0.02]'}"
               role="button"
               tabindex="0"
               onclick={(e) => {
@@ -1569,13 +1571,13 @@
             >
               {#if item.snipsel.content_markdown}
                   <div 
-                    class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap"
+                    class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert"
                     style="--accent-light: {getToolboxBg()}"
                   >
                     {@html renderWithWikiLinks(item.snipsel.content_markdown, item.collection_refs)}
                   </div>
               {:else}
-                <span class="text-sm italic text-slate-400">Empty snipsel</span>
+                <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
               {/if}
 
               {#if item.snipsel.attachments.length > 0 && item.snipsel.type === 'image'}
@@ -1587,7 +1589,7 @@
                     {#each images.slice(0, 9) as a}
                       <button
                         type="button"
-                        class="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/30 bg-white/20 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition-all hover:scale-[1.03] hover:shadow-lg active:scale-95"
+                        class="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/30 bg-white/20 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition-all hover:scale-[1.03] hover:shadow-lg active:scale-95 dark:border-white/10 dark:bg-white/5"
                         aria-label={`View ${a.filename}`}
                         onclick={(e) => {
                           e.stopPropagation();
@@ -1613,7 +1615,7 @@
                   <div class="mt-2 space-y-1">
                     {#each others.slice(0, 3) as a}
                       <a
-                        class="flex items-center gap-2 rounded-md border bg-white px-2 py-1 text-xs"
+                        class="flex items-center gap-2 rounded-md border bg-white px-2 py-1 text-xs dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                         href={api.attachments.downloadUrl(a.id)}
                         target="_blank"
                         rel="noreferrer"
@@ -1632,7 +1634,7 @@
                 <div class="mt-2 space-y-1">
                   {#each item.snipsel.attachments.slice(0, 3) as a}
                     <a
-                      class="flex items-center gap-2 rounded-md border bg-white px-2 py-1 text-xs"
+                      class="flex items-center gap-2 rounded-md border bg-white px-2 py-1 text-xs dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                       href={api.attachments.downloadUrl(a.id)}
                       target="_blank"
                       rel="noreferrer"
@@ -1665,7 +1667,7 @@
           <div class="space-y-2">
             {#each incomingMentions as snip (snip.id)}
               <div
-                class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
+                class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5"
               >
                 {#if snip.created_by_username}
                   <div class="mb-1 text-xs font-medium text-slate-500">
@@ -1674,11 +1676,11 @@
                 {/if}
 
                 {#if snip.content_markdown}
-                  <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 whitespace-pre-wrap">
+                  <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 whitespace-pre-wrap dark:prose-invert">
                     {@html renderMarkdown(snip.content_markdown)}
                   </div>
                 {:else if !snip.attachments}
-                  <span class="text-sm italic text-slate-400">Empty snipsel</span>
+                  <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
                 {/if}
 
                 {#if snip.attachments && snip.attachments.length > 0 && snip.type === 'image'}
@@ -1721,7 +1723,7 @@
       {/if}
 
       <button
-        class="mt-6 flex h-24 w-full items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-base text-slate-400 hover:bg-slate-50"
+        class="mt-6 flex h-24 w-full items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-base text-slate-400 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Add new snipsel"
         onclick={() => {
@@ -1748,7 +1750,7 @@
 {#if selectedIds.size > 0}
   <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pb-4">
     <div
-      class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl px-3 py-3 text-slate-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md"
+      class="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl px-3 py-3 text-slate-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:text-slate-100 dark:ring-white/10"
       style={`background-color: ${getToolboxBg()}`}
     >
 
@@ -1762,7 +1764,7 @@
        />
 
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Move up"
         title="Move up"
@@ -1777,7 +1779,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
       </button>
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Move down"
         title="Move down"
@@ -1793,7 +1795,7 @@
       </button>
 
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Outdent"
         title="Outdent"
@@ -1808,7 +1810,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H9m0 0 4-4m-4 4 4 4M3 5v14"/></svg>
       </button>
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Indent"
         title="Indent"

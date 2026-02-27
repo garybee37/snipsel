@@ -180,15 +180,15 @@
 
 <div class="space-y-4">
   <div class="flex items-center justify-between">
-    <h2 class="flex items-center gap-2 text-2xl font-semibold text-slate-800">
-      <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <h2 class="flex items-center gap-2 text-2xl font-semibold text-slate-800 dark:text-slate-100">
+      <svg class="h-6 w-6 text-slate-700 dark:text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M3 4h6a2 2 0 012 2v14H5a2 2 0 01-2-2V4z" />
         <path d="M13 6a2 2 0 012-2h6v14a2 2 0 01-2 2h-6V6z" />
       </svg>
       <span>Collections</span>
     </h2>
     <button
-      class="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-all"
+      class="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-all dark:border-white/10 dark:bg-slate-900 dark:ring-white/5 dark:hover:bg-white/5"
       type="button"
       onclick={() => (showCreate = true)}
       aria-label="New collection"
@@ -200,12 +200,12 @@
     </button>
   </div>
 
-  <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+  <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/5">
     <div class="grid grid-cols-7">
       <button
         class="grid place-items-center py-3 text-sm transition-colors {filter === 'all'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          ? 'text-slate-900 dark:text-white'
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         type="button"
         onclick={() => (filter = 'all')}
         style={filter === 'all' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -215,8 +215,8 @@
       </button>
       <button
         class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'favorites'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          ? 'text-slate-900 dark:text-white'
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         type="button"
         onclick={() => (filter = 'favorites')}
         style={filter === 'favorites' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -228,8 +228,8 @@
       </button>
       <button
         class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'day'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          ? 'text-slate-900 dark:text-white'
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         type="button"
         onclick={() => (filter = 'day')}
         style={filter === 'day' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -241,8 +241,8 @@
       </button>
       <button
         class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'mine'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          ? 'text-slate-900 dark:text-white'
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         type="button"
         onclick={() => (filter = 'mine')}
         style={filter === 'mine' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -254,8 +254,8 @@
       </button>
       <button
         class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'shared'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          ? 'text-slate-900 dark:text-white'
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         type="button"
         onclick={() => (filter = 'shared')}
         style={filter === 'shared' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -267,8 +267,8 @@
       </button>
       <button
         class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'templates'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          ? 'text-slate-900 dark:text-white'
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         type="button"
         onclick={() => (filter = 'templates')}
         style={filter === 'templates' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -282,8 +282,8 @@
       </button>
       <button
         class="grid place-items-center border-l border-black/5 py-3 text-sm transition-colors {filter === 'archive'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900'}"
+          ? 'text-slate-900 dark:text-white'
+          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
         type="button"
         onclick={() => (filter = 'archive')}
         style={filter === 'archive' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -298,19 +298,19 @@
 
   <div class="flex items-center gap-3">
     <input
-      class="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-base shadow-sm outline-none ring-1 ring-black/5 transition-all focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
+      class="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-base shadow-sm outline-none ring-1 ring-black/5 transition-all focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20 dark:border-white/10 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-indigo-500"
       type="search"
       placeholder="Filter by title"
       bind:value={titleFilter}
     />
 
     <div class="ml-auto flex items-center gap-2">
-      <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+      <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900">
         <div class="flex">
           <button
             class="px-4 py-2 text-sm font-medium {sortKey === 'modified'
-              ? 'text-slate-900'
-              : 'text-slate-600 hover:text-slate-900'}"
+              ? 'text-slate-900 dark:text-white'
+              : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => (sortKey = 'modified')}
             style={sortKey === 'modified' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -319,8 +319,8 @@
           </button>
           <button
             class="border-l border-black/5 px-4 py-2 text-sm font-medium {sortKey === 'name'
-              ? 'text-slate-900'
-              : 'text-slate-600 hover:text-slate-900'}"
+              ? 'text-slate-900 dark:text-white'
+              : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => (sortKey = 'name')}
             style={sortKey === 'name' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -331,7 +331,7 @@
       </div>
 
       <button
-        class="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-white transition-all"
+        class="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-all dark:border-white/10 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-white/5"
         type="button"
         aria-label={sortDir === 'asc' ? 'Sort ascending' : 'Sort descending'}
         title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
@@ -394,8 +394,8 @@
           <button class="flex flex-1 items-center gap-3 text-left" type="button" onclick={() => openCollection(c)}>
             <span class="text-3xl transition-transform group-hover:scale-110">{c.icon}</span>
             <div class="min-w-0 flex-1">
-              <div class="truncate text-lg font-medium text-slate-800">{c.title}</div>
-              <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-slate-500">
+              <div class="truncate text-lg font-medium text-slate-800 dark:text-slate-200">{c.title}</div>
+              <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                 {#if c.access_level === 'read' || c.access_level === 'write'}
                   <span class="rounded-full px-2 py-0.5 font-medium" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
                     >shared</span
@@ -410,7 +410,7 @@
             </div>
           </button>
 
-          <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 flex h-11 items-center px-1">
+          <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 flex h-11 items-center px-1 dark:border-white/10 dark:bg-slate-900 dark:ring-white/5">
             {#if filter === 'shared'}
               <div
                 class="grid h-10 w-10 place-items-center text-lg text-slate-400"

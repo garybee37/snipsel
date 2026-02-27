@@ -49,6 +49,7 @@ class User(db.Model):
     )
 
     carry_over_open_tasks: Mapped[bool] = mapped_column(default=True, nullable=False)
+    theme: Mapped[str] = mapped_column(String(20), nullable=False, default="system")
 
     passcode_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     passcode_failed_attempts: Mapped[int] = mapped_column(default=0, nullable=False)

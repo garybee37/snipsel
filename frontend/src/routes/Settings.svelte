@@ -163,17 +163,42 @@
     </div>
 
     <!-- Appearance -->
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/60">
       <div class="text-xs uppercase text-slate-500">Appearance</div>
-      <div class="mt-3">
-        <label for="accent-color-picker" class="block text-sm font-medium text-slate-700">Default collection header color</label>
+      
+      <div class="mt-4">
+        <label for="theme-select" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Color Theme</label>
+        <div class="mt-2 grid grid-cols-3 gap-2">
+          {#each ['system', 'light', 'dark'] as t}
+            <button
+              class="rounded-lg border px-3 py-2 text-sm font-medium transition-all {$currentUser?.theme === t ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'}"
+              type="button"
+              onclick={async () => {
+                isBusy = true;
+                try {
+                  const res = await api.updateMe({ theme: t as any });
+                  currentUser.set(res.user);
+                } finally {
+                  isBusy = false;
+                }
+              }}
+              disabled={isBusy}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          {/each}
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <label for="accent-color-picker" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Default collection header color</label>
         <div class="mt-2 flex items-center gap-2">
-          <div class="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm ring-1 ring-black/5">
+          <div class="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm ring-1 ring-black/5 dark:border-slate-700 dark:bg-slate-800">
             <input id="accent-color-picker" class="h-8 w-8 cursor-pointer overflow-hidden rounded border-none bg-transparent" type="color" bind:value={defaultHeaderColor} />
-            <input class="min-w-0 flex-1 border-none bg-transparent text-sm font-mono text-slate-700 focus:outline-none focus:ring-0" bind:value={defaultHeaderColor} />
+            <input class="min-w-0 flex-1 border-none bg-transparent text-sm font-mono text-slate-700 focus:outline-none focus:ring-0 dark:text-slate-300" bind:value={defaultHeaderColor} />
           </div>
           <button
-            class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+            class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
             style={`color: ${getAccent()}`}
             type="button"
             onclick={saveDefaultHeaderColor}

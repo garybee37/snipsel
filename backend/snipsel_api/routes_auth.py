@@ -93,6 +93,11 @@ def update_me():
     if "carry_over_open_tasks" in data:
         user.carry_over_open_tasks = bool(data.get("carry_over_open_tasks"))
 
+    if "theme" in data:
+        theme = (data.get("theme") or "system").strip().lower()
+        if theme in {"light", "dark", "system"}:
+            user.theme = theme
+
     if "day_collection_template_id" in data:
         tpl_id_raw = (data.get("day_collection_template_id") or "").strip() or None
         if tpl_id_raw is None:
@@ -228,6 +233,7 @@ def _user_json(user: User) -> dict:
         "email": user.email,
         "default_collection_header_color": user.default_collection_header_color,
         "carry_over_open_tasks": user.carry_over_open_tasks,
+        "theme": user.theme,
         "day_collection_template_id": getattr(user, "day_collection_template_id", None),
         "passcode_set": user.passcode_hash is not None,
         "created_at": user.created_at.isoformat() + "Z",

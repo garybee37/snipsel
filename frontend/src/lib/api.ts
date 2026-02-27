@@ -13,6 +13,7 @@ export type User = {
   created_at: string;
   default_collection_header_color?: string | null;
   carry_over_open_tasks?: boolean;
+  theme?: 'light' | 'dark' | 'system';
   day_collection_template_id?: string | null;
   passcode_set?: boolean;
 };
@@ -205,6 +206,7 @@ export const api = {
   updateMe: (input: {
     default_collection_header_color?: string | null;
     carry_over_open_tasks?: boolean;
+    theme?: 'light' | 'dark' | 'system' | null;
     day_collection_template_id?: string | null;
   }) =>
     requestJson<{ user: User }>('/api/auth/me', {
