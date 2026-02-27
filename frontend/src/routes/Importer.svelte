@@ -270,7 +270,7 @@ async function startImport() {
           </div>
           
           {#if error}
-            <div class="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-600">
+            <div class="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-600 dark:bg-red-950/30 dark:text-red-400">
               {error}
             </div>
           {/if}

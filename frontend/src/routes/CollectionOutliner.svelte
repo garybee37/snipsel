@@ -1492,7 +1492,7 @@
               <button
                 type="button"
                 aria-label="Select snipsel"
-                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded border border-slate-200 bg-white text-base leading-none transition-opacity {selectedIds.has(
+                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded border border-slate-200 bg-white text-base leading-none transition-opacity dark:border-white/10 dark:bg-slate-800 dark:text-white {selectedIds.has(
                   item.snipsel_id
                 )
                   ? 'opacity-100'
@@ -1510,7 +1510,7 @@
               <button
                 type="button"
                 aria-label="Select snipsel"
-                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded border border-slate-200 bg-white text-base leading-none transition-opacity {selectedIds.has(
+                class="absolute right-1 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded border border-slate-200 bg-white text-base leading-none transition-opacity dark:border-white/10 dark:bg-slate-800 dark:text-white {selectedIds.has(
                   item.snipsel_id
                 )
                   ? 'opacity-100'
@@ -1822,7 +1822,7 @@
 
       <div class="relative">
         <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
           type="button"
           aria-label="Change type"
           title="Change type"
@@ -1832,21 +1832,21 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
         </button>
         {#if showTypeMenu}
-          <div class="absolute bottom-12 right-0 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
-            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('text')}>
+          <div class="absolute bottom-12 right-0 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl dark:border-white/10 dark:bg-slate-900 dark:text-slate-100">
+            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-white/5" type="button" onclick={() => setTypeSelected('text')}>
               Note
             </button>
-            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('image')}>
+            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-white/5" type="button" onclick={() => setTypeSelected('image')}>
               Image
             </button>
-            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('attachment')}>
+            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-white/5" type="button" onclick={() => setTypeSelected('attachment')}>
               File
             </button>
-            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50" type="button" onclick={() => setTypeSelected('task')}>
+            <button class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-white/5" type="button" onclick={() => setTypeSelected('task')}>
               Task
             </button>
             <button
-              class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
+              class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50 dark:border-white/5 dark:hover:bg-white/5"
               type="button"
               onclick={closeTypeMenu}
             >
@@ -1868,7 +1868,7 @@
       </button>
 
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Insert template"
         title="Insert template"
@@ -1878,14 +1878,14 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
       </button>
       {#if showTemplateMenu}
-        <div class="absolute bottom-12 right-0 w-64 max-h-80 overflow-y-auto rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl">
-          <div class="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">Templates</div>
+        <div class="absolute bottom-12 right-0 w-64 max-h-80 overflow-y-auto rounded-lg border border-slate-200 bg-white text-slate-900 shadow-xl dark:border-white/10 dark:bg-slate-900 dark:text-slate-100">
+          <div class="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100 dark:bg-slate-950 dark:border-white/5">Templates</div>
           {#if templates.length === 0}
-            <div class="px-3 py-4 text-sm text-slate-500 italic">No templates found</div>
+            <div class="px-3 py-4 text-sm text-slate-500 italic dark:text-slate-400">No templates found</div>
           {:else}
             {#each templates as t (t.id)}
               <button
-                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-white/5"
                 type="button"
                 onclick={() => insertTemplateSelected(t.id)}
               >
@@ -1895,7 +1895,7 @@
             {/each}
           {/if}
           <button
-            class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
+            class="w-full border-t px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50 dark:border-white/5 dark:hover:bg-white/5"
             type="button"
             onclick={closeTemplateMenu}
           >
@@ -1905,7 +1905,7 @@
       {/if}
 
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Upload files"
         title="Upload files"
@@ -1915,7 +1915,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
       </button>
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Move"
         title="Move"
@@ -1925,7 +1925,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4M2 12h20M6 8l-4 4 4 4"/></svg>
       </button>
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Add to collection"
         title="Add to collection"
@@ -1935,7 +1935,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
       </button>
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10"
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Info"
         title="Info"
@@ -1944,7 +1944,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
       </button>
       <button
-        class="grid h-11 w-11 place-items-center rounded-md bg-red-600/90 text-lg text-white hover:bg-red-600"
+        class="grid h-11 w-11 place-items-center rounded-md bg-red-600/90 text-lg text-white hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-600"
         type="button"
         aria-label="Delete"
         title="Delete"
@@ -1954,7 +1954,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5v6m4-6v6"/></svg>
       </button>
       <button
-        class="grid h-11 w-11 place-items-center rounded-md text-lg text-slate-600 hover:bg-black/5 hover:text-slate-900"
+        class="grid h-11 w-11 place-items-center rounded-md text-lg text-slate-600 hover:bg-black/5 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
         type="button"
         aria-label="Clear selection"
         title="Clear selection"
@@ -1973,7 +1973,7 @@
 {#if showScrollTop}
   <div class="fixed bottom-24 left-0 right-0 z-10 flex justify-center pointer-events-none">
     <button 
-      class="pointer-events-auto grid h-12 w-12 place-items-center rounded-full border border-slate-200 bg-white/80 text-slate-600 shadow-lg ring-1 ring-black/5 backdrop-blur-md transition-all hover:-translate-y-1 hover:bg-white" 
+      class="pointer-events-auto grid h-12 w-12 place-items-center rounded-full border border-slate-200 bg-white/80 text-slate-600 shadow-lg ring-1 ring-black/5 backdrop-blur-md transition-all hover:-translate-y-1 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-900" 
       type="button" 
       onclick={scrollToTop} 
       aria-label="Scroll to top" 

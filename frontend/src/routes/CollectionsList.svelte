@@ -344,7 +344,7 @@
 
   {#if showCreate}
     <form
-      class="space-y-4 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl ring-1 ring-black/5 backdrop-blur-md"
+      class="space-y-4 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10"
       onsubmit={(e) => {
         e.preventDefault();
         createCollection();
@@ -352,20 +352,20 @@
     >
       <div class="flex gap-3">
         <input
-          class="w-20 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-center text-2xl shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+          class="w-20 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-center text-2xl shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
           bind:value={newIcon}
           maxlength={2}
           placeholder="📋"
         />
         <input
-          class="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-lg shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+          class="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-lg shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
           bind:value={newTitle}
           placeholder="Collection title"
         />
       </div>
       <div class="flex gap-2">
         <button
-          class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-3 text-base font-bold shadow-sm ring-1 ring-black/5 transition-all hover:bg-slate-50 disabled:opacity-50"
+          class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-3 text-base font-bold shadow-sm ring-1 ring-black/5 transition-all hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
           style={`color: ${getAccent()}`}
           type="submit"
           disabled={busy || !newTitle.trim()}
@@ -373,7 +373,7 @@
           {busy ? 'Creating...' : 'Create Collection'}
         </button>
         <button
-          class="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-medium text-slate-600 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-all"
+          class="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-medium text-slate-600 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
           type="button"
           onclick={() => (showCreate = false)}
         >
@@ -428,7 +428,7 @@
                   </svg>
                 {/if}
               </div>
-              <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
+              <div class="h-6 w-px bg-slate-100 mx-0.5 dark:bg-white/10"></div>
             {/if}
 
             {#if c.is_template}
@@ -439,7 +439,7 @@
                   <line x1="9" y1="21" x2="9" y2="9" />
                 </svg>
               </div>
-              <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
+              <div class="h-6 w-px bg-slate-100 mx-0.5 dark:bg-white/10"></div>
             {/if}
 
             <button
@@ -460,9 +460,9 @@
                 </svg>
               {/if}
             </button>
-            <div class="h-6 w-px bg-slate-100 mx-0.5"></div>
+            <div class="h-6 w-px bg-slate-100 mx-0.5 dark:bg-white/10"></div>
             <button
-              class="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-slate-50 transition-colors"
+              class="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-slate-50 transition-colors dark:hover:bg-white/5"
               type="button"
               aria-label="Edit collection"
               title="Edit"

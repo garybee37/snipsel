@@ -144,15 +144,15 @@
 
   <div class="space-y-3">
     <!-- Account -->
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
       <div class="text-xs uppercase text-slate-500">Account</div>
       <div class="mt-3 flex items-center justify-between gap-4">
         <div class="min-w-0 flex-1">
-          <div class="truncate text-lg font-medium text-slate-900">{$currentUser?.username}</div>
-          <div class="truncate text-sm text-slate-500">{$currentUser?.email}</div>
+          <div class="truncate text-lg font-medium text-slate-900 dark:text-slate-100">{$currentUser?.username}</div>
+          <div class="truncate text-sm text-slate-500 dark:text-slate-400">{$currentUser?.email}</div>
         </div>
         <button 
-          class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm ring-1 ring-black/5 hover:bg-red-50 disabled:opacity-50" 
+          class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm ring-1 ring-black/5 hover:bg-red-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-950/30" 
           type="button" 
           onclick={logout}
           disabled={isBusy}
@@ -211,14 +211,14 @@
     </div>
 
     <!-- Day Template -->
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
       <div class="text-xs uppercase text-slate-500">Day template</div>
       <div class="mt-3">
-        <label for="day-template-select" class="block text-sm font-medium text-slate-700">Template for new daily collections</label>
+        <label for="day-template-select" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Template for new daily collections</label>
         <div class="mt-2 flex items-center gap-2">
           <select 
             id="day-template-select"
-            class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5" 
+            class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10" 
             bind:value={dayTemplateId}
           >
             <option value="">No template</option>
@@ -229,7 +229,7 @@
             {/each}
           </select>
           <button
-            class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50"
+            class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
             style={`color: ${getAccent()}`}
             type="button"
             onclick={saveDayTemplate}
@@ -242,15 +242,15 @@
     </div>
 
     <!-- Tasks -->
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
       <div class="text-xs uppercase text-slate-500">Tasks</div>
       <div class="mt-3 flex items-center justify-between gap-4">
         <div>
-          <div class="text-sm font-medium text-slate-900">Carry over open tasks</div>
-          <div class="text-xs text-slate-500">Move unfinished tasks from the last 30 days into today.</div>
+          <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Carry over open tasks</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Move unfinished tasks from the last 30 days into today.</div>
         </div>
         <button
-          class="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold transition-all hover:bg-slate-50 disabled:opacity-40"
+          class="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold transition-all hover:bg-slate-50 disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
           type="button"
           onclick={toggleCarryOver}
           disabled={isBusy}
@@ -262,7 +262,7 @@
     </div>
 
     <!-- Security -->
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
       <div class="flex items-center gap-2 text-xs uppercase text-slate-500">
         <svg 
           class="h-3 w-3 transition-colors" 
@@ -283,13 +283,13 @@
       {#if !showPasscodeForm}
         <div class="mt-3 flex items-center justify-between gap-4">
           <div>
-            <div class="text-sm font-medium text-slate-900">Personal Passcode</div>
-            <div class="text-xs text-slate-500">
+            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Personal Passcode</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">
               {$currentUser?.passcode_set ? 'Passcode is active.' : 'Set a passcode to protect sensitive collections.'}
             </div>
           </div>
           <button
-            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all"
+            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
             style={`color: ${getAccent()}`}
             type="button"
             onclick={() => { showPasscodeForm = true; passcodeError = ''; }}
@@ -301,36 +301,36 @@
       {:else}
         <div class="mt-4 space-y-4 transition-all">
           <div>
-            <label for="new-passcode" class="block text-sm font-medium text-slate-700">New 4-digit passcode</label>
+            <label for="new-passcode" class="block text-sm font-medium text-slate-700 dark:text-slate-300">New 4-digit passcode</label>
             <input
               id="new-passcode"
               type="password"
               inputmode="numeric"
               maxlength="12"
-              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
               bind:value={passcode}
               oninput={(e) => passcode = e.currentTarget.value.replace(/\D/g, '')}
               placeholder="••••"
             />
           </div>
           <div>
-            <label for="password-confirm" class="block text-sm font-medium text-slate-700">Confirm account password</label>
+            <label for="password-confirm" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm account password</label>
             <input
               id="password-confirm"
               type="password"
-              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
               bind:value={passwordConfirm}
               placeholder="Your account password"
             />
           </div>
           
           {#if passcodeError}
-            <div class="text-xs font-medium text-red-600">{passcodeError}</div>
+            <div class="text-xs font-medium text-red-600 dark:text-red-400">{passcodeError}</div>
           {/if}
           
           <div class="flex items-center gap-2 pt-2">
             <button
-              class="flex-1 rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-50 transition-all"
+              class="flex-1 rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-50 transition-all dark:opacity-90"
               style={`background-color: ${getAccent()}`}
               type="button"
               onclick={savePasscode}
@@ -339,7 +339,7 @@
               Save Passcode
             </button>
             <button
-              class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all"
+              class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
               type="button"
               onclick={() => { showPasscodeForm = false; passcode = ''; passwordConfirm = ''; }}
               disabled={isBusy}
@@ -352,22 +352,22 @@
     </div>
 
     <!-- Data & Migration -->
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
       <div class="text-xs uppercase text-slate-500">Data & Migration</div>
       <div class="mt-3">
         <button
-          class="flex w-full items-center gap-4 rounded-xl border border-dashed border-slate-200 p-3 text-left transition-all hover:border-slate-300 hover:bg-slate-50/50"
+          class="flex w-full items-center gap-4 rounded-xl border border-dashed border-slate-200 p-3 text-left transition-all hover:border-slate-300 hover:bg-slate-50/50 dark:border-white/10 dark:hover:bg-white/5"
           onclick={() => currentView.set({ type: 'importer' })}
           type="button"
         >
-          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600">
+          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
           </div>
           <div class="flex-1">
-            <div class="font-medium text-slate-900">Import from TwoS</div>
-            <div class="text-xs text-slate-500">Bring your lists and things into snipsel</div>
+            <div class="font-medium text-slate-900 dark:text-slate-100">Import from TwoS</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Bring your lists and things into snipsel</div>
           </div>
           <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

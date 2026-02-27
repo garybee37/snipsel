@@ -322,7 +322,7 @@
             <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
               <div class="grid grid-cols-4">
                 <button
-                  class="px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === '' || defaultSnipselType === 'text' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+                  class="px-2 py-2.5 text-xs font-medium transition-colors {defaultSnipselType === '' || defaultSnipselType === 'text' ? 'text-slate-900 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
                   type="button"
                   onclick={() => (defaultSnipselType = '')}
                   style={defaultSnipselType === '' || defaultSnipselType === 'text' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}

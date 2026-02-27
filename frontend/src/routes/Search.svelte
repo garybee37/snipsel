@@ -93,7 +93,7 @@
       <div class="grid grid-cols-5">
         {#each filters as f}
           <button
-            class="whitespace-nowrap px-1 py-3 text-[10px] sm:text-xs font-medium transition-colors border-l first:border-l-0 border-black/5 dark:border-white/5 {$searchType === f.value ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+            class="whitespace-nowrap px-1 py-3 text-[10px] sm:text-xs font-medium transition-colors border-l first:border-l-0 border-black/5 dark:border-white/5 {$searchType === f.value ? 'text-slate-900 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => searchType.set(f.value)}
             style={$searchType === f.value ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -108,7 +108,7 @@
       <div class="flex">
         {#each [{label: 'All', value: 'all'}, {label: 'My', value: 'my'}, {label: 'Shared', value: 'shared'}] as s}
           <button
-            class="px-3 sm:px-4 py-3 text-[10px] sm:text-xs font-medium transition-colors border-l first:border-l-0 border-black/5 dark:border-white/5 {$searchScope === s.value ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+            class="px-3 sm:px-4 py-3 text-[10px] sm:text-xs font-medium transition-colors border-l first:border-l-0 border-black/5 dark:border-white/5 {$searchScope === s.value ? 'text-slate-900 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => searchScope.set(s.value as any)}
             style={$searchScope === s.value ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
@@ -121,7 +121,7 @@
   </div>
 
   {#if $searchError}
-    <div class="rounded-xl border border-red-200 bg-red-50/50 p-4 text-base text-red-700 backdrop-blur-md">
+    <div class="rounded-xl border border-red-200 bg-red-50/50 p-4 text-base text-red-700 backdrop-blur-md dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
       {$searchError}
     </div>
   {/if}
@@ -159,7 +159,7 @@
         </div>
 
         {#if $searchResults.snipsels.length === 0}
-          <div class="rounded-xl border border-slate-200 bg-white/80 p-8 text-center text-slate-500 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
+          <div class="rounded-xl border border-slate-200 bg-white/80 p-8 text-center text-slate-500 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-400">
             No matches found
           </div>
         {:else}
