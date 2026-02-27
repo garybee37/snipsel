@@ -58,6 +58,10 @@ def create_app() -> Flask:
     app.register_blueprint(errors_bp)
 
     from snipsel_api import models
+    from snipsel_api.cli import cleanup, db_init
+
+    app.cli.add_command(cleanup)
+    app.cli.add_command(db_init)
 
     _ = models
 

@@ -85,3 +85,6 @@ def cleanup():
 
         db.session.commit()
         print(f"Cleanup complete: {snipsel_count} snipsels, {collection_count} collections, and {attachment_count} attachment files deleted.")
+
+if __name__ == "__main__":
+    cli()
