@@ -12,6 +12,18 @@ export type View =
   | { type: 'todos' }
   | { type: 'calendar' }
   | { type: 'settings' }
+  | { type: 'importer' }
+  | { type: 'notifications' }
+  | { type: 'snipsel'; id: string; returnTo?: string };
+  | { type: 'loading' }
+  | { type: 'collections' }
+  | { type: 'collection'; id: string }
+  | { type: 'collection_settings'; id: string }
+  | { type: 'tags_mentions' }
+  | { type: 'search' }
+  | { type: 'todos' }
+  | { type: 'calendar' }
+  | { type: 'settings' }
   | { type: 'notifications' }
   | { type: 'snipsel'; id: string; returnTo?: string };
 
