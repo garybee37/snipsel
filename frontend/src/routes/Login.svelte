@@ -48,7 +48,7 @@
     <p class="mt-2 text-slate-500 dark:text-slate-400">{mode === 'login' ? 'Sign in to continue' : 'Sign up to get started'}</p>
   </div>
 
-  <form class="space-y-5" onsubmit|preventDefault={submit}>
+  <form class="space-y-5" onsubmit={(e) => { e.preventDefault(); submit(); }}>
     <div class="space-y-4 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
       <label class="block">
         <span class="mb-1.5 ml-1 block text-sm font-medium text-slate-600 dark:text-slate-400">Username</span>
