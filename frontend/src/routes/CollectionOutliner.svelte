@@ -1239,7 +1239,7 @@
           {#if collapsibleParentIds.size > 0}
             <button
               type="button"
-              class="grid h-6 w-6 place-items-center rounded-full bg-slate-50 text-slate-400 border border-slate-200 shadow-sm hover:bg-slate-100 hover:text-slate-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+              class="grid h-6 w-6 place-items-center text-slate-400 hover:text-slate-600 transition-all focus:outline-none"
               onclick={toggleAllExpanded}
               title={allExpanded ? 'Collapse All' : 'Expand All'}
             >
