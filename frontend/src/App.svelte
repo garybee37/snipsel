@@ -37,6 +37,7 @@
   import CollectionSettings from './routes/CollectionSettings.svelte';
   import TagsMentions from './routes/TagsMentions.svelte';
   import Notifications from './routes/Notifications.svelte';
+import Importer from './routes/Importer.svelte';
   import PasscodeModal from './lib/PasscodeModal.svelte';
 
   let initialized = $state(false);
@@ -641,6 +642,8 @@
       <Calendar />
     {:else if $currentView.type === 'settings'}
       <Settings />
+    {:else if $currentView.type === 'importer'}
+      <Importer />
     {:else if $currentView.type === 'notifications'}
       <Notifications />
     {:else if $currentView.type === 'snipsel'}

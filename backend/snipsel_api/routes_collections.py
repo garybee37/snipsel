@@ -32,7 +32,6 @@ from snipsel_api.permissions import (
     can_write_collection,
     get_collection_access_level,
     is_passcode_unlocked,
-
 )
 from snipsel_api.routes_attachments import (
     _resolve_attachment_path,
@@ -55,9 +54,7 @@ def _get_share_permission(user_id: str, collection_id: str) -> str | None:
 def list_collections():
     user = current_user()
     include_archived = request.args.get("include_archived") == "1" or True
-    owned_ids = db.select(Collection.id).where(
-        Collection.owner_user_id == user.id, Collection.deleted_at.is_(None)
-    )
+    owned_ids = db.select(Collection.id).where(Collection.owner_user_id == user.id, Collection.deleted_at.is_(None))
     if not include_archived:
         owned_ids = owned_ids.where(Collection.archived_at.is_(None))
 
@@ -75,14 +72,10 @@ def list_collections():
     ids_subq = owned_ids.union(shared_ids).subquery()
     ids_select = db.select(ids_subq.c.id)
 
-    q = db.select(Collection).where(
-        Collection.id.in_(ids_select), Collection.deleted_at.is_(None)
-    )
+    q = db.select(Collection).where(Collection.id.in_(ids_select), Collection.deleted_at.is_(None))
     if not include_archived:
         q = q.where(Collection.archived_at.is_(None))
-    q = q.order_by(
-        Collection.list_for_day.desc().nullslast(), Collection.created_at.desc()
-    )
+    q = q.order_by(Collection.list_for_day.desc().nullslast(), Collection.created_at.desc())
     items = db.session.execute(q).scalars().all()
 
     shared_collection_ids = [c.id for c in items if c.owner_user_id != user.id]
@@ -90,51 +83,28 @@ def list_collections():
         cid: perm
         for cid, perm in (
             db.session.execute(
-                db.select(
-                    CollectionShare.collection_id, CollectionShare.permission
-                ).where(
+                db.select(CollectionShare.collection_id, CollectionShare.permission).where(
                     CollectionShare.shared_with_user_id == user.id,
-                    CollectionShare.collection_id.in_(shared_collection_ids)
-                    if shared_collection_ids
-                    else db.false(),
+                    CollectionShare.collection_id.in_(shared_collection_ids) if shared_collection_ids else db.false(),
                 )
             ).all()
         )
     }
     owner_ids = list({c.owner_user_id for c in items if c.owner_user_id != user.id})
     owner_names = {
-        uid: uname
-        for uid, uname in (
-            db.session.execute(
-                db.select(User.id, User.username).where(User.id.in_(owner_ids))
-            ).all()
-            if owner_ids
-            else []
-        )
+        uid: uname for uid, uname in (db.session.execute(db.select(User.id, User.username).where(User.id.in_(owner_ids))).all() if owner_ids else [])
     }
 
     owned_item_ids = [c.id for c in items if c.owner_user_id == user.id]
     shared_out_ids = set(
         db.session.execute(
-            db.select(db.distinct(CollectionShare.collection_id)).where(
-                CollectionShare.collection_id.in_(owned_item_ids)
-                if owned_item_ids
-                else db.false()
-            )
+            db.select(db.distinct(CollectionShare.collection_id)).where(CollectionShare.collection_id.in_(owned_item_ids) if owned_item_ids else db.false())
         )
         .scalars()
         .all()
     )
 
-    fav_ids = set(
-        db.session.execute(
-            db.select(CollectionFavorite.collection_id).where(
-                CollectionFavorite.user_id == user.id
-            )
-        )
-        .scalars()
-        .all()
-    )
+    fav_ids = set(db.session.execute(db.select(CollectionFavorite.collection_id).where(CollectionFavorite.user_id == user.id)).scalars().all())
 
     out = []
     for c in items:
@@ -216,12 +186,7 @@ def get_today_collection():
     tpl_id = getattr(user, "day_collection_template_id", None)
     if tpl_id:
         tpl = db.session.get(Collection, tpl_id)
-        if (
-            tpl
-            and tpl.deleted_at is None
-            and tpl.owner_user_id == user.id
-            and getattr(tpl, "is_template", False)
-        ):
+        if tpl and tpl.deleted_at is None and tpl.owner_user_id == user.id and getattr(tpl, "is_template", False):
             c.icon = tpl.icon
             c.header_image_url = tpl.header_image_url
             c.header_color = tpl.header_color
@@ -236,25 +201,16 @@ def get_today_collection():
     _maybe_carry_over_open_tasks(user=user, today_collection=c, day=day)
 
     if tpl_id:
-        _maybe_copy_template_contents(
-            user=user, template_collection_id=tpl_id, target_collection=c
-        )
+        _maybe_copy_template_contents(user=user, template_collection_id=tpl_id, target_collection=c)
     j = _collection_json(c)
     j["is_favorite"] = False
     j["access_level"] = "owner"
     return json_response({"collection": j}, status=201)
 
 
-def _maybe_copy_template_contents(
-    *, user: User, template_collection_id: str, target_collection: Collection
-) -> None:
+def _maybe_copy_template_contents(*, user: User, template_collection_id: str, target_collection: Collection) -> None:
     max_pos = (
-        db.session.execute(
-            db.select(db.func.max(CollectionSnipsel.position)).where(
-                CollectionSnipsel.collection_id == target_collection.id
-            )
-        ).scalar()
-        or 0
+        db.session.execute(db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == target_collection.id)).scalar() or 0
     )
     _insert_template_into_collection(
         user=user,
@@ -272,21 +228,14 @@ def _insert_template_into_collection(
     position_offset: int,
 ) -> None:
     tpl = db.session.get(Collection, template_collection_id)
-    if (
-        not tpl
-        or tpl.deleted_at is not None
-        or tpl.owner_user_id != user.id
-        or not getattr(tpl, "is_template", False)
-    ):
+    if not tpl or tpl.deleted_at is not None or tpl.owner_user_id != user.id or not getattr(tpl, "is_template", False):
         return
 
     tpl_items = (
         db.session.execute(
             db.select(CollectionSnipsel)
             .join(Snipsel, Snipsel.id == CollectionSnipsel.snipsel_id)
-            .where(
-                CollectionSnipsel.collection_id == tpl.id, Snipsel.deleted_at.is_(None)
-            )
+            .where(CollectionSnipsel.collection_id == tpl.id, Snipsel.deleted_at.is_(None))
             .order_by(CollectionSnipsel.position.asc())
         )
         .scalars()
@@ -379,13 +328,7 @@ def _insert_template_into_collection(
             )
         )
 
-    shares = (
-        db.session.execute(
-            db.select(CollectionShare).where(CollectionShare.collection_id == tpl.id)
-        )
-        .scalars()
-        .all()
-    )
+    shares = db.session.execute(db.select(CollectionShare).where(CollectionShare.collection_id == tpl.id)).scalars().all()
     for s in shares:
         existing = (
             db.session.execute(
@@ -434,14 +377,7 @@ def insert_template(collection_id: str):
     if not template_collection_id:
         raise api_error(400, "invalid_input", "template_collection_id is required")
 
-    max_pos = (
-        db.session.execute(
-            db.select(db.func.max(CollectionSnipsel.position)).where(
-                CollectionSnipsel.collection_id == target.id
-            )
-        ).scalar()
-        or 0
-    )
+    max_pos = db.session.execute(db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == target.id)).scalar() or 0
     _insert_template_into_collection(
         user=user,
         template_collection_id=template_collection_id,
@@ -478,14 +414,7 @@ def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) 
     if not past_collections:
         return
 
-    max_pos = (
-        db.session.execute(
-            db.select(db.func.max(CollectionSnipsel.position)).where(
-                CollectionSnipsel.collection_id == today_collection.id
-            )
-        ).scalar()
-        or 0
-    )
+    max_pos = db.session.execute(db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == today_collection.id)).scalar() or 0
 
     for src in past_collections:
         items = (
@@ -538,11 +467,7 @@ def create_collection():
     title = (data.get("title") or "").strip()
     icon = (data.get("icon") or "🗒").strip() or "🗒"
     header_image_url = (data.get("header_image_url") or "").strip() or None
-    header_color = (
-        (data.get("header_color") or "").strip()
-        or user.default_collection_header_color
-        or None
-    )
+    header_color = (data.get("header_color") or "").strip() or user.default_collection_header_color or None
     default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
 
     if not title:
@@ -596,13 +521,7 @@ def get_collection(collection_id: str):
     else:
         level = get_collection_access_level(user.id, c.id)
         j["access_level"] = "write" if level == "write" else "read"
-        j["shared_by_username"] = (
-            db.session.execute(
-                db.select(User.username).where(User.id == c.owner_user_id)
-            )
-            .scalars()
-            .first()
-        )
+        j["shared_by_username"] = db.session.execute(db.select(User.username).where(User.id == c.owner_user_id)).scalars().first()
     # Record visit
     visit = db.session.get(CollectionVisit, (user.id, c.id))
     if visit:
@@ -644,12 +563,9 @@ def update_collection(collection_id: str):
     if "is_passcode_protected" in data:
         c.is_passcode_protected = bool(data.get("is_passcode_protected"))
     if "default_snipsel_type" in data:
-
         c.is_template = bool(data.get("is_template"))
     if "default_snipsel_type" in data:
-        c.default_snipsel_type = (
-            data.get("default_snipsel_type") or ""
-        ).strip() or None
+        c.default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
 
     c.modified_by_id = user.id
     db.session.commit()
@@ -674,14 +590,18 @@ def update_collection(collection_id: str):
 def delete_collection(collection_id: str):
     user = current_user()
     c = _get_owned_collection(user.id, collection_id)
+    from sqlalchemy import and_
 
     # Check for backlinks
     has_backlinks = (
         db.session.execute(
             db.select(db.func.count(SnipselCollectionRef.snipsel_id))
             .join(Snipsel, Snipsel.id == SnipselCollectionRef.snipsel_id)
+            .join(CollectionSnipsel, and_(CollectionSnipsel.collection_id == Collection.id, CollectionSnipsel.snipsel_id == Snipsel.id))
+            .join(Collection, Collection.id == CollectionSnipsel.collection_id)
             .where(
                 SnipselCollectionRef.collection_id == collection_id,
+                Collection.deleted_at.is_(None),
                 Snipsel.deleted_at.is_(None),
             )
         ).scalar()
@@ -715,18 +635,14 @@ def list_recent_collections():
         .limit(20)
     )
     items = db.session.execute(stmt).scalars().all()
-    return json_response(
-        {"collections": [{"id": c.id, "title": c.title, "icon": c.icon} for c in items]}
-    )
+    return json_response({"collections": [{"id": c.id, "title": c.title, "icon": c.icon} for c in items]})
 
 
 @collections_bp.delete("/recent")
 @require_auth
 def clear_recent_collections():
     user = current_user()
-    db.session.execute(
-        db.delete(CollectionVisit).where(CollectionVisit.user_id == user.id)
-    )
+    db.session.execute(db.delete(CollectionVisit).where(CollectionVisit.user_id == user.id))
     db.session.commit()
     return json_response({"ok": True})
 
@@ -768,9 +684,7 @@ def autocomplete_collections():
         .limit(10)
     )
     items = db.session.execute(stmt).scalars().all()
-    return json_response(
-        {"collections": [{"id": c.id, "title": c.title, "icon": c.icon} for c in items]}
-    )
+    return json_response({"collections": [{"id": c.id, "title": c.title, "icon": c.icon} for c in items]})
 
 
 @collections_bp.get("/<collection_id>/backlinks")
@@ -864,25 +778,12 @@ def list_shares(collection_id: str):
     c = _get_owned_collection(user.id, collection_id)
     _ = c
     rows = (
-        db.session.execute(
-            db.select(CollectionShare)
-            .where(CollectionShare.collection_id == collection_id)
-            .order_by(CollectionShare.created_at.asc())
-        )
+        db.session.execute(db.select(CollectionShare).where(CollectionShare.collection_id == collection_id).order_by(CollectionShare.created_at.asc()))
         .scalars()
         .all()
     )
     user_ids = [r.shared_with_user_id for r in rows]
-    users_by_id = {
-        u.id: u.username
-        for u in (
-            db.session.execute(db.select(User).where(User.id.in_(user_ids)))
-            .scalars()
-            .all()
-            if user_ids
-            else []
-        )
-    }
+    users_by_id = {u.id: u.username for u in (db.session.execute(db.select(User).where(User.id.in_(user_ids))).scalars().all() if user_ids else [])}
     return json_response(
         {
             "shares": [

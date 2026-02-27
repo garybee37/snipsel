@@ -432,4 +432,34 @@ export const api = {
       return requestJson<{ snipsels: SearchSnipselHit[] }>(`/api/search/mentions/incoming?day=${encodeURIComponent(day)}`);
     },
   },
+
+  importer: {
+    twosLogin: (username: string, password: string) => {
+      return requestJson<{ user: { id: string; username: string; token: string } }>(
+        '/api/importer/twos/login',
+        {
+          method: 'POST',
+          body: JSON.stringify({ username, password }),
+        }
+      );
+    },
+    twosLists: (lastSync: string, userId: string, token: string) => {
+      return requestJson<{ lists: Array<{ id: string; name: string; isDaily: boolean; emoji: string }> }>(
+        '/api/importer/twos/lists',
+        {
+          method: 'POST',
+          body: JSON.stringify({ lastSync, userId, token }),
+        }
+      );
+    },
+    importFromTwoS: (input: { listIds: string[]; overwrite: boolean; token: string; userId: string }) => {
+      return requestJson<{ imported: number; skipped: number; errors: string[] }>(
+        '/api/importer/twos/import',
+        {
+          method: 'POST',
+          body: JSON.stringify({ listIds: input.listIds, overwrite: input.overwrite, token: input.token, userId: input.userId }),
+        }
+      );
+    },
+  },
 };

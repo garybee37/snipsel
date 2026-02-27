@@ -8,6 +8,7 @@
   let error = $state<string | null>(null);
   let isLoggedIn = $state(false);
   let twoSToken = $state('');
+  let twoSUserId = $state('');
   
   // Lists from TwoS
   let lists = $state<any[]>([]);
@@ -16,9 +17,13 @@
   
   // Import options
   let overwrite = $state(false);
+  let directListId = $state('');
   let isImporting = $state(false);
   let importProgress = $state('');
   let importResult = $state<{ imported: number; skipped: number; errors: string[] } | null>(null);
+  
+  // TwoS sync
+  let lastSync = $state('');
 
   async function handleLogin() {
     if (!username || !password) {
@@ -31,7 +36,10 @@
     
     try {
       const res = await api.importer.twosLogin(username, password);
+      console.log('Login response:', res);
       twoSToken = res.user.token;
+      twoSUserId = res.user.id;
+      console.log('After setting:', { twoSToken, twoSUserId });
       isLoggedIn = true;
       
       // Load lists after login
@@ -44,9 +52,14 @@
   }
   
   async function loadLists() {
+    if (!lastSync) {
+      const d = new Date();
+      d.setFullYear(d.getFullYear() - 2);
+      lastSync = d.toISOString();
+    }
     isLoadingLists = true;
     try {
-      const res = await api.importer.twosLists(twoSToken);
+      const res = await api.importer.twosLists(lastSync, twoSUserId, twoSToken);
       lists = res.lists;
     } catch (e) {
       error = 'Failed to load lists';
@@ -72,7 +85,39 @@
     selectedLists = new Set();
   }
   
-  async function startImport() {
+  
+  async function importDirectList() {
+    console.log('importDirectList called', { directListId, twoSToken, twoSUserId });
+    if (!directListId) {
+      error = 'Please enter a list ID';
+      return;
+    }
+    
+    console.log('Calling API with:', { listIds: [directListId], overwrite, token: twoSToken, userId: twoSUserId });
+    isImporting = true;
+    importProgress = '';
+    importResult = null;
+    error = null;
+    
+    try {
+      console.log('API call starting');
+      const result = await api.importer.importFromTwoS({
+        listIds: [directListId],
+        overwrite: overwrite,
+        token: twoSToken,
+        userId: twoSUserId,
+      });
+      
+      importResult = result;
+      directListId = '';
+    } catch (e) {
+      error = e instanceof Error ? e.message : 'Import failed';
+    } finally {
+      isImporting = false;
+    }
+  }
+
+async function startImport() {
     if (selectedLists.size === 0) {
       error = 'Please select at least one list to import';
       return;
@@ -84,12 +129,13 @@
     error = null;
     
     try {
+      console.log('API call starting');
       const result = await api.importer.importFromTwoS({
         listIds: Array.from(selectedLists),
         overwrite: overwrite,
         token: twoSToken,
+        userId: twoSUserId,
       });
-      
       importResult = result;
     } catch (e) {
       error = e instanceof Error ? e.message : 'Import failed';
@@ -185,6 +231,29 @@
         </button>
       </div>
       
+      <!-- Direct list ID import -->
+      <div class="rounded-lg border border-slate-200 bg-white p-4">
+        <label class="mb-2 block text-sm font-medium text-slate-700" for="directListId">
+          Or import a specific list by ID:
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="directListId"
+            type="text"
+            bind:value={directListId}
+            placeholder="Enter TwoS list ID"
+            class="flex-1 rounded-lg border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
+          />
+          <button
+            onclick={importDirectList}
+            disabled={!directListId || isImporting}
+            class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          >
+            Import
+          </button>
+        </div>
+      </div>
+
       {#if isLoadingLists}
         <div class="py-8 text-center text-slate-500">
           Loading lists...

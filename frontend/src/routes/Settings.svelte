@@ -326,6 +326,22 @@
       {/if}
     </div>
 
+    <div class="mt-4 border-t border-slate-200 pt-4">
+      <button
+        class="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-slate-50"
+        onclick={() => currentView.set({ type: 'importer' })}
+        type="button"
+      >
+        <svg class="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        <div>
+          <div class="font-medium text-slate-800">Import from TwoS</div>
+          <div class="text-sm text-slate-500">Import lists and things from TwoS</div>
+        </div>
+      </button>
+    </div>
+
     <div class="py-4 text-center text-xs text-slate-400">
       More settings coming soon.
     </div>
