@@ -1361,8 +1361,8 @@
           class="group relative pr-10 {anchorHighlightId === item.snipsel_id ? 'ring-2 rounded-lg' : ''}"
           style={
             anchorHighlightId === item.snipsel_id
-              ? `padding-left: calc(3rem + ${item.indent * 1.25}rem); --tw-ring-color: ${getHeaderColor()}`
-              : `padding-left: calc(3rem + ${item.indent * 1.25}rem)`
+              ? `padding-left: calc(3.25rem + ${item.indent * 1.25}rem); --tw-ring-color: ${getHeaderColor()}`
+              : `padding-left: calc(3.25rem + ${item.indent * 1.25}rem)`
           }
         >
           {#if item.snipsel_id === $editingSnipselId}
@@ -1408,8 +1408,8 @@
               {#if hasChildren(item, $sortedItems)}
                 <button
                   type="button"
-                  class="absolute top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
-                  style="left: calc(0.25rem + {item.indent * 1.25}rem)"
+                  class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
+                  style="left: calc(0.125rem + {item.indent * 1.25}rem)"
                   onclick={(e) => {
                     e.stopPropagation();
                     toggleExpand(item.snipsel_id);
@@ -1425,13 +1425,13 @@
               <button
                 type="button"
                 aria-label={item.snipsel.task_done ? 'Mark task not done' : 'Mark task done'}
-                class="absolute top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white"
+                class="absolute top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white"
                 onclick={(e) => {
                   e.stopPropagation();
                   toggleTaskDone(item);
                 }}
-                style="left: calc(1.25rem + {item.indent * 1.25}rem); {item.snipsel.task_done
-                  ? `border-color: ${getHeaderColor()}; background-color: ${getToolboxBg()}; color: ${getHeaderColor()}`
+                style="left: calc(1.75rem + {item.indent * 1.25}rem); {item.snipsel.task_done
+                  ? `border-color: ${getHeaderColor()}; background-color: ${getToolboxBg()}; color: ${getHeaderColor()}; font-size: 10px`
                   : ''}"
               >
                 {#if item.snipsel.task_done}
@@ -1480,8 +1480,8 @@
               {#if hasChildren(item, $sortedItems)}
                 <button
                   type="button"
-                  class="absolute top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
-                  style="left: calc(1.25rem + {item.indent * 1.25}rem)"
+                  class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
+                  style="left: calc(1.625rem + {item.indent * 1.25}rem)"
                   onclick={(e) => {
                     e.stopPropagation();
                     toggleExpand(item.snipsel_id);
@@ -1495,7 +1495,7 @@
               {:else}
                 <div 
                   class="absolute top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" 
-                  style="left: calc(2.125rem + {item.indent * 1.25}rem)"
+                  style="left: calc(2.25rem + {item.indent * 1.25}rem)"
                   aria-hidden="true"
                 ></div>
               {/if}
