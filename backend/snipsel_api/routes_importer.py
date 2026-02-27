@@ -21,6 +21,7 @@ from snipsel_api.models import (
     CollectionSnipsel,
     Snipsel,
     SnipselCollectionRef,
+    utcnow,
 )
 
 importer_bp = Blueprint("importer", __name__)
@@ -482,7 +483,8 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
                 content_parts.append(body)
 
             # Determine type based on post type
-            if post_type == "checkbox" or thing.get("isComplete") is not None:
+            is_completed = thing.get("completed", thing.get("isComplete", False))
+            if post_type == "checkbox" or is_completed:
                 snipsel_type = "task"
 
             if len(photos) > 0:
@@ -514,7 +516,8 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
                 owner_user_id=user.id,
                 type=snipsel_type,
                 content_markdown=final_content,
-                task_done=thing.get("isComplete", False),
+                task_done=is_completed,
+                done_at=utcnow() if is_completed else None,
                 created_by_id=user.id,
                 modified_by_id=user.id,
             )
