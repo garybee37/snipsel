@@ -1583,11 +1583,11 @@
                 {@const others = item.snipsel.attachments.filter((a) => !isImageAttachment(a))}
 
                 {#if images.length > 0}
-                  <div class="mt-3 grid grid-cols-3 gap-2">
+                  <div class="mt-3 grid grid-cols-3 gap-3">
                     {#each images.slice(0, 9) as a}
                       <button
                         type="button"
-                        class="aspect-square w-full overflow-hidden rounded-lg border bg-slate-50"
+                        class="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/30 bg-white/20 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition-all hover:scale-[1.03] hover:shadow-lg active:scale-95"
                         aria-label={`View ${a.filename}`}
                         onclick={(e) => {
                           e.stopPropagation();
@@ -1595,11 +1595,12 @@
                         }}
                       >
                         <img
-                          class="h-full w-full object-cover"
+                          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                           src={a.has_thumbnail ? api.attachments.thumbnailUrl(a.id) : api.attachments.downloadUrl(a.id)}
                           alt={a.filename}
                           loading="lazy"
                         />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
                       </button>
                     {/each}
                   </div>
@@ -1683,10 +1684,10 @@
                 {#if snip.attachments && snip.attachments.length > 0 && snip.type === 'image'}
                   {@const images = snip.attachments.filter((a) => a.mime_type?.startsWith('image/') || a.has_thumbnail)}
                   {#if images.length > 0}
-                    <div class="mt-2 grid grid-cols-3 gap-1">
+                    <div class="mt-3 grid grid-cols-3 gap-3">
                       {#each images.slice(0, 9) as a (a.id)}
                         <button
-                          class="aspect-square overflow-hidden rounded"
+                          class="group relative aspect-square overflow-hidden rounded-2xl border border-white/30 bg-white/20 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition-all hover:scale-[1.03] hover:shadow-lg active:scale-95"
                           type="button"
                           aria-label="View image"
                           onclick={(e) => {
@@ -1695,11 +1696,12 @@
                           }}
                         >
                           <img
-                            class="h-full w-full object-cover"
+                            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                             src={a.has_thumbnail ? api.attachments.thumbnailUrl(a.id) : api.attachments.downloadUrl(a.id)}
                             alt={a.filename}
                             loading="lazy"
                           />
+                          <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
                         </button>
                       {/each}
                     </div>
