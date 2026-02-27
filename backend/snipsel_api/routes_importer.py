@@ -467,7 +467,7 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
                 collection_id=collection.id,
                 snipsel_id=snipsel.id,
                 position=idx + 1,
-                indent=0,
+                indent=thing.get("tabs", 0),
             )
             db.session.add(cs)
             db.session.flush()
