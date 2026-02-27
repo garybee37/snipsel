@@ -977,6 +977,7 @@
         (m, p1, token) =>
           `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${tokenFg}">${token}</mark>`
       )
+      .replace(/==([^=]+)==/g, `<mark style="background-color:${tokenBg}; border-radius: 0.25rem; padding: 0 0.125rem">$1</mark>`)
       .replace(/<a /g, `<a style="color:${tokenFg}; text-decoration:underline" `)
       .replace(/>\s+</g, '><');
   }
