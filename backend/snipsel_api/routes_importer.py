@@ -9,6 +9,7 @@ from urllib.error import URLError, HTTPError
 
 from flask import Blueprint, current_app
 from PIL import Image
+from datetime import datetime
 
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import ApiError, api_error
@@ -424,10 +425,22 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
         emoji = lst.get("emoji") or "📝"
         cover_photo = lst.get("coverPhoto")
 
+        # Handle daily list date parsing
+        list_for_day = None
+        if lst.get("today"):
+            try:
+                # TwoS title format for daily lists: "Mon Oct 27, 2025"
+                dt = datetime.strptime(list_name, "%a %b %d, %Y")
+                list_for_day = dt.strftime("%Y-%m-%d")
+                print(f"[TwoS Import]   Daily list detected for date: {list_for_day}")
+            except Exception as e:
+                print(f"[TwoS Import]   Warning: Failed to parse date from '{list_name}': {e}")
+
         collection = Collection(
             owner_user_id=user.id,
             title=list_name,
             twos_id=list_id,
+            list_for_day=list_for_day,
             icon=emoji[:8] if emoji else "📝",  # Limit to 8 chars
             header_image_url=cover_photo if cover_photo else None,
             created_by_id=user.id,
