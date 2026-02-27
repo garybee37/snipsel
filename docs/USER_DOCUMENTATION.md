@@ -329,7 +329,27 @@ Per-collection settings (accessed via collection menu):
 
 ---
 
+### Maintenance
+
+#### Cleanup Command
+
+To permanently delete all snipsels and collections marked as "deleted" (including physical attachment files and their thumbnails), run the following command from the `backend` directory:
+
+```bash
+flask --app snipsel_api.app cleanup
+```
+
+This command:
+1. Identifies all items with a `deleted_at` timestamp.
+2. Removes associated physical files from the storage directory.
+3. Completely removes the database records and all their relationships (tags, mentions, shares, etc.).
+
+---
+
 ## Technical Notes
+
+### Image Handling
+... (unchanged)
 
 ### Image Handling
 
