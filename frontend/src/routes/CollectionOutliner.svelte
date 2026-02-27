@@ -67,6 +67,22 @@
   let showTypeMenu = $state(false);
   let showScrollTop = $state(false);
 
+  let collapsedSnipsels = $state<Set<string>>(new Set());
+
+  function toggleCollapse(id: string) {
+    const next = new Set(collapsedSnipsels);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    collapsedSnipsels = next;
+  }
+
+  function hasChildren(item: CollectionItem, allItems: CollectionItem[]): boolean {
+    const idx = allItems.findIndex((i) => i.snipsel_id === item.snipsel_id);
+    if (idx < 0 || idx === allItems.length - 1) return false;
+    // Children are any following items with higher indentation
+    return allItems[idx + 1].indent > item.indent;
+  }
+
   let showEmojiPicker = $state(false);
   const commonEmojis = [
     '🗒', '📅', '✅', '📌', '💡', '🏷', '📁', '🏠', '🚀', '🎨', 
@@ -967,8 +983,30 @@
   }
 
   function visibleItems(items: CollectionItem[]): CollectionItem[] {
-    if (!hideDoneTasks) return items;
-    return items.filter((i) => !isDoneTask(i));
+    let filtered = items;
+    if (hideDoneTasks) {
+      filtered = filtered.filter((i) => !isDoneTask(i));
+    }
+
+    const result: CollectionItem[] = [];
+    let skipUntilIndent: number | null = null;
+
+    for (const item of filtered) {
+      if (skipUntilIndent !== null) {
+        if (item.indent > skipUntilIndent) {
+          continue;
+        } else {
+          skipUntilIndent = null;
+        }
+      }
+
+      result.push(item);
+
+      if (collapsedSnipsels.has(item.snipsel_id)) {
+        skipUntilIndent = item.indent;
+      }
+    }
+    return result;
   }
 
   function hiddenDoneCount(items: CollectionItem[]): number {
@@ -1311,8 +1349,8 @@
           class="group relative pr-10 {anchorHighlightId === item.snipsel_id ? 'ring-2 rounded-lg' : ''}"
           style={
             anchorHighlightId === item.snipsel_id
-              ? `padding-left: calc(1.5rem + ${item.indent * 1.25}rem); --tw-ring-color: ${getHeaderColor()}`
-              : `padding-left: calc(1.5rem + ${item.indent * 1.25}rem)`
+              ? `padding-left: calc(3rem + ${item.indent * 1.25}rem); --tw-ring-color: ${getHeaderColor()}`
+              : `padding-left: calc(3rem + ${item.indent * 1.25}rem)`
           }
         >
           {#if item.snipsel_id === $editingSnipselId}
@@ -1355,17 +1393,34 @@
             </div>
           {:else}
             {#if item.snipsel.type === 'task'}
+              {#if hasChildren(item, $sortedItems)}
+                <button
+                  type="button"
+                  class="absolute top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {collapsedSnipsels.has(item.snipsel_id) ? '-rotate-90' : ''}"
+                  style="left: calc(0.25rem + {item.indent * 1.25}rem)"
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    toggleCollapse(item.snipsel_id);
+                  }}
+                  aria-label={collapsedSnipsels.has(item.snipsel_id) ? 'Expand' : 'Collapse'}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              {/if}
+
               <button
                 type="button"
                 aria-label={item.snipsel.task_done ? 'Mark task not done' : 'Mark task done'}
-                class="absolute left-1 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white"
+                class="absolute top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white"
                 onclick={(e) => {
                   e.stopPropagation();
                   toggleTaskDone(item);
                 }}
-                style={item.snipsel.task_done
+                style="left: calc(1.25rem + {item.indent * 1.25}rem); {item.snipsel.task_done
                   ? `border-color: ${getHeaderColor()}; background-color: ${getToolboxBg()}; color: ${getHeaderColor()}`
-                  : undefined}
+                  : ''}"
               >
                 {#if item.snipsel.task_done}
                   ✓
@@ -1410,7 +1465,28 @@
             {/if}
 
             {#if item.snipsel.type !== 'task'}
-              <div class="absolute left-[1.125rem] top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" aria-hidden="true"></div>
+              {#if hasChildren(item, $sortedItems)}
+                <button
+                  type="button"
+                  class="absolute top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {collapsedSnipsels.has(item.snipsel_id) ? '-rotate-90' : ''}"
+                  style="left: calc(1.25rem + {item.indent * 1.25}rem)"
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    toggleCollapse(item.snipsel_id);
+                  }}
+                  aria-label={collapsedSnipsels.has(item.snipsel_id) ? 'Expand' : 'Collapse'}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              {:else}
+                <div 
+                  class="absolute top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" 
+                  style="left: calc(2.125rem + {item.indent * 1.25}rem)"
+                  aria-hidden="true"
+                ></div>
+              {/if}
             {/if}
             <div
               class="rounded px-4 py-3 {selectedIds.has(item.snipsel_id)
