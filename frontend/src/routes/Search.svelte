@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults, searchType } from '../lib/stores';
+  import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults, searchType, searchScope } from '../lib/stores';
   import type { SearchSnipselHit } from '../lib/api';
   import { getCurrentUrl } from '../lib/router';
   import { currentUser } from '../lib/session';
@@ -86,18 +86,35 @@
     <span>Search</span>
   </h2>
 
-  <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
-    <div class="grid grid-cols-5">
-      {#each filters as f}
-        <button
-          class="px-2 py-3 text-xs font-medium transition-colors border-l first:border-l-0 border-black/5 {$searchType === f.value ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
-          type="button"
-          onclick={() => searchType.set(f.value)}
-          style={$searchType === f.value ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-        >
-          {f.label}
-        </button>
-      {/each}
+  <div class="flex flex-wrap items-center gap-2">
+    <div class="flex-1 min-w-[200px] overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+      <div class="grid grid-cols-5">
+        {#each filters as f}
+          <button
+            class="whitespace-nowrap px-1 py-3 text-[10px] sm:text-xs font-medium transition-colors border-l first:border-l-0 border-black/5 {$searchType === f.value ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => searchType.set(f.value)}
+            style={$searchType === f.value ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          >
+            {f.label}
+          </button>
+        {/each}
+      </div>
+    </div>
+
+    <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
+      <div class="flex">
+        {#each [{label: 'All', value: 'all'}, {label: 'My', value: 'my'}, {label: 'Shared', value: 'shared'}] as s}
+          <button
+            class="px-3 sm:px-4 py-3 text-[10px] sm:text-xs font-medium transition-colors border-l first:border-l-0 border-black/5 {$searchScope === s.value ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+            type="button"
+            onclick={() => searchScope.set(s.value as any)}
+            style={$searchScope === s.value ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          >
+            {s.label}
+          </button>
+        {/each}
+      </div>
     </div>
   </div>
 

@@ -226,9 +226,11 @@ import Importer from './routes/Importer.svelte';
   let isSearching = false;
   async function runSearch() {
     if (isSearching) return;
-    const q = untrack(() => $searchQuery).trim();
+    const qRaw = untrack(() => $searchQuery).trim();
     const type = untrack(() => $searchType);
-    if (!q && !type) {
+    const scope = untrack(() => $searchScope);
+
+    if (!qRaw && !type) {
       searchResults.set(null);
       searchError.set(null);
       return;
@@ -236,6 +238,19 @@ import Importer from './routes/Importer.svelte';
     
     isSearching = true;
     
+    // Auto-detect tag/mention prefix
+    let q = qRaw;
+    let tag: string | undefined = undefined;
+    let mention: string | undefined = undefined;
+    
+    if (q.startsWith('#')) {
+      tag = q.slice(1);
+      q = '';
+    } else if (q.startsWith('@')) {
+      mention = q.slice(1);
+      q = '';
+    }
+
     // Set view to search if not already, but guard it with strict check
     const curView = untrack(() => $currentView);
     if (curView.type !== 'search') {
@@ -245,7 +260,13 @@ import Importer from './routes/Importer.svelte';
     searchError.set(null);
     isLoading.set(true);
     try {
-      const res = await api.search({ q, type });
+      const res = await api.search({ 
+        q: q || undefined, 
+        type, 
+        tag, 
+        mention, 
+        scope: scope !== 'all' ? scope : undefined 
+      });
       searchResults.set(res);
     } catch (e) {
       console.error('Search failed:', e);
@@ -366,10 +387,11 @@ import Importer from './routes/Importer.svelte';
   $effect(() => {
     if (!initialized || !$currentUser) return;
     
-    // Track query and type
+    // Track query, type and scope
     const q = $searchQuery;
     const t = $searchType;
-    void q; void t;
+    const s = $searchScope;
+    void q; void t; void s;
 
     // Run search if currently in search view
     const viewType = $currentView.type;

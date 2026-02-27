@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, type TagCount } from '../lib/api';
-  import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
+  import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults, searchScope } from '../lib/stores';
   import { currentUser } from '../lib/session';
 
   const DEFAULT_ACCENT = '#4f46e5';
@@ -11,7 +11,7 @@
   }
 
   function hexToRgb(hex: string): Rgb | null {
-    const h = hex.trim();
+    const h = (hex || '').trim();
     const m = /^#([0-9a-fA-F]{6})$/.exec(h);
     if (!m) return null;
     const v = m[1];
@@ -73,20 +73,12 @@
 
   async function selectToken(name: string) {
     collectionAnchor.set(null);
-    searchQuery.set('');
+    searchQuery.set((mode === 'tags' ? '#' : '@') + name);
+    searchScope.set(scope);
     searchError.set(null);
     searchResults.set(null);
     currentView.set({ type: 'search' });
-    isLoading.set(true);
-    try {
-      const res = await api.search(mode === 'tags' ? { tag: name, scope } : { mention: name, scope });
-      searchResults.set(res);
-    } catch {
-      searchResults.set(null);
-      searchError.set('Search failed');
-    } finally {
-      isLoading.set(false);
-    }
+    // runSearch will be triggered automatically by App.svelte $effect
   }
 
   $effect(() => {

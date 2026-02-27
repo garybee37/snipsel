@@ -33,6 +33,7 @@ export const searchQuery = writable('');
 export const searchResults = writable<SearchResponse | null>(null);
 export const searchError = writable<string | null>(null);
 export const searchType = writable<string | undefined>(undefined);
+export const searchScope = writable<'my' | 'shared' | 'all'>('all');
 
 export const notificationsStore = writable<import('./api').Notification[]>([]);
 export const recentCollectionsStore = writable<Array<{ id: string; title: string; icon: string }>>([]);
