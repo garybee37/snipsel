@@ -97,15 +97,38 @@
   
   async function loadLists() {
     isLoadingLists = true;
+    error = null;
     try {
       // Use '0' to get everything if no lastSync, or a very old date
       const syncTime = lastSync || "0";
       const res = await api.importer.twosLists(syncTime, twoSUserId, twoSToken);
       lists = res.lists;
+      searchQuery = ''; // Clear search when reloading full list
     } catch (e) {
       error = 'Failed to load lists';
     } finally {
       isLoadingLists = false;
+    }
+  }
+
+  let searchQuery = $state('');
+  let isSearching = $state(false);
+
+  async function handleSearch() {
+    if (!searchQuery.trim()) {
+      await loadLists();
+      return;
+    }
+
+    isSearching = true;
+    error = null;
+    try {
+      const res = await api.importer.twosSearch(searchQuery, twoSUserId, twoSToken);
+      lists = res.lists;
+    } catch (e) {
+      error = 'Search failed';
+    } finally {
+      isSearching = false;
     }
   }
   
@@ -327,8 +350,26 @@ async function startImport() {
       </div>
 
       <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex flex-col gap-4 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="text-xs uppercase text-slate-500">Your Lists</div>
+          <div class="relative flex-1 max-w-sm ml-auto">
+            <input
+              type="text"
+              bind:value={searchQuery}
+              onkeydown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Search in TwoS..."
+              class="w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-xs shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5"
+            />
+            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+              {#if isSearching}
+                <div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500"></div>
+              {:else}
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              {/if}
+            </div>
+          </div>
           <div class="flex gap-3">
             <button
               onclick={selectAll}
@@ -346,7 +387,7 @@ async function startImport() {
         </div>
         
         <div class="mt-3 max-h-[400px] space-y-2 overflow-y-auto pr-1">
-          {#if isLoadingLists}
+          {#if isLoadingLists && !isSearching}
             <div class="flex flex-col items-center justify-center py-12">
               <div class="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-slate-800"></div>
               <span class="mt-2 text-xs text-slate-500">Loading lists...</span>

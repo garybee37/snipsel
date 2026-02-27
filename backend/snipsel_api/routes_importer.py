@@ -228,6 +228,55 @@ def twos_lists():
         raise api_error(502, "external_error", f"Failed to fetch lists: {str(e)}")
 
 
+@importer_bp.route("/twos/search", methods=["POST"])
+@require_auth
+def twos_search():
+    """Search for entries/lists in TwoS."""
+    from flask import request
+
+    data = request.get_json() or {}
+    token = data.get("token")
+    user_id = data.get("userId")
+    query = data.get("query")
+
+    if not token:
+        raise api_error(401, "auth_required", "TwoS token required")
+    if not user_id:
+        raise api_error(400, "invalid_input", "userId required")
+    if not query:
+        raise api_error(400, "invalid_input", "query required")
+
+    try:
+        # Use regex2 search endpoint as specified by the user
+        result = _twos_api_request(
+            "/apiV2/post/search/regex2",
+            data={"search": query, "user_id": user_id, "token": token, "skip": 0},
+        )
+
+        # The search result typically contains 'entries'
+        search_data = result.get("entries") or []
+
+        # Map search results to the same format as lists for UI consistency
+        lists = [
+            {
+                "id": entry.get("_id"),
+                "name": entry.get("title") or entry.get("text") or "Untitled",
+                "emoji": entry.get("emoji"),
+                "favorited": entry.get("favorited", False),
+                "isDaily": entry.get("today", False),
+                "coverPhoto": entry.get("coverPhoto"),
+                "thingsCount": len(entry.get("things", [])),
+            }
+            for entry in search_data
+        ]
+
+        return json_response({"lists": lists})
+    except ApiError:
+        raise
+    except Exception as e:
+        raise api_error(502, "external_error", f"Failed to search TwoS: {str(e)}")
+
+
 @importer_bp.route("/twos/import", methods=["POST"])
 @require_auth
 def twos_import():

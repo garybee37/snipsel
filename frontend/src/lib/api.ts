@@ -461,5 +461,14 @@ export const api = {
         }
       );
     },
+    twosSearch: (query: string, userId: string, token: string) => {
+      return requestJson<{ lists: Array<{ id: string; name: string; isDaily: boolean; emoji: string; thingsCount: number }> }>(
+        '/api/importer/twos/search',
+        {
+          method: 'POST',
+          body: JSON.stringify({ query, userId, token }),
+        }
+      );
+    },
   },
 };
