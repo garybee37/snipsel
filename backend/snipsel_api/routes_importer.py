@@ -205,15 +205,16 @@ def twos_lists():
             data={"lastSync": last_sync, "user_id": user_id, "token": token},
         )
 
-        # Parse lists from fullSync response
-        lists_data = result.get("lists", [])
+        # Parse entries from fullSync response
+        lists_data = result.get("entries") or result.get("lists", [])
 
         lists = [
             {
                 "id": lst.get("_id"),
-                "name": lst.get("name", "Untitled"),
+                "name": lst.get("title") or lst.get("name", "Untitled"),
                 "emoji": lst.get("emoji"),
                 "favorited": lst.get("favorited", False),
+                "isDaily": lst.get("today", False),
                 "coverPhoto": lst.get("coverPhoto"),
                 "thingsCount": len(lst.get("things", [])),
             }
