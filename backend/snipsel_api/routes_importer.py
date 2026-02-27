@@ -486,6 +486,27 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
                     db.session.add(ref)
                     db.session.flush()
 
+        # 4. Add automated notice snipsel at the end
+        notice_body = "Imported from TwoS #twos-import"
+        notice_snipsel = Snipsel(
+            owner_user_id=user.id,
+            type="text",
+            content_markdown=notice_body,
+            created_by_id=user.id,
+            modified_by_id=user.id,
+        )
+        db.session.add(notice_snipsel)
+        db.session.flush()
+
+        cs_notice = CollectionSnipsel(
+            collection_id=collection.id,
+            snipsel_id=notice_snipsel.id,
+            position=len(things) + 1,
+            indent=0,
+        )
+        db.session.add(cs_notice)
+        db.session.flush()
+
         # Cache the result
         context["imported_ids"][list_id] = collection.id
         return collection.id
