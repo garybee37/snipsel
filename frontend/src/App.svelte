@@ -15,6 +15,7 @@
     searchResults,
     notificationsStore,
     searchType,
+    searchScope,
     recentCollectionsStore,
   } from './lib/stores';
   import {
