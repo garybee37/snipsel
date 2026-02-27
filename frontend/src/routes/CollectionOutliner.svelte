@@ -1235,12 +1235,11 @@
     </div>
     {#if $currentCollection}
       <div class="mt-1 flex items-center justify-between px-1 text-[10px] text-slate-400">
-        <div>
+        <div class="flex items-center" style="padding-left: 1.625rem">
           {#if collapsibleParentIds.size > 0}
             <button
               type="button"
-              class="absolute -bottom-7 grid h-6 w-6 place-items-center rounded-full bg-white/50 text-slate-400 border border-slate-200 shadow-sm hover:bg-white hover:text-slate-600 transition-all"
-              style="left: 0.125rem"
+              class="grid h-6 w-6 place-items-center rounded-full bg-slate-50 text-slate-400 border border-slate-200 shadow-sm hover:bg-slate-100 hover:text-slate-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
               onclick={toggleAllExpanded}
               title={allExpanded ? 'Collapse All' : 'Expand All'}
             >
