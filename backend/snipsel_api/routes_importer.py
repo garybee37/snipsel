@@ -431,7 +431,7 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
             try:
                 # TwoS title format for daily lists: "Mon Oct 27, 2025"
                 dt = datetime.strptime(list_name, "%a %b %d, %Y")
-                list_for_day = dt.strftime("%Y-%m-%d")
+                list_for_day = dt.date()
                 print(f"[TwoS Import]   Daily list detected for date: {list_for_day}")
             except Exception as e:
                 print(f"[TwoS Import]   Warning: Failed to parse date from '{list_name}': {e}")
