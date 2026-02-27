@@ -326,20 +326,29 @@
       {/if}
     </div>
 
-    <div class="mt-4 border-t border-slate-200 pt-4">
-      <button
-        class="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-slate-50"
-        onclick={() => currentView.set({ type: 'importer' })}
-        type="button"
-      >
-        <svg class="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-        </svg>
-        <div>
-          <div class="font-medium text-slate-800">Import from TwoS</div>
-          <div class="text-sm text-slate-500">Import lists and things from TwoS</div>
-        </div>
-      </button>
+    <!-- Data & Migration -->
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="text-xs uppercase text-slate-500">Data & Migration</div>
+      <div class="mt-3">
+        <button
+          class="flex w-full items-center gap-4 rounded-xl border border-dashed border-slate-200 p-3 text-left transition-all hover:border-slate-300 hover:bg-slate-50/50"
+          onclick={() => currentView.set({ type: 'importer' })}
+          type="button"
+        >
+          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <div class="font-medium text-slate-900">Import from TwoS</div>
+            <div class="text-xs text-slate-500">Bring your lists and things into snipsel</div>
+          </div>
+          <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="py-4 text-center text-xs text-slate-400">
