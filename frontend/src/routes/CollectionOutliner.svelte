@@ -67,13 +67,13 @@
   let showTypeMenu = $state(false);
   let showScrollTop = $state(false);
 
-  let collapsedSnipsels = $state<Set<string>>(new Set());
+  let expandedSnipsels = $state<Set<string>>(new Set());
 
-  function toggleCollapse(id: string) {
-    const next = new Set(collapsedSnipsels);
+  function toggleExpand(id: string) {
+    const next = new Set(expandedSnipsels);
     if (next.has(id)) next.delete(id);
     else next.add(id);
-    collapsedSnipsels = next;
+    expandedSnipsels = next;
   }
 
   function hasChildren(item: CollectionItem, allItems: CollectionItem[]): boolean {
@@ -991,7 +991,8 @@
     const result: CollectionItem[] = [];
     let skipUntilIndent: number | null = null;
 
-    for (const item of filtered) {
+    for (let i = 0; i < filtered.length; i++) {
+      const item = filtered[i];
       if (skipUntilIndent !== null) {
         if (item.indent > skipUntilIndent) {
           continue;
@@ -1002,7 +1003,10 @@
 
       result.push(item);
 
-      if (collapsedSnipsels.has(item.snipsel_id)) {
+      const nextItem = filtered[i + 1];
+      const itemsHasChildren = nextItem && nextItem.indent > item.indent;
+
+      if (itemsHasChildren && !expandedSnipsels.has(item.snipsel_id)) {
         skipUntilIndent = item.indent;
       }
     }
@@ -1396,13 +1400,13 @@
               {#if hasChildren(item, $sortedItems)}
                 <button
                   type="button"
-                  class="absolute top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {collapsedSnipsels.has(item.snipsel_id) ? '-rotate-90' : ''}"
+                  class="absolute top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
                   style="left: calc(0.25rem + {item.indent * 1.25}rem)"
                   onclick={(e) => {
                     e.stopPropagation();
-                    toggleCollapse(item.snipsel_id);
+                    toggleExpand(item.snipsel_id);
                   }}
-                  aria-label={collapsedSnipsels.has(item.snipsel_id) ? 'Expand' : 'Collapse'}
+                  aria-label={expandedSnipsels.has(item.snipsel_id) ? 'Collapse' : 'Expand'}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -1468,13 +1472,13 @@
               {#if hasChildren(item, $sortedItems)}
                 <button
                   type="button"
-                  class="absolute top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {collapsedSnipsels.has(item.snipsel_id) ? '-rotate-90' : ''}"
+                  class="absolute top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 transition-transform {expandedSnipsels.has(item.snipsel_id) ? '' : '-rotate-90'}"
                   style="left: calc(1.25rem + {item.indent * 1.25}rem)"
                   onclick={(e) => {
                     e.stopPropagation();
-                    toggleCollapse(item.snipsel_id);
+                    toggleExpand(item.snipsel_id);
                   }}
-                  aria-label={collapsedSnipsels.has(item.snipsel_id) ? 'Expand' : 'Collapse'}
+                  aria-label={expandedSnipsels.has(item.snipsel_id) ? 'Collapse' : 'Expand'}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
