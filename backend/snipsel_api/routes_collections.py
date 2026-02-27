@@ -597,11 +597,8 @@ def delete_collection(collection_id: str):
         db.session.execute(
             db.select(db.func.count(SnipselCollectionRef.snipsel_id))
             .join(Snipsel, Snipsel.id == SnipselCollectionRef.snipsel_id)
-            .join(CollectionSnipsel, and_(CollectionSnipsel.collection_id == Collection.id, CollectionSnipsel.snipsel_id == Snipsel.id))
-            .join(Collection, Collection.id == CollectionSnipsel.collection_id)
             .where(
                 SnipselCollectionRef.collection_id == collection_id,
-                Collection.deleted_at.is_(None),
                 Snipsel.deleted_at.is_(None),
             )
         ).scalar()
