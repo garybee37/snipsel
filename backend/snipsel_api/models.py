@@ -1,5 +1,5 @@
-from typing import Optional
 from __future__ import annotations
+from typing import Optional
 
 import uuid
 from datetime import date, datetime
@@ -38,19 +38,19 @@ class User(db.Model):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
     modified_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
-    deleted_at: Mapped[datetimeOptional] = mapped_column(DateTime, nullable=True)
-    anonymized_at: Mapped[datetimeOptional] = mapped_column(DateTime, nullable=True)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    anonymized_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    default_collection_header_color: Mapped[strOptional] = mapped_column(String(7), nullable=True)
+    default_collection_header_color: Mapped[Optional[str]] = mapped_column(String(7), nullable=True)
 
-    day_collection_template_id: Mapped[strOptional] = mapped_column(
+    day_collection_template_id: Mapped[Optional[str]] = mapped_column(
         ForeignKey("collections.id"),
         nullable=True,
     )
 
     carry_over_open_tasks: Mapped[bool] = mapped_column(default=True, nullable=False)
 
-    passcode_hash: Mapped[strOptional] = mapped_column(String(255), nullable=True)
+    passcode_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     passcode_failed_attempts: Mapped[int] = mapped_column(default=0, nullable=False)
 
 
@@ -62,25 +62,25 @@ class Collection(db.Model):
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     icon: Mapped[str] = mapped_column(String(8), nullable=False, default="🗒")
-    header_image_url: Mapped[strOptional] = mapped_column(Text, nullable=True)
-    header_color: Mapped[strOptional] = mapped_column(String(7), nullable=True)
+    header_image_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    header_color: Mapped[Optional[str]] = mapped_column(String(7), nullable=True)
 
     is_template: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     is_passcode_protected: Mapped[bool] = mapped_column(default=False, nullable=False)
 
-    default_snipsel_type: Mapped[strOptional] = mapped_column(String(32), nullable=True)
+    default_snipsel_type: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
 
-    archived_at: Mapped[datetimeOptional] = mapped_column(DateTime, nullable=True)
-    list_for_day: Mapped[dateOptional] = mapped_column(Date, nullable=True)
+    archived_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    list_for_day: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
     created_by_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
     modified_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
     modified_by_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-    deleted_at: Mapped[datetimeOptional] = mapped_column(DateTime, nullable=True)
-    deleted_by_id: Mapped[strOptional] = mapped_column(ForeignKey("users.id"), nullable=True)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    deleted_by_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     owner = relationship("User", foreign_keys=[owner_user_id])
     created_by = relationship("User", foreign_keys=[created_by_id])
@@ -132,28 +132,28 @@ class Snipsel(db.Model):
 
     type: Mapped[str] = mapped_column(SnipselType, nullable=False, index=True)
 
-    content_markdown: Mapped[strOptional] = mapped_column(Text, nullable=True)
+    content_markdown: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    geo_lat: Mapped[floatOptional] = mapped_column(nullable=True)
-    geo_lng: Mapped[floatOptional] = mapped_column(nullable=True)
-    geo_accuracy_m: Mapped[floatOptional] = mapped_column(nullable=True)
+    geo_lat: Mapped[Optional[float]] = mapped_column(nullable=True)
+    geo_lng: Mapped[Optional[float]] = mapped_column(nullable=True)
+    geo_accuracy_m: Mapped[Optional[float]] = mapped_column(nullable=True)
 
     task_done: Mapped[bool] = mapped_column(default=False, nullable=False)
-    done_at: Mapped[datetimeOptional] = mapped_column(DateTime, nullable=True)
-    done_by_id: Mapped[strOptional] = mapped_column(ForeignKey("users.id"), nullable=True)
+    done_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    done_by_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id"), nullable=True)
 
-    external_url: Mapped[strOptional] = mapped_column(Text, nullable=True)
-    external_label: Mapped[strOptional] = mapped_column(Text, nullable=True)
+    external_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    external_label: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    internal_target_snipsel_id: Mapped[strOptional] = mapped_column(ForeignKey("snipsels.id"), nullable=True)
+    internal_target_snipsel_id: Mapped[Optional[str]] = mapped_column(ForeignKey("snipsels.id"), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
     created_by_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
     modified_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
     modified_by_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-    deleted_at: Mapped[datetimeOptional] = mapped_column(DateTime, nullable=True)
-    deleted_by_id: Mapped[strOptional] = mapped_column(ForeignKey("users.id"), nullable=True)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    deleted_by_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     owner = relationship("User", foreign_keys=[owner_user_id])
     done_by = relationship("User", foreign_keys=[done_by_id])
@@ -267,11 +267,11 @@ class Attachment(db.Model):
     snipsel_id: Mapped[str] = mapped_column(ForeignKey("snipsels.id"), nullable=False, index=True)
 
     filename: Mapped[str] = mapped_column(String(512), nullable=False)
-    mime_type: Mapped[strOptional] = mapped_column(String(255), nullable=True)
+    mime_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     size_bytes: Mapped[int] = mapped_column(nullable=False)
 
     storage_path: Mapped[str] = mapped_column(Text, nullable=False)
-    thumbnail_path: Mapped[strOptional] = mapped_column(Text, nullable=True)
+    thumbnail_path: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
     created_by_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
@@ -286,7 +286,7 @@ class PasswordResetToken(db.Model):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     token_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    used_at: Mapped[datetimeOptional] = mapped_column(DateTime, nullable=True)
+    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
     user = relationship("User")
@@ -300,8 +300,8 @@ class Notification(db.Model):
     message: Mapped[str] = mapped_column(Text, nullable=False)
     is_read: Mapped[bool] = mapped_column(default=False, nullable=False)
 
-    snipsel_id: Mapped[strOptional] = mapped_column(ForeignKey("snipsels.id"), nullable=True)
-    collection_id: Mapped[strOptional] = mapped_column(ForeignKey("collections.id"), nullable=True)
+    snipsel_id: Mapped[Optional[str]] = mapped_column(ForeignKey("snipsels.id"), nullable=True)
+    collection_id: Mapped[Optional[str]] = mapped_column(ForeignKey("collections.id"), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
