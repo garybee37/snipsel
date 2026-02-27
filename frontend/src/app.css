@@ -59,3 +59,31 @@ body {
 .prose li > p {
   margin: 0 !important;
 }
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--accent-light, #e2e8f0);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.prose th {
+  background-color: var(--accent-light, #f8fafc);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem;
+  border: 1px solid var(--accent-light, #e2e8f0);
+}
+
+.prose td {
+  padding: 0.75rem;
+  border: 1px solid var(--accent-light, #e2e8f0);
+}
+
+.prose tr:last-child td {
+  border-bottom: 0;
+}
