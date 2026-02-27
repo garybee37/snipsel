@@ -965,7 +965,15 @@
     const tokenBg = getToolboxBg();
     const tokenFg = getHeaderColor();
     html = html.replace(/\[\[([^\]]+)\]\]/g, (_match, title: string) => {
-      const collectionId = refMap.get(title.toLowerCase());
+      // Unescape HTML entities (like &amp;) because markdown-it escapes them
+      const unescapedTitle = title
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+      const collectionId = refMap.get(unescapedTitle.toLowerCase());
       if (collectionId) {
         return `<a class="snip-token cursor-pointer" style="background-color:${tokenBg}; color:${tokenFg}" data-collection-id="${collectionId}">[[${title}]]</a>`;
       }
