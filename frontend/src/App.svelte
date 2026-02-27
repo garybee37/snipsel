@@ -670,7 +670,7 @@ import Importer from './routes/Importer.svelte';
 
   {#if $currentUser}
     <nav class="pointer-events-none fixed bottom-0 left-0 right-0 z-10">
-      <div class="mx-auto max-w-3xl px-4 pt-2" style="padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);">
+      <div class="mx-auto max-w-3xl px-4 pt-2" style="padding-bottom: calc(env(safe-area-inset-bottom) + 2rem);">
         <div class="pointer-events-auto mx-auto flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-slate-700 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
           <button
             class="grid h-12 w-12 place-items-center rounded-full transition-colors {$currentView.type === 'calendar'
