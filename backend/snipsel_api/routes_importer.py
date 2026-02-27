@@ -388,6 +388,9 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
         db.session.add(collection)
         db.session.flush()
 
+        # Cache the ID early so cycles can resolve it
+        context["imported_ids"][list_id] = collection.id
+
         # Handle favorited status
         if lst.get("favorited"):
             favorite = CollectionFavorite(
@@ -507,8 +510,6 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
         db.session.add(cs_notice)
         db.session.flush()
 
-        # Cache the result
-        context["imported_ids"][list_id] = collection.id
         return collection.id
 
     finally:
