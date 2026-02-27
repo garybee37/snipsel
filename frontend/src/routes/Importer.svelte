@@ -96,14 +96,11 @@
   }
   
   async function loadLists() {
-    if (!lastSync) {
-      const d = new Date();
-      d.setFullYear(d.getFullYear() - 2);
-      lastSync = d.toISOString();
-    }
     isLoadingLists = true;
     try {
-      const res = await api.importer.twosLists(lastSync, twoSUserId, twoSToken);
+      // Use '0' to get everything if no lastSync, or a very old date
+      const syncTime = lastSync || "0";
+      const res = await api.importer.twosLists(syncTime, twoSUserId, twoSToken);
       lists = res.lists;
     } catch (e) {
       error = 'Failed to load lists';
@@ -302,6 +299,33 @@ async function startImport() {
         </div>
       </div>
 
+      <!-- Import Settings -->
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+        <div class="text-xs uppercase text-slate-500">Settings</div>
+        <div class="mt-4">
+          <label class="flex cursor-pointer items-center gap-3">
+            <div 
+              class="flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all"
+              style={overwrite ? `background-color: ${getAccent()}; border-color: ${getAccent()}` : 'border-color: #e2e8f0; background-color: white'}
+            >
+              <input
+                type="checkbox"
+                bind:checked={overwrite}
+                class="sr-only"
+              />
+              {#if overwrite}
+                <svg class="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              {/if}
+            </div>
+            <span class="text-xs font-medium text-slate-600">
+              Overwrite existing collections with the same name
+            </span>
+          </label>
+        </div>
+      </div>
+
       <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div class="text-xs uppercase text-slate-500">Your Lists</div>
@@ -367,30 +391,7 @@ async function startImport() {
         </div>
 
         {#if lists.length > 0}
-          <div class="mt-4 border-t border-slate-100 pt-4">
-            <label class="flex cursor-pointer items-center gap-3">
-              <div 
-                class="flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all"
-                style={overwrite ? `background-color: ${getAccent()}; border-color: ${getAccent()}` : 'border-color: #e2e8f0; background-color: white'}
-              >
-                <input
-                  type="checkbox"
-                  bind:checked={overwrite}
-                  class="sr-only"
-                />
-                {#if overwrite}
-                  <svg class="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                  </svg>
-                {/if}
-              </div>
-              <span class="text-xs font-medium text-slate-600">
-                Overwrite existing collections with the same name
-              </span>
-            </label>
-          </div>
-
-          <div class="mt-4">
+          <div class="mt-6">
             <button
               onclick={startImport}
               disabled={isImporting || selectedLists.size === 0}

@@ -288,7 +288,7 @@ def twos_import():
 
 
 def import_list_with_id(user, data, list_id) -> str:
-    overwrite = True  # data.get("overwrite", True)
+    overwrite = data.get("overwrite", False)
     token = data.get("token")
     user_id = data.get("userId")
     # Fetch individual list via /apiV2/entry/{_id}
