@@ -11,6 +11,7 @@ from flask import Blueprint, current_app
 from PIL import Image
 from datetime import datetime
 
+from snipsel_api.routes_snipsels import _sync_tags_mentions
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import ApiError, api_error
 from snipsel_api.extensions import db
@@ -524,6 +525,9 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
             db.session.add(snipsel)
             db.session.flush()
 
+            # Sync tags/mentions extracted from TwoS text
+            _sync_tags_mentions(user_id=user.id, snipsel=snipsel)
+
             # Download and attach photos
             if photos:
                 for photo_idx, photo_url in enumerate(photos):
@@ -565,6 +569,9 @@ def import_list_with_id(user, data, list_id, context: dict) -> str | None:
         )
         db.session.add(notice_snipsel)
         db.session.flush()
+
+        # Sync tags for the notice (specifically for #twos-import)
+        _sync_tags_mentions(user_id=user.id, snipsel=notice_snipsel)
 
         cs_notice = CollectionSnipsel(
             collection_id=collection.id,
