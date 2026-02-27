@@ -69,11 +69,38 @@
 
   let expandedSnipsels = $state<Set<string>>(new Set());
 
+  let collapsibleParentIds = $derived.by(() => {
+    const ids = new Set<string>();
+    const items = $sortedItems;
+    for (let i = 0; i < items.length - 1; i++) {
+      if (items[i + 1].indent > items[i].indent) {
+        ids.add(items[i].snipsel_id);
+      }
+    }
+    return ids;
+  });
+
+  let allExpanded = $derived.by(() => {
+    if (collapsibleParentIds.size === 0) return false;
+    for (const id of collapsibleParentIds) {
+      if (!expandedSnipsels.has(id)) return false;
+    }
+    return true;
+  });
+
   function toggleExpand(id: string) {
     const next = new Set(expandedSnipsels);
     if (next.has(id)) next.delete(id);
     else next.add(id);
     expandedSnipsels = next;
+  }
+
+  function toggleAllExpanded() {
+    if (allExpanded) {
+      expandedSnipsels = new Set();
+    } else {
+      expandedSnipsels = new Set(collapsibleParentIds);
+    }
   }
 
   function hasChildren(item: CollectionItem, allItems: CollectionItem[]): boolean {
@@ -1207,11 +1234,31 @@
       </div>
     </div>
     {#if $currentCollection}
-      <div class="mt-1 flex items-center justify-end gap-1.5 px-1 text-[10px] text-slate-400">
-        <span>Last modified: {formatModifiedAt($currentCollection.modified_at)}</span>
-        {#if $currentCollection.modified_by_username && $currentCollection.modified_by_id !== $currentUser?.id}
-          <span>by {$currentCollection.modified_by_username}</span>
-        {/if}
+      <div class="mt-1 flex items-center justify-between px-1 text-[10px] text-slate-400">
+        <div>
+          {#if collapsibleParentIds.size > 0}
+            <button
+              type="button"
+              class="flex items-center gap-1 rounded-full bg-slate-50 px-2 py-0.5 text-slate-500 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              onclick={toggleAllExpanded}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {#if allExpanded}
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7M19 5l-7 7-7-7" />
+                {:else}
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+                {/if}
+              </svg>
+              {allExpanded ? 'Collapse All' : 'Expand All'}
+            </button>
+          {/if}
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span>Last modified: {formatModifiedAt($currentCollection.modified_at)}</span>
+          {#if $currentCollection.modified_by_username && $currentCollection.modified_by_id !== $currentUser?.id}
+            <span>by {$currentCollection.modified_by_username}</span>
+          {/if}
+        </div>
       </div>
     {/if}
 
