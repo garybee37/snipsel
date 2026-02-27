@@ -45,7 +45,9 @@
   }
 
   function getAccentTint(): string {
-    const base = { r: 255, g: 255, b: 255 };
+    const isDark = document.documentElement.classList.contains('dark');
+    const baseColor = isDark ? '#1e293b' : '#ffffff';
+    const base = hexToRgb(baseColor) ?? { r: 255, g: 255, b: 255 };
     const accent = hexToRgb(getAccent());
     const mixed = accent ? mixRgb(base, accent, 0.14) : base;
     return rgba(mixed, 0.96);
@@ -131,8 +133,8 @@
 
 <div class="space-y-4">
   <div class="flex items-center justify-between gap-3">
-    <h2 class="flex items-center gap-2 text-2xl font-semibold">
-      <svg class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <h2 class="flex items-center gap-2 text-2xl font-semibold dark:text-slate-100">
+      <svg class="h-6 w-6 text-slate-700 dark:text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2" />
         <path d="M16 2v4" />
         <path d="M8 2v4" />
@@ -143,24 +145,24 @@
   </div>
 
   <div class="flex items-center gap-2">
-    <div class="flex-1 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5">
-      <div class="flex items-stretch divide-x divide-black/5">
+    <div class="flex-1 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
+      <div class="flex items-stretch divide-x divide-black/5 dark:divide-white/5">
         <button
-          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
           type="button"
           onclick={() => (cursor = addMonths(cursor, -1))}
         >
           Prev
         </button>
         <button
-          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
           type="button"
           onclick={() => (cursor = new Date())}
         >
           Today
         </button>
         <button
-          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
           type="button"
           onclick={() => (cursor = addMonths(cursor, 1))}
         >
@@ -169,8 +171,8 @@
       </div>
     </div>
 
-    <div class="relative h-[46px] w-[46px] flex-shrink-0 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-colors">
-      <div class="flex h-full items-center justify-center text-slate-600 pointer-events-none">
+    <div class="relative h-[46px] w-[46px] flex-shrink-0 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 hover:bg-slate-50 transition-colors dark:border-white/10 dark:bg-slate-900 dark:ring-white/10 dark:hover:bg-white/5">
+      <div class="flex h-full items-center justify-center text-slate-600 pointer-events-none dark:text-slate-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
@@ -204,14 +206,14 @@
       {@const showIcon = collectionData?.icon && collectionData.icon !== '📅'}
       <button
         class="relative aspect-square rounded-lg text-lg transition-colors {cell.inMonth
-          ? 'bg-white hover:bg-slate-50'
-          : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}"
+          ? 'bg-white hover:bg-slate-50 dark:bg-slate-900/40 dark:hover:bg-slate-800/60'
+          : 'bg-slate-50 text-slate-400 hover:bg-slate-100 dark:bg-slate-950/40 dark:text-slate-600 dark:hover:bg-slate-900/40'}"
         type="button"
         onclick={() => openDay(cell.day)}
         style={isToday ? `box-shadow: inset 0 0 0 2px ${getAccent()}` : undefined}
       >
         {#if showIcon}
-          <span class="absolute -right-1 -top-1 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white text-[12px] shadow-sm ring-1 ring-black/5">
+          <span class="absolute -right-1 -top-1 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white text-[12px] shadow-sm ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/10">
             {collectionData.icon}
           </span>
         {/if}
@@ -219,10 +221,10 @@
           class="mx-auto grid h-10 w-10 place-items-center rounded-full text-base {hasCollection
             ? 'font-semibold'
             : isToday
-              ? 'bg-slate-100 font-semibold text-slate-900'
+              ? 'bg-slate-100 font-semibold text-slate-900 dark:bg-slate-800 dark:text-white'
               : cell.inMonth
-                ? 'text-slate-800'
-                : 'text-slate-400'}"
+                ? 'text-slate-800 dark:text-slate-300'
+                : 'text-slate-400 dark:text-slate-600'}"
           style={hasCollection ? `background-color: ${getAccent()}; color: white` : undefined}
         >
           {cell.day.getDate()}

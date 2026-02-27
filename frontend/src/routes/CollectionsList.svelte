@@ -51,7 +51,9 @@
   }
 
   function getAccentTint(): string {
-    const base = { r: 255, g: 255, b: 255 };
+    const isDark = document.documentElement.classList.contains('dark');
+    const baseColor = isDark ? '#1e293b' : '#ffffff';
+    const base = hexToRgb(baseColor) ?? { r: 255, g: 255, b: 255 };
     const accent = hexToRgb(getAccent());
     const mixed = accent ? mixRgb(base, accent, 0.14) : base;
     return rgba(mixed, 0.96);
@@ -397,12 +399,12 @@
               <div class="truncate text-lg font-medium text-slate-800 dark:text-slate-200">{c.title}</div>
               <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                 {#if c.access_level === 'read' || c.access_level === 'write'}
-                  <span class="rounded-full px-2 py-0.5 font-medium" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
+                  <span class="rounded-full px-2 py-0.5 font-medium border border-black/5 dark:border-white/10" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
                     >shared</span
                   >
                 {/if}
                 {#if c.archived}
-                  <span class="rounded-full px-2 py-0.5 font-medium" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
+                  <span class="rounded-full px-2 py-0.5 font-medium border border-black/5 dark:border-white/10" style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
                     >archived</span
                   >
                 {/if}
