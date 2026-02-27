@@ -82,6 +82,8 @@ class Collection(db.Model):
     deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     deleted_by_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id"), nullable=True)
 
+    twos_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+
     owner = relationship("User", foreign_keys=[owner_user_id])
     created_by = relationship("User", foreign_keys=[created_by_id])
     modified_by = relationship("User", foreign_keys=[modified_by_id])

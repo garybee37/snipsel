@@ -250,20 +250,27 @@ def twos_import():
 
     print(f"[TwoS Import] ==> Starting import of {len(list_ids)} lists...")
 
-    # Track imported collection IDs for subEntry references
-    imported_collection_ids: dict[str, str] = {}  # twos_list_id -> snipsel_collection_id
+    # Track imported collection IDs for subEntry references and recursion prevention
+    # context = {
+    #   "imported_ids": {twos_list_id: snipsel_collection_id},
+    #   "active_ids": {twos_list_id} # for cycle detection
+    # }
+    import_context = {
+        "imported_ids": {},
+        "active_ids": set(),
+    }
 
     imported = 0
-    skipped = 0
     errors = []
 
     for list_id in list_ids:
-        print(f"[TwoS Import] Fetching list {list_id}...")
+        print(f"[TwoS Import] Processing batch list {list_id}...")
         try:
-            success = import_list_with_id(user, data, list_id)
+            # Pass context to recursive function
+            success_id = import_list_with_id(user, data, list_id, import_context)
 
             db.session.commit()
-            if success:
+            if success_id:
                 imported += 1
 
             print(f"[TwoS Import]   Completed: {list_id}")
@@ -274,7 +281,7 @@ def twos_import():
             print(f"[TwoS Import] ERROR: {error_msg}")
             errors.append(error_msg)
 
-    print(f"[TwoS Import] <== Finished import: {imported} imported, {skipped} skipped")
+    print(f"[TwoS Import] <== Finished import: {imported} imported or updated")
     if errors:
         print(f"[TwoS Import] Errors: {errors}")
     print("[TwoS Import] IMPORT COMPLETE")
@@ -282,42 +289,53 @@ def twos_import():
     return json_response(
         {
             "imported": imported,
-            "skipped": skipped,
             "errors": errors,
         }
     )
 
 
-def import_list_with_id(user, data, list_id) -> str:
+def import_list_with_id(user, data, list_id, context: dict) -> str | None:
     overwrite = data.get("overwrite", False)
     token = data.get("token")
     user_id = data.get("userId")
-    # Fetch individual list via /apiV2/entry/{_id}
-    try:
-        result = _twos_api_request(
-            f"/apiV2/entry/{list_id}",
-            data={"noPush": True, "user_id": user_id, "token": token},
-        )
-    except ApiError as e:
-        # errors.append(f"Failed to fetch list {list_id}: {e.message}")
-        print(f"[TwoS Import] ERROR: Failed to fetch list {list_id}: {e.message}")
-        return None
-    except Exception as e:
-        # errors.append(f"Failed to fetch list {list_id}: {str(e)}")
-        print(f"[TwoS Import] ERROR: Failed to fetch list {list_id}: {str(e)}")
-        return None
 
-    lst = result.get("entry", result)  # Response may have "entry" wrapper or be direct
-    list_name = lst.get("title", "Untitled")
-    print(f"[TwoS Import] Importing list: {list_name}")
+    # 1. Cycle detection
+    if list_id in context["active_ids"]:
+        print(f"[TwoS Import] Cycle detected for list {list_id}, skipping recursion.")
+        return context["imported_ids"].get(list_id)
+
+    # 2. Check if already imported in this session
+    if list_id in context["imported_ids"]:
+        return context["imported_ids"][list_id]
+
+    # Add to active set to track recursion
+    context["active_ids"].add(list_id)
 
     try:
+        # Fetch individual list via /apiV2/entry/{_id}
+        try:
+            result = _twos_api_request(
+                f"/apiV2/entry/{list_id}",
+                data={"noPush": True, "user_id": user_id, "token": token},
+            )
+        except ApiError as e:
+            print(f"[TwoS Import] ERROR: Failed to fetch list {list_id}: {e.message}")
+            return None
+        except Exception as e:
+            print(f"[TwoS Import] ERROR: Failed to fetch list {list_id}: {str(e)}")
+            return None
+
+        lst = result.get("entry", result)  # Response may have "entry" wrapper or be direct
+        list_name = lst.get("title", "Untitled")
+        print(f"[TwoS Import] Importing list: {list_name} ({list_id})")
+
         # Check if collection already exists
+        # 1. First check by TwoS ID (most robust)
         existing = (
             db.session.execute(
                 db.select(Collection).where(
                     Collection.owner_user_id == user.id,
-                    Collection.title == list_name,
+                    Collection.twos_id == list_id,
                     Collection.deleted_at.is_(None),
                 )
             )
@@ -325,14 +343,33 @@ def import_list_with_id(user, data, list_id) -> str:
             .first()
         )
 
+        # 2. Fallback to title (for compatibility with previous imports)
+        if not existing:
+            existing = (
+                db.session.execute(
+                    db.select(Collection).where(
+                        Collection.owner_user_id == user.id,
+                        Collection.title == list_name,
+                        Collection.deleted_at.is_(None),
+                    )
+                )
+                .scalars()
+                .first()
+            )
+
         if existing:
+            # Update TwoS ID if we found it by title but it didn't have the ID yet
+            if not existing.twos_id:
+                existing.twos_id = list_id
+                db.session.flush()
+
             if overwrite:
                 existing.deleted_at = db.func.now()
-                db.session.commit()
+                db.session.flush()  # Use flush instead of commit inside recursion
             else:
-                print(f"[TwoS Import] Skipping existing list: {list_name}")
-                # skipped += 1
-                return None
+                print(f"[TwoS Import] Skipping existing list (already in DB): {list_name}")
+                context["imported_ids"][list_id] = existing.id
+                return existing.id
 
         # Create collection with metadata from TwoS
         emoji = lst.get("emoji") or "📝"
@@ -341,6 +378,7 @@ def import_list_with_id(user, data, list_id) -> str:
         collection = Collection(
             owner_user_id=user.id,
             title=list_name,
+            twos_id=list_id,
             icon=emoji[:8] if emoji else "📝",  # Limit to 8 chars
             header_image_url=cover_photo if cover_photo else None,
             created_by_id=user.id,
@@ -349,9 +387,6 @@ def import_list_with_id(user, data, list_id) -> str:
 
         db.session.add(collection)
         db.session.flush()
-
-        # Store mapping for subEntry references
-        # imported_collection_ids[lst.get("_id")] = collection.id
 
         # Handle favorited status
         if lst.get("favorited"):
@@ -363,12 +398,11 @@ def import_list_with_id(user, data, list_id) -> str:
 
         # Import things as snipsels
         things = result.get("posts", [])
-        print(f"[TwoS Import] ==>   {len(things)} tings found...")
+        print(f"[TwoS Import] ==>   {len(things)} things found in {list_name}")
         for idx, thing in enumerate(things):
             body = thing.get("text", "")
             post_type = thing.get("type", "text")
             photos = thing.get("photos", [])
-            print(thing)
 
             # Determine snipsel type and content
             snipsel_type = "text"
@@ -388,7 +422,6 @@ def import_list_with_id(user, data, list_id) -> str:
 
             if len(photos) > 0:
                 snipsel_type = "image"
-            # Links are imported as text with markdown format
 
             # Handle tags
             tags = thing.get("tags", [])
@@ -404,7 +437,8 @@ def import_list_with_id(user, data, list_id) -> str:
                 content_parts.append(f"({url})")
 
             # Handle subEntry - create wiki link reference
-            if thing.get("subEntry_id"):
+            is_subentry = thing.get("subEntry_id")
+            if is_subentry:
                 # The subEntry contains a reference to another list
                 # We'll create a [[wiki link]] style reference
                 content_parts = [f"[[{body}]]"]
@@ -424,7 +458,6 @@ def import_list_with_id(user, data, list_id) -> str:
 
             # Download and attach photos
             if photos:
-                print(f"[TwoS Import]   Downloading {len(photos)} photos for snipsel...")
                 for photo_idx, photo_url in enumerate(photos):
                     if photo_url and isinstance(photo_url, str):
                         _download_and_create_attachment(photo_url, snipsel.id, user.id, photo_idx + 1)
@@ -440,16 +473,24 @@ def import_list_with_id(user, data, list_id) -> str:
             db.session.flush()
 
             # Handle subEntry - create SnipselCollectionRef
-            if thing.get("subEntry_id"):
+            if is_subentry:
                 ref_list_id = thing.get("subEntry_id")
-                list_id = import_list_with_id(user, data, ref_list_id)
-                ref = SnipselCollectionRef(
-                    snipsel_id=snipsel.id,
-                    collection_id=list_id,
-                )
-                db.session.add(ref)
-                db.session.flush()
+                # Recursive call with context
+                linked_collection_id = import_list_with_id(user, data, ref_list_id, context)
+                
+                if linked_collection_id:
+                    ref = SnipselCollectionRef(
+                        snipsel_id=snipsel.id,
+                        collection_id=linked_collection_id,
+                    )
+                    db.session.add(ref)
+                    db.session.flush()
 
-    except Exception as e:
-        print(e)
-    return collection.id
+        # Cache the result
+        context["imported_ids"][list_id] = collection.id
+        return collection.id
+
+    finally:
+        # Always remove from active set when done
+        if list_id in context["active_ids"]:
+            context["active_ids"].remove(list_id)
