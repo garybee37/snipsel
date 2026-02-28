@@ -15,6 +15,7 @@ Snipsel is a personal knowledge management application that helps you organize n
 - **Sharing** - Share collections with other users
 - **Passcode Protection** - Secure sensitive collections
 - **Notifications** - Stay informed about mentions and task assignments
+- **Reminders** - Set date-based alerts for individual snipsels
 
 ---
 
@@ -101,6 +102,14 @@ For **task** type snipsels:
 - Click the checkbox to mark as done/undone
 - Done tasks show a strikethrough
 - Tasks assigned to you via @mention will appear in your notifications
+
+### Reminders
+
+You can set date-based reminders for any snipsel:
+1. Open the snipsel detail (click the "edit" or "expand" icon)
+2. Use the **Reminders** card to set a date and time
+3. **Recurrence**: Enter a standard iCalendar RRule (e.g., `FREQ=DAILY`) for repeating reminders
+4. **Display**: Reminders are shown in the collection view and the dedicated **Tasks** page (sorted by date)
 
 ### Attachments
 
@@ -276,6 +285,7 @@ Protect sensitive collections with a passcode:
 1. **Mention** - Someone mentioned you in a snipsel
 2. **Task Assignment** - You were assigned a task
 3. **Share** - A collection was shared with you
+4. **Reminder** - A snipsel reminder time has been reached
 
 ### Viewing Notifications
 
