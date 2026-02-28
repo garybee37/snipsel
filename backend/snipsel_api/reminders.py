@@ -18,13 +18,25 @@ def process_reminders(user_id: str) -> int:
     
     count = 0
     for s in due_snipsels:
-        # Create notification
-        n = models.Notification(
-            user_id=s.owner_user_id,
-            message=f"Reminder: {s.content_markdown[:100] if s.content_markdown else 'Snipsel reminder'}",
-            snipsel_id=s.id
-        )
-        db.session.add(n)
+        # Prevent duplicates: Check if an unread notification for this snipsel already exists
+        existing = db.session.execute(
+            db.select(models.Notification).where(
+                models.Notification.snipsel_id == s.id,
+                models.Notification.is_read == False
+            )
+        ).scalars().first()
+        
+        if existing:
+            # Skip creating a new notification if one already exists and is unread
+            pass
+        else:
+            # Create notification
+            n = models.Notification(
+                user_id=s.owner_user_id,
+                message=f"Reminder: {s.content_markdown[:100] if s.content_markdown else 'Snipsel reminder'}",
+                snipsel_id=s.id
+            )
+            db.session.add(n)
         
         # Handle recurrence
         if s.reminder_rrule:
