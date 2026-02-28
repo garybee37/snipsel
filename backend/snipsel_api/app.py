@@ -8,7 +8,7 @@ from datetime import timedelta
 from flask import Flask
 
 from snipsel_api.config import Settings
-from snipsel_api.extensions import cors, db, migrate
+from snipsel_api.extensions import cors, db, migrate, scheduler
 from snipsel_api.routes_errors import errors_bp
 from snipsel_api.routes_attachments import attachments_bp
 from snipsel_api.routes_auth import auth_bp
@@ -47,6 +47,29 @@ def create_app() -> Flask:
         supports_credentials=True,
     )
 
+    # Scheduler configuration
+    app.config["SCHEDULER_API_ENABLED"] = False # We don't need the API
+    try:
+        scheduler.init_app(app)
+    except Exception:
+        # Already initialized
+        pass
+    
+    # Avoid duplicate jobs in debug mode
+    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        if not scheduler.running:
+            scheduler.start()
+            
+            # Register the reminder job
+            from snipsel_api.reminders import process_reminders
+            
+            # Use a check to avoid adding the job multiple times if possible
+            if not scheduler.get_job("process_reminders_task"):
+                @scheduler.task("interval", id="process_reminders_task", minutes=1, misfire_grace_time=900)
+                def scheduled_process_reminders():
+                    with app.app_context():
+                        process_reminders()
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(collections_bp, url_prefix="/api/collections")
     app.register_blueprint(snipsels_bp, url_prefix="/api")
@@ -58,10 +81,11 @@ def create_app() -> Flask:
     app.register_blueprint(errors_bp)
 
     from snipsel_api import models
-    from snipsel_api.cli import cleanup, db_init
+    from snipsel_api.cli import cleanup, db_init, process_reminders_command as process_reminders
 
     app.cli.add_command(cleanup)
     app.cli.add_command(db_init)
+    app.cli.add_command(process_reminders)
 
     _ = models
 
@@ -70,6 +94,3 @@ def create_app() -> Flask:
         return {"status": "ok"}
 
     return app
-
-
-app = create_app()
