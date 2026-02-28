@@ -6,6 +6,8 @@
 
 	let items = $state<SearchSnipselHit[]>([]);
 	let showDone = $state(false);
+	let saveStatuses = $state<Record<string, 'success' | 'error' | null>>({});
+
 
   const DEFAULT_ACCENT = '#4f46e5';
   type Rgb = { r: number; g: number; b: number };
@@ -78,8 +80,16 @@
 
 	async function toggleDone(id: string, current: boolean) {
 		collectionAnchor.set(null);
-		await api.snipsels.update(id, { task_done: !current });
-		await load();
+		try {
+			await api.snipsels.update(id, { task_done: !current });
+			saveStatuses[id] = 'success';
+			setTimeout(() => { if (saveStatuses[id] === 'success') saveStatuses[id] = null; }, 5000);
+			await load();
+		} catch (err) {
+			console.error('Failed to toggle task:', err);
+			saveStatuses[id] = 'error';
+			setTimeout(() => { if (saveStatuses[id] === 'error') saveStatuses[id] = null; }, 5000);
+		}
 	}
 
   function openInfo(id: string) {
@@ -180,6 +190,14 @@
 						</div>
 					</div>
 				</button>
+
+				{#if saveStatuses[t.id]}
+					<div 
+						class="h-2 w-2 rounded-full transition-opacity duration-500"
+						style="background-color: {saveStatuses[t.id] === 'success' ? '#22c55e' : '#ef4444'}"
+						aria-hidden="true"
+					></div>
+				{/if}
 
           <div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
             <div class="flex">

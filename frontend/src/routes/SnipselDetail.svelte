@@ -21,8 +21,10 @@
   }>>([]);
 	let loading = $state(true);
   let changingType = $state(false);
+  let saveStatus = $state<'success' | 'error' | null>(null);
 
   let copied = $state(false);
+
 
   const DEFAULT_ACCENT = '#4f46e5';
   type Rgb = { r: number; g: number; b: number };
@@ -104,7 +106,13 @@
 		changingType = true;
 		try {
 			await api.snipsels.update(snipselId, { type: nextType });
+			saveStatus = 'success';
+			setTimeout(() => { if (saveStatus === 'success') saveStatus = null; }, 5000);
 			await load();
+		} catch (err) {
+			console.error('Failed to update type:', err);
+			saveStatus = 'error';
+			setTimeout(() => { if (saveStatus === 'error') saveStatus = null; }, 5000);
 		} finally {
 			changingType = false;
 		}
@@ -593,6 +601,14 @@
 
 
 			
+  {/if}
+
+  {#if saveStatus}
+    <div 
+      class="fixed bottom-4 right-4 h-3 w-3 rounded-full shadow-lg z-50 transition-opacity duration-500"
+      style="background-color: {saveStatus === 'success' ? '#22c55e' : '#ef4444'}"
+      aria-hidden="true"
+    ></div>
   {/if}
 </div>
 

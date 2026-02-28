@@ -25,6 +25,8 @@
   let editIndent = $state(0);
   let saving = $state(false);
   let creatingFromTripleEmptyLines = $state(false);
+  let saveStatuses = $state<Record<string, 'success' | 'error' | null>>({});
+
 
   let selectedIds = $state<Set<string>>(new Set());
 
@@ -385,6 +387,19 @@
       }
 
       await loadItems();
+      
+      // Set success indicator
+      saveStatuses[snipselId] = 'success';
+      setTimeout(() => {
+        if (saveStatuses[snipselId] === 'success') saveStatuses[snipselId] = null;
+      }, 5000);
+    } catch (err) {
+      console.error('Failed to save snipsel:', err);
+      // Set error indicator
+      saveStatuses[snipselId] = 'error';
+      setTimeout(() => {
+        if (saveStatuses[snipselId] === 'error') saveStatuses[snipselId] = null;
+      }, 5000);
     } finally {
       saving = false;
       editingSnipselId.set(null);
@@ -1578,6 +1593,14 @@
                   </div>
               {:else}
                 <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
+              {/if}
+
+              {#if saveStatuses[item.snipsel_id]}
+                <div 
+                  class="absolute bottom-2 right-2 h-2 w-2 rounded-full transition-opacity duration-500"
+                  style="background-color: {saveStatuses[item.snipsel_id] === 'success' ? '#22c55e' : '#ef4444'}"
+                  aria-hidden="true"
+                ></div>
               {/if}
 
               {#if item.snipsel.attachments.length > 0 && item.snipsel.type === 'image'}
