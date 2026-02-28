@@ -17,6 +17,9 @@ notifications_bp = Blueprint("notifications", __name__)
 @require_auth
 def list_notifications():
     user = current_user()
+    
+    from snipsel_api.reminders import process_reminders
+    process_reminders(user.id)
 
     q = (
         db.select(Notification)

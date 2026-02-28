@@ -4,11 +4,12 @@ from dateutil import rrule
 from snipsel_api.extensions import db
 from snipsel_api import models
 
-def process_reminders() -> int:
-    """Check for due reminders and create notifications. Returns count of processed reminders."""
+def process_reminders(user_id: str) -> int:
+    """Check for due reminders and create notifications for a specific user. Returns count of processed reminders."""
     now = datetime.utcnow()
     due_snipsels = db.session.execute(
         db.select(models.Snipsel).where(
+            models.Snipsel.owner_user_id == user_id,
             models.Snipsel.reminder_at.isnot(None),
             models.Snipsel.reminder_at <= now,
             models.Snipsel.deleted_at.is_(None)
@@ -32,13 +33,13 @@ def process_reminders() -> int:
                 rr = rrule.rrulestr(s.reminder_rrule, dtstart=s.reminder_at)
                 next_at = rr.after(now)
                 s.reminder_at = next_at
-            except Exception as e:
-                # We could log this properly if we had a logger here
+            except Exception:
                 s.reminder_at = None
         else:
             s.reminder_at = None
         
         count += 1
     
-    db.session.commit()
+    if count > 0:
+        db.session.commit()
     return count
