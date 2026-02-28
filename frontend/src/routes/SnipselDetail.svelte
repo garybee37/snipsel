@@ -84,7 +84,8 @@
   }
 
   function getAccentTint(): string {
-    const base = { r: 255, g: 255, b: 255 };
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    const base = isDark ? { r: 30, g: 41, b: 59 } : { r: 255, g: 255, b: 255 }; // slate-800 or white
     const accent = hexToRgb(getAccent());
     const mixed = accent ? mixRgb(base, accent, 0.14) : base;
     return rgba(mixed, 0.96);
@@ -224,8 +225,11 @@
       .replace(/>/g, '&gt;');
     const raw = ($currentUser?.default_collection_header_color || '').trim() || '#4f46e5';
     const accent = /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : '#4f46e5';
+    
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
     // tinted background like the toolbox for readability
-    const tokenBg = `rgba(255, 255, 255, 0.96)`;
+    const tokenBg = isDark ? `rgba(30, 41, 59, 0.8)` : `rgba(255, 255, 255, 0.96)`;
+
     return escaped.replace(
       /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
       (m, p1, token) =>
@@ -371,7 +375,7 @@
 <div class="space-y-4">
   <div class="flex items-center justify-between gap-3">
     <button
-      class="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur-md hover:bg-white"
+      class="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-black/5 backdrop-blur-md hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-900"
       type="button"
       onclick={goBack}
       aria-label="Back"
@@ -381,7 +385,7 @@
     </button>
 
     <div
-      class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium shadow-sm ring-1 ring-black/5 backdrop-blur-md"
+      class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80"
       style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
     >
       <span class="text-xs uppercase tracking-wide" style={`color: ${getAccent()}`}>Snipsel</span>
@@ -398,17 +402,17 @@
     <div class="space-y-3">
 
 			
-			<div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+			<div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
 				<div class="flex items-center justify-between gap-2">
-					<div class="text-xs uppercase text-slate-500">Type</div>
+					<div class="text-xs uppercase text-slate-500 dark:text-slate-400">Type</div>
           {#if changingType}
             <div class="text-xs text-slate-500">Updating...</div>
           {/if}
         </div>
-        <div class="mt-2 overflow-hidden rounded-full border border-slate-200 bg-white">
+        <div class="mt-2 overflow-hidden rounded-full border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900">
           <div class="grid grid-cols-4">
           <button
-            class="px-4 py-3 text-sm font-medium transition-colors {snipsel.type === 'text' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}"
+            class="px-4 py-3 text-sm font-medium transition-colors {snipsel.type === 'text' ? 'text-slate-900 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => setType('text')}
             disabled={changingType}
@@ -417,9 +421,9 @@
             Note
           </button>
           <button
-            class="border-l border-black/5 px-4 py-3 text-sm font-medium transition-colors {snipsel.type === 'image'
-              ? 'text-slate-900'
-              : 'text-slate-600 hover:text-slate-900'}"
+            class="border-l border-black/5 px-4 py-3 text-sm font-medium transition-colors dark:border-white/5 {snipsel.type === 'image'
+              ? 'text-slate-900 dark:text-white'
+              : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => setType('image')}
             disabled={changingType}
@@ -428,9 +432,9 @@
             Image
           </button>
           <button
-            class="border-l border-black/5 px-4 py-3 text-sm font-medium transition-colors {snipsel.type === 'attachment'
-              ? 'text-slate-900'
-              : 'text-slate-600 hover:text-slate-900'}"
+            class="border-l border-black/5 px-4 py-3 text-sm font-medium transition-colors dark:border-white/5 {snipsel.type === 'attachment'
+              ? 'text-slate-900 dark:text-white'
+              : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => setType('attachment')}
             disabled={changingType}
@@ -439,9 +443,9 @@
             File
           </button>
           <button
-            class="border-l border-black/5 px-4 py-3 text-sm font-medium transition-colors {snipsel.type === 'task'
-              ? 'text-slate-900'
-              : 'text-slate-600 hover:text-slate-900'}"
+            class="border-l border-black/5 px-4 py-3 text-sm font-medium transition-colors dark:border-white/5 {snipsel.type === 'task'
+              ? 'text-slate-900 dark:text-white'
+              : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
             type="button"
             onclick={() => setType('task')}
             disabled={changingType}
@@ -453,29 +457,27 @@
 			</div>
 		</div>
 			
-			<div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
-				<div class="text-xs uppercase text-slate-500">Timestamps</div>
-				<div class="mt-2 space-y-1 text-sm text-slate-600">
+			<div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
+				<div class="text-xs uppercase text-slate-500 dark:text-slate-400">Timestamps</div>
+				<div class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
 					<div>
 						<span class="font-medium">Created:</span>
 						<span class="ml-1">{formatWhen(snipsel.created_at)}</span>
 						{#if snipsel.created_by_username}
-							<span class="ml-1 text-slate-500">by {snipsel.created_by_username}</span>
+						<span class="ml-1 text-slate-500 dark:text-slate-500">by {snipsel.created_by_username}</span>
 						{/if}
 					</div>
 					<div>
 						<span class="font-medium">Modified:</span>
 						<span class="ml-1">{formatWhen(snipsel.modified_at)}</span>
-						{#if snipsel.modified_by_username}
-							<span class="ml-1 text-slate-500">by {snipsel.modified_by_username}</span>
-						{/if}
+						<span class="ml-1 text-slate-500 dark:text-slate-500">by {snipsel.modified_by_username}</span>
 					</div>
 					{#if snipsel.type === 'task' && snipsel.done_at}
 						<div>
 							<span class="font-medium">Done:</span>
 							<span class="ml-1">{formatWhen(snipsel.done_at)}</span>
 							{#if snipsel.done_by_username}
-								<span class="ml-1 text-slate-500">by {snipsel.done_by_username}</span>
+								<span class="ml-1 text-slate-500 dark:text-slate-500">by {snipsel.done_by_username}</span>
 							{/if}
 						</div>
 					{/if}
@@ -488,16 +490,14 @@
     </div>
 
     {#if (snipsel.tags?.length ?? 0) > 0 || (snipsel.mentions?.length ?? 0) > 0}
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
-        <div class="text-xs uppercase text-slate-500">Tags / Mentions</div>
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Tags / Mentions</div>
         <div class="mt-2 flex flex-wrap gap-2">
             {#each snipsel.tags ?? [] as t (t)}
               <button
                 type="button"
-                class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                style={`background-color: rgba(255,255,255,0.92); color: ${/^#[0-9a-fA-F]{6}$/.test(($currentUser?.default_collection_header_color || '').trim() || '#4f46e5')
-                  ? (($currentUser?.default_collection_header_color || '').trim() || '#4f46e5')
-                  : '#4f46e5'}`}
+                class="rounded-full border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                style={`background-color: ${getAccentTint()}; color: ${getAccent()}`}
                 onclick={() => {
                   currentView.set({ type: 'search' });
                   searchQuery.set('');
@@ -527,16 +527,16 @@
       </div>
     {/if}
 
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
       <div class="flex items-center justify-between gap-2">
-        <div class="text-xs uppercase text-slate-500">Reminders</div>
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Reminders</div>
         {#if updatingReminders}
           <div class="text-xs text-slate-500">Saving...</div>
         {/if}
       </div>
       <div class="mt-3 space-y-3">
         <div>
-          <label for="reminder-at" class="block text-xs font-medium text-slate-500">Next Reminder</label>
+          <label for="reminder-at" class="block text-xs font-medium text-slate-500 dark:text-slate-400">Next Reminder</label>
           <div class="mt-1 flex items-center gap-2">
             <input
               id="reminder-at"
@@ -557,7 +557,7 @@
           </div>
         </div>
         <div>
-          <label for="reminder-rrule" class="block text-xs font-medium text-slate-500">Recurrence (RRule)</label>
+          <label for="reminder-rrule" class="block text-xs font-medium text-slate-500 dark:text-slate-400">Recurrence (RRule)</label>
           <div class="mt-1 flex items-center gap-2">
             <input
               id="reminder-rrule"
@@ -640,9 +640,9 @@
 
 
     {#if hasGeo(snipsel)}
-      <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
-        <div class="text-xs uppercase text-slate-500">Location</div>
-        <div class="mt-2 overflow-hidden rounded-md border border-black/5">
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Location</div>
+        <div class="mt-2 overflow-hidden rounded-md border border-black/5 dark:border-white/10">
           <iframe
             class="h-64 w-full"
             title="OpenStreetMap"
@@ -659,8 +659,8 @@
       </div>
     {/if}
 
-			<div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
-				<div class="text-xs uppercase text-slate-500">Attachments</div>
+			<div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
+				<div class="text-xs uppercase text-slate-500 dark:text-slate-400">Attachments</div>
 				{#if snipsel.attachments.length === 0}
 					<div class="mt-2 text-sm text-slate-500">No attachments</div>
 				{:else}
@@ -682,12 +682,12 @@
 									<div class="h-10 w-10 rounded bg-slate-100"></div>
 								{/if}
 								<div class="min-w-0 flex-1">
-									<div class="truncate text-sm font-medium">{a.filename}</div>
-									<div class="text-xs text-slate-500">{a.size_bytes} bytes</div>
+									<div class="truncate text-sm font-medium dark:text-slate-200">{a.filename}</div>
+									<div class="text-xs text-slate-500 dark:text-slate-400">{a.size_bytes} bytes</div>
 								</div>
-								<div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm ring-1 ring-black/5">
+								<div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-800/80">
 									<a
-										class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5"
+										class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/5"
 										href={api.attachments.downloadUrl(a.id)}
 										target="_blank"
 										rel="noreferrer"
@@ -697,7 +697,7 @@
 										{@html attachmentDownloadIcon().__html}
 									</a>
 									<button
-										class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5"
+										class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/5"
 										type="button"
 										aria-label="Delete attachment"
 										onclick={() => deleteAttachment(a.id)}
@@ -712,8 +712,8 @@
 				{/if}
 			</div>
 
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
-      <div class="text-xs uppercase text-slate-500">Placements</div>
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
+      <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Placements</div>
       {#if placements.length === 0}
         <div class="mt-2 text-sm text-slate-500">Not in any collection</div>
       {:else}
@@ -721,7 +721,7 @@
 			{#each placements as p}
 				<div class="flex items-center justify-between gap-2">
 					<button
-						class="min-w-0 flex-1 text-left text-sm font-medium text-slate-700 hover:underline"
+						class="min-w-0 flex-1 text-left text-sm font-medium text-slate-700 hover:underline dark:text-slate-300 dark:hover:text-slate-100"
 						type="button"
 						onclick={() => {
 							currentView.set({ type: 'collection', id: p.collection_id });
@@ -730,9 +730,9 @@
 					>
 						<span class="truncate">{p.collection_icon ? `${p.collection_icon} ` : ''}{p.collection_title ?? p.collection_id}</span>
 					</button>
-					<div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm ring-1 ring-black/5">
+					<div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-800/80">
 						<button
-							class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5"
+							class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/5"
 							type="button"
 							aria-label={(favoriteByCollectionId[p.collection_id] ?? false) ? 'Unfavorite collection' : 'Favorite collection'}
 							title={(favoriteByCollectionId[p.collection_id] ?? false) ? 'Unfavorite' : 'Favorite'}
@@ -742,7 +742,7 @@
 							{@html favoriteIcon(Boolean(favoriteByCollectionId[p.collection_id])).__html}
 						</button>
 						<button
-							class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5"
+							class="grid h-9 w-9 place-items-center rounded-full text-slate-700 hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/5"
 							type="button"
 							aria-label="Collection info"
 							title="Info"
@@ -757,9 +757,9 @@
       {/if}
     </div>
 
-    <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
       <div class="flex items-center justify-between gap-2">
-        <div class="text-xs uppercase text-slate-500">Direct link</div>
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Direct link</div>
         {#if copied}
           <div class="text-xs text-slate-500">Copied</div>
         {/if}
@@ -767,13 +767,13 @@
       <div class="mt-2 flex items-center gap-2">
         <input
           id="snipsel-direct-link"
-          class="min-w-0 flex-1 rounded-md border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm ring-1 ring-black/5"
+          class="min-w-0 flex-1 rounded-md border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-300"
           readonly
           value={directLinkUrl()}
         />
-        <div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm ring-1 ring-black/5">
+        <div class="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-800/80">
           <button
-            class="rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-black/5"
+            class="rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-black/5 dark:text-slate-300 dark:hover:text-slate-100"
             type="button"
             onclick={copyDirectLink}
             aria-label="Copy direct link"
