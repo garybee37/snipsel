@@ -1616,8 +1616,8 @@
               {/if}
 
               {#if item.snipsel.reminder_at}
+                {@const expired = isExpired(item.snipsel.reminder_at)}
                 <div class="mt-1 flex flex-wrap items-center gap-1 text-[10px]">
-                  {@const expired = isExpired(item.snipsel.reminder_at)}
                   <span 
                     class="flex items-center gap-1 rounded px-1.5 py-0.5 {expired ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : ''}"
                     style={expired 
