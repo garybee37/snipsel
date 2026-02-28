@@ -1613,11 +1613,12 @@
 
               {#if saveStatuses[item.snipsel_id]}
                 <div 
-                  class="absolute bottom-2 right-2 h-2 w-2 rounded-full transition-opacity duration-500"
+                  class="absolute bottom-3 right-[1.125rem] h-2 w-2 rounded-full transition-opacity duration-500"
                   style="background-color: {saveStatuses[item.snipsel_id] === 'success' ? '#22c55e' : '#ef4444'}"
                   aria-hidden="true"
                 ></div>
               {/if}
+
 
               {#if item.snipsel.attachments.length > 0 && item.snipsel.type === 'image'}
                 {@const images = item.snipsel.attachments.filter(isImageAttachment)}
