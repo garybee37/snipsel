@@ -146,6 +146,8 @@ export type SearchSnipselHit = {
   has_collection_access?: boolean;
   has_write_access?: boolean;
   can_toggle_task_done?: boolean;
+  reminder_at?: string | null;
+  reminder_rrule?: string | null;
   attachments?: Attachment[];
 };
 

@@ -356,6 +356,8 @@ def search():
                     "collection_title": collection_title,
                     "collection_icon": collection_icon,
                     "position": position,
+                    "reminder_at": s.reminder_at.isoformat() + "Z" if s.reminder_at else None,
+                    "reminder_rrule": s.reminder_rrule,
                     "has_collection_access": has_collection_access,
                     "has_write_access": has_write_access,
                     "can_toggle_task_done": can_toggle_task_done,
@@ -487,6 +489,8 @@ def get_incoming_day_mentions():
                         "collection_id": collection_id,
                         "created_by_username": owner_username,
                         "position": int(position) if position is not None else None,
+                        "reminder_at": s.reminder_at.isoformat() + "Z" if s.reminder_at else None,
+                        "reminder_rrule": s.reminder_rrule,
                         "attachments": attachments_by_snipsel.get(s.id, []),
                     }
                     for s, collection_id, position, owner_user_id, owner_username in rows
