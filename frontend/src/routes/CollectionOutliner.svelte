@@ -238,11 +238,27 @@
     if (item.snipsel.type !== 'task') return;
 
     const nextDone = !item.snipsel.task_done;
-    await api.snipsels.update(item.snipsel_id, { task_done: nextDone });
-    collectionItems.update((items) =>
-      items.map((i) => (i.snipsel_id === item.snipsel_id ? { ...i, snipsel: { ...i.snipsel, task_done: nextDone } } : i))
-    );
+    try {
+      await api.snipsels.update(item.snipsel_id, { task_done: nextDone });
+      collectionItems.update((items) =>
+        items.map((i) => (i.snipsel_id === item.snipsel_id ? { ...i, snipsel: { ...i.snipsel, task_done: nextDone } } : i))
+      );
+      
+      // Set success indicator
+      saveStatuses[item.snipsel_id] = 'success';
+      setTimeout(() => {
+        if (saveStatuses[item.snipsel_id] === 'success') saveStatuses[item.snipsel_id] = null;
+      }, 5000);
+    } catch (err) {
+      console.error('Failed to toggle task:', err);
+      // Set error indicator
+      saveStatuses[item.snipsel_id] = 'error';
+      setTimeout(() => {
+        if (saveStatuses[item.snipsel_id] === 'error') saveStatuses[item.snipsel_id] = null;
+      }, 5000);
+    }
   }
+
 
   function openDetailSelected() {
     if (selectedIds.size === 0) return;
