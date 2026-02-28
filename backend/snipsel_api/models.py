@@ -149,6 +149,8 @@ class Snipsel(db.Model):
     external_label: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     internal_target_snipsel_id: Mapped[Optional[str]] = mapped_column(ForeignKey("snipsels.id"), nullable=True)
+    reminder_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    reminder_rrule: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
     created_by_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)

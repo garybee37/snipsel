@@ -81,6 +81,8 @@ export type Snipsel = {
   geo_lat?: number | null;
   geo_lng?: number | null;
   geo_accuracy_m?: number | null;
+  reminder_at?: string | null;
+  reminder_rrule?: string | null;
   created_at: string;
   created_by_id?: string;
   created_by_username?: string | null;
@@ -320,6 +322,8 @@ export const api = {
         external_url?: string | null;
         external_label?: string | null;
         internal_target_snipsel_id?: string | null;
+        reminder_at?: string | null;
+        reminder_rrule?: string | null;
       }
     ) =>
       requestJson<{ snipsel: Snipsel }>(`/api/snipsels/${snipselId}`, {

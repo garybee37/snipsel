@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+from dateutil import rrule
 from flask.cli import FlaskGroup
 
 from snipsel_api.app import create_app
@@ -85,6 +87,48 @@ def cleanup():
 
         db.session.commit()
         print(f"Cleanup complete: {snipsel_count} snipsels, {collection_count} collections, and {attachment_count} attachment files deleted.")
+
+@cli.command("process-reminders")
+def process_reminders():
+    """Check for due reminders and create notifications."""
+    app = create_app()
+    with app.app_context():
+        now = datetime.utcnow()
+        due_snipsels = db.session.execute(
+            db.select(models.Snipsel).where(
+                models.Snipsel.reminder_at.isnot(None),
+                models.Snipsel.reminder_at <= now,
+                models.Snipsel.deleted_at.is_(None)
+            )
+        ).scalars().all()
+        
+        count = 0
+        for s in due_snipsels:
+            # Create notification
+            n = models.Notification(
+                user_id=s.owner_user_id,
+                message=f"Reminder: {s.content_markdown[:100] if s.content_markdown else 'Snipsel reminder'}",
+                snipsel_id=s.id
+            )
+            db.session.add(n)
+            
+            # Handle recurrence
+            if s.reminder_rrule:
+                try:
+                    # Parse rrule and find next occurrence
+                    rr = rrule.rrulestr(s.reminder_rrule, dtstart=s.reminder_at)
+                    next_at = rr.after(now)
+                    s.reminder_at = next_at
+                except Exception as e:
+                    print(f"Error parsing rrule for snipsel {s.id}: {e}")
+                    s.reminder_at = None
+            else:
+                s.reminder_at = None
+            
+            count += 1
+        
+        db.session.commit()
+        print(f"Processed {count} reminders.")
 
 if __name__ == "__main__":
     cli()

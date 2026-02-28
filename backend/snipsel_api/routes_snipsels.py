@@ -121,6 +121,8 @@ def create_snipsel(collection_id: str):
         geo_lat=float(geo_lat) if geo_lat is not None else None,
         geo_lng=float(geo_lng) if geo_lng is not None else None,
         geo_accuracy_m=float(geo_accuracy_m) if geo_accuracy_m is not None else None,
+        reminder_at=datetime.fromisoformat(data["reminder_at"].replace("Z", "")) if data.get("reminder_at") else None,
+        reminder_rrule=data.get("reminder_rrule"),
         created_by_id=user.id,
         modified_by_id=user.id,
     )
@@ -204,6 +206,8 @@ def copy_snipsel(collection_id: str, snipsel_id: str):
         external_url=src.external_url,
         external_label=src.external_label,
         internal_target_snipsel_id=src.internal_target_snipsel_id,
+        reminder_at=src.reminder_at,
+        reminder_rrule=src.reminder_rrule,
         created_by_id=user.id,
         modified_by_id=user.id,
     )
@@ -399,6 +403,11 @@ def update_snipsel(snipsel_id: str):
         s.external_label = data.get("external_label")
     if "internal_target_snipsel_id" in data and has_write_access:
         s.internal_target_snipsel_id = data.get("internal_target_snipsel_id")
+    if "reminder_at" in data and has_write_access:
+        val = data.get("reminder_at")
+        s.reminder_at = datetime.fromisoformat(val.replace("Z", "")) if val else None
+    if "reminder_rrule" in data and has_write_access:
+        s.reminder_rrule = data.get("reminder_rrule")
 
     s.modified_by_id = user.id
     if has_write_access:
@@ -622,6 +631,8 @@ def _snipsel_json(s: Snipsel) -> dict:
         "geo_lat": s.geo_lat,
         "geo_lng": s.geo_lng,
         "geo_accuracy_m": s.geo_accuracy_m,
+        "reminder_at": s.reminder_at.isoformat() + "Z" if s.reminder_at else None,
+        "reminder_rrule": s.reminder_rrule,
         "created_at": s.created_at.isoformat() + "Z",
         "created_by_id": s.created_by_id,
         "created_by_username": s.created_by.username if s.created_by else None,

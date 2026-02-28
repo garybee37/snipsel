@@ -24,6 +24,10 @@
   let saveStatus = $state<'success' | 'error' | null>(null);
 
   let copied = $state(false);
+  let reminderAt = $state<string | null>(null);
+  let reminderRRule = $state<string | null>(null);
+  let updatingReminders = $state(false);
+
 
 
   const DEFAULT_ACCENT = '#4f46e5';
@@ -90,6 +94,8 @@
 			snipsel = res.snipsel;
 			snipsel = { ...res.snipsel, tags: res.tags ?? [], mentions: res.mentions ?? [] };
 			hasWriteAccess = res.has_write_access !== false;
+			reminderAt = res.snipsel.reminder_at ? res.snipsel.reminder_at.slice(0, 16) : null;
+			reminderRRule = res.snipsel.reminder_rrule ?? null;
 			const nextPlacements = res.placements ?? [];
 			placements = nextPlacements;
 			void loadPlacementFavorites(nextPlacements);
@@ -117,6 +123,28 @@
 			changingType = false;
 		}
 	}
+  
+	async function updateReminders() {
+		if (!hasWriteAccess) return;
+		updatingReminders = true;
+		try {
+			const nextAt = reminderAt ? new Date(reminderAt).toISOString() : null;
+			await api.snipsels.update(snipselId, {
+				reminder_at: nextAt,
+				reminder_rrule: reminderRRule
+			});
+			saveStatus = 'success';
+			setTimeout(() => { if (saveStatus === 'success') saveStatus = null; }, 5000);
+			await load();
+		} catch (err) {
+			console.error('Failed to update reminders:', err);
+			saveStatus = 'error';
+			setTimeout(() => { if (saveStatus === 'error') saveStatus = null; }, 5000);
+		} finally {
+			updatingReminders = false;
+		}
+	}
+
 
 
 
@@ -451,6 +479,53 @@
         </div>
       </div>
     {/if}
+
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
+      <div class="flex items-center justify-between gap-2">
+        <div class="text-xs uppercase text-slate-500">Reminders</div>
+        {#if updatingReminders}
+          <div class="text-xs text-slate-500">Saving...</div>
+        {/if}
+      </div>
+      <div class="mt-3 space-y-3">
+        <div>
+          <label for="reminder-at" class="block text-xs font-medium text-slate-500">Next Reminder</label>
+          <div class="mt-1 flex items-center gap-2">
+            <input
+              id="reminder-at"
+              type="datetime-local"
+              class="flex-1 rounded-md border border-slate-200 bg-white/50 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-white/10 dark:bg-slate-900/50"
+              bind:value={reminderAt}
+              onchange={updateReminders}
+            />
+            {#if reminderAt}
+              <button
+                type="button"
+                class="rounded-md bg-slate-100 px-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                onclick={() => { reminderAt = null; updateReminders(); }}
+              >
+                Clear
+              </button>
+            {/if}
+          </div>
+        </div>
+        <div>
+          <label for="reminder-rrule" class="block text-xs font-medium text-slate-500">Recurrence (RRule)</label>
+          <input
+            id="reminder-rrule"
+            type="text"
+            placeholder="e.g. FREQ=DAILY or FREQ=WEEKLY;BYDAY=MO"
+            class="mt-1 w-full rounded-md border border-slate-200 bg-white/50 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-white/10 dark:bg-slate-900/50"
+            bind:value={reminderRRule}
+            onblur={updateReminders}
+          />
+          <p class="mt-1 text-[10px] text-slate-400">
+            Standard iCalendar RRule format. Leave empty for one-time reminder.
+          </p>
+        </div>
+      </div>
+    </div>
+
 
     {#if hasGeo(snipsel)}
       <div class="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
