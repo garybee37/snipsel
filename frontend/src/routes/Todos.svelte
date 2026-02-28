@@ -201,14 +201,10 @@
 							{#if t.reminder_at}
 								{@const expired = isExpired(t.reminder_at)}
 								<span 
-									class="flex items-center gap-1 rounded px-1.5 py-0.5"
+									class="flex items-center gap-1 rounded px-1.5 py-0.5 {expired ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : ''}"
 									style={expired 
 										? undefined 
 										: `background-color: ${getAccentTint()}; color: ${getAccent()}`}
-									class:bg-red-100={expired}
-									class:text-red-700={expired}
-									class:dark:bg-red-900/40={expired}
-									class:dark:text-red-400={expired}
 								>
 									<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 										<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
