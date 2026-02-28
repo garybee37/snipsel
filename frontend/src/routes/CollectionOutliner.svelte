@@ -159,6 +159,10 @@
     return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : DEFAULT_HEADER_COLOR;
   }
 
+  function isExpired(dateStr: string): boolean {
+    return new Date(dateStr).getTime() < Date.now();
+  }
+
   type Rgb = { r: number; g: number; b: number };
 
   function clampByte(n: number): number {
@@ -1612,8 +1616,18 @@
               {/if}
 
               {#if item.snipsel.reminder_at}
-                <div class="mt-1 flex flex-wrap items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
-                  <span class="flex items-center gap-1 rounded bg-orange-100 px-1.5 py-0.5 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                <div class="mt-1 flex flex-wrap items-center gap-1 text-[10px]">
+                  {@const expired = isExpired(item.snipsel.reminder_at)}
+                  <span 
+                    class="flex items-center gap-1 rounded px-1.5 py-0.5"
+                    style={expired 
+                      ? undefined 
+                      : `background-color: ${getToolboxBg()}; color: ${getHeaderColor()}`}
+                    class:bg-red-100={expired}
+                    class:text-red-700={expired}
+                    class:dark:bg-red-900/40={expired}
+                    class:dark:text-red-400={expired}
+                  >
                     <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
                     </svg>

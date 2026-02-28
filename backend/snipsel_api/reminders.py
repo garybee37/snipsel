@@ -34,9 +34,8 @@ def process_reminders(user_id: str) -> int:
                 next_at = rr.after(now)
                 s.reminder_at = next_at
             except Exception:
-                s.reminder_at = None
-        else:
-            s.reminder_at = None
+                # If rrule parsing fails, we keep the old date as "expired"
+                pass
         
         count += 1
     
