@@ -2033,7 +2033,7 @@
 {/if}
 
 {#if showScrollTop}
-  <div class="fixed bottom-24 left-0 right-0 z-10 flex justify-center pointer-events-none">
+  <div class="fixed bottom-32 left-0 right-0 z-10 flex justify-center pointer-events-none">
     <button 
       class="pointer-events-auto grid h-12 w-12 place-items-center rounded-full border border-slate-200 bg-white/80 text-slate-600 shadow-lg ring-1 ring-black/5 backdrop-blur-md transition-all hover:-translate-y-1 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-900" 
       type="button" 
