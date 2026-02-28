@@ -81,7 +81,7 @@ def create_app() -> Flask:
     app.register_blueprint(errors_bp)
 
     from snipsel_api import models
-    from snipsel_api.cli import cleanup, db_init, process_reminders_command as process_reminders
+    from snipsel_api.commands import cleanup, db_init, process_reminders_command as process_reminders
 
     app.cli.add_command(cleanup)
     app.cli.add_command(db_init)
