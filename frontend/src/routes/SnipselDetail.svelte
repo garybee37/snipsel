@@ -27,6 +27,21 @@
   let reminderAt = $state<string | null>(null);
   let reminderRRule = $state<string | null>(null);
   let updatingReminders = $state(false);
+  let showRRuleBuilder = $state(false);
+
+  // RRule builder state
+  let rrFreq = $state<'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'>('WEEKLY');
+  let rrInterval = $state(1);
+  let rrByDay = $state<string[]>([]);
+	
+  function toLocalDatetimeString(iso: string | null): string | null {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    const offset = d.getTimezoneOffset() * 60000;
+    const local = new Date(d.getTime() - offset);
+    return local.toISOString().slice(0, 16);
+  }
 
 
 
@@ -94,7 +109,7 @@
 			snipsel = res.snipsel;
 			snipsel = { ...res.snipsel, tags: res.tags ?? [], mentions: res.mentions ?? [] };
 			hasWriteAccess = res.has_write_access !== false;
-			reminderAt = res.snipsel.reminder_at ? res.snipsel.reminder_at.slice(0, 16) : null;
+			reminderAt = toLocalDatetimeString(res.snipsel.reminder_at);
 			reminderRRule = res.snipsel.reminder_rrule ?? null;
 			const nextPlacements = res.placements ?? [];
 			placements = nextPlacements;
@@ -144,6 +159,38 @@
 			updatingReminders = false;
 		}
 	}
+
+  function applyRRuleBuilder() {
+    let parts = [`FREQ=${rrFreq}`];
+    if (rrInterval > 1) parts.push(`INTERVAL=${rrInterval}`);
+    if (rrFreq === 'WEEKLY' && rrByDay.length > 0) {
+      parts.push(`BYDAY=${rrByDay.join(',')}`);
+    }
+    reminderRRule = parts.join(';');
+    showRRuleBuilder = false;
+    updateReminders();
+  }
+
+  function parseCurrentRRule() {
+    if (!reminderRRule) return;
+    const parts = reminderRRule.split(';');
+    rrByDay = [];
+    for (const p of parts) {
+      const [key, val] = p.split('=');
+      if (key === 'FREQ') rrFreq = val as any;
+      if (key === 'INTERVAL') rrInterval = parseInt(val) || 1;
+      if (key === 'BYDAY') rrByDay = val.split(',');
+    }
+  }
+
+  function toggleDay(day: string) {
+    if (rrByDay.includes(day)) {
+      rrByDay = rrByDay.filter(d => d !== day);
+    } else {
+      rrByDay = [...rrByDay, day];
+    }
+  }
+
 
 
 
@@ -511,14 +558,79 @@
         </div>
         <div>
           <label for="reminder-rrule" class="block text-xs font-medium text-slate-500">Recurrence (RRule)</label>
-          <input
-            id="reminder-rrule"
-            type="text"
-            placeholder="e.g. FREQ=DAILY or FREQ=WEEKLY;BYDAY=MO"
-            class="mt-1 w-full rounded-md border border-slate-200 bg-white/50 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-white/10 dark:bg-slate-900/50"
-            bind:value={reminderRRule}
-            onblur={updateReminders}
-          />
+          <div class="mt-1 flex items-center gap-2">
+            <input
+              id="reminder-rrule"
+              type="text"
+              placeholder="e.g. FREQ=DAILY"
+              class="flex-1 rounded-md border border-slate-200 bg-white/50 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-white/10 dark:bg-slate-900/50"
+              bind:value={reminderRRule}
+              onblur={updateReminders}
+            />
+            <button
+              type="button"
+              class="rounded-md bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+              onclick={() => { parseCurrentRRule(); showRRuleBuilder = !showRRuleBuilder; }}
+            >
+              {showRRuleBuilder ? 'Close' : 'Builder'}
+            </button>
+          </div>
+          
+          {#if showRRuleBuilder}
+            <div class="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3 dark:border-white/5 dark:bg-white/5">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[10px] uppercase tracking-wider text-slate-400">Frequency</label>
+                  <select
+                    bind:value={rrFreq}
+                    class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-sm dark:border-white/10 dark:bg-slate-800"
+                  >
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Weekly</option>
+                    <option value="MONTHLY">Monthly</option>
+                    <option value="YEARLY">Yearly</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] uppercase tracking-wider text-slate-400">Interval</label>
+                  <input
+                    type="number"
+                    min="1"
+                    bind:value={rrInterval}
+                    class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-sm dark:border-white/10 dark:bg-slate-800"
+                  />
+                </div>
+              </div>
+
+              {#if rrFreq === 'WEEKLY'}
+                <div>
+                  <label class="block text-[10px] uppercase tracking-wider text-slate-400">Days</label>
+                  <div class="mt-1 flex flex-wrap gap-1">
+                    {#each ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] as day}
+                      <button
+                        type="button"
+                        class="h-7 w-8 rounded text-[10px] font-bold transition-colors {rrByDay.includes(day) ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400'}"
+                        onclick={() => toggleDay(day)}
+                      >
+                        {day}
+                      </button>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
+
+              <div class="flex justify-end pt-1">
+                <button
+                  type="button"
+                  class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500"
+                  onclick={applyRRuleBuilder}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          {/if}
+          
           <p class="mt-1 text-[10px] text-slate-400">
             Standard iCalendar RRule format. Leave empty for one-time reminder.
           </p>
