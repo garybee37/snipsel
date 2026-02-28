@@ -65,7 +65,14 @@
 				mentions_me: Boolean(mentionName),
 				task_done: showDone,
 			});
-			items = res.snipsels;
+			items = res.snipsels.sort((a, b) => {
+				if (a.reminder_at && b.reminder_at) {
+					return new Date(a.reminder_at).getTime() - new Date(b.reminder_at).getTime();
+				}
+				if (a.reminder_at) return -1;
+				if (b.reminder_at) return 1;
+				return 0;
+			});
 		} finally {
 			isLoading.set(false);
 		}
@@ -187,6 +194,14 @@
 									Restricted
 								{/if}
 							</span>
+							{#if t.reminder_at}
+								<span class="flex items-center gap-1 rounded bg-orange-100 px-1.5 py-0.5 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+									<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
+									</svg>
+									{new Date(t.reminder_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+								</span>
+							{/if}
 						</div>
 					</div>
 				</button>
