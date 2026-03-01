@@ -38,16 +38,8 @@ def process_reminders(user_id: str) -> int:
             )
             db.session.add(n)
         
-        # Handle recurrence
-        if s.reminder_rrule:
-            try:
-                # Parse rrule and find next occurrence
-                rr = rrule.rrulestr(s.reminder_rrule, dtstart=s.reminder_at)
-                next_at = rr.after(now)
-                s.reminder_at = next_at
-            except Exception:
-                # If rrule parsing fails, we keep the old date as "expired"
-                pass
+        # [REMOVED] Handle recurrence automatically. 
+        # Recurrence is now handled in update_snipsel when a task is marked as done.
         
         count += 1
     

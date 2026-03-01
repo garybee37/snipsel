@@ -168,6 +168,8 @@ class Snipsel(db.Model):
     attachments: Mapped[list["Attachment"]] = relationship(
         "Attachment", back_populates="snipsel", cascade="all, delete-orphan"
     )
+    tags: Mapped[list["SnipselTag"]] = relationship("SnipselTag", back_populates="snipsel", cascade="all, delete-orphan")
+    mentions: Mapped[list["SnipselMention"]] = relationship("SnipselMention", back_populates="snipsel", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint(
@@ -216,7 +218,7 @@ class SnipselTag(db.Model):
     snipsel_id: Mapped[str] = mapped_column(ForeignKey("snipsels.id"), primary_key=True)
     tag_id: Mapped[str] = mapped_column(ForeignKey("tags.id"), primary_key=True)
 
-    snipsel = relationship("Snipsel")
+    snipsel = relationship("Snipsel", back_populates="tags")
     tag = relationship("Tag")
 
 
@@ -237,7 +239,7 @@ class SnipselMention(db.Model):
     snipsel_id: Mapped[str] = mapped_column(ForeignKey("snipsels.id"), primary_key=True)
     mention_id: Mapped[str] = mapped_column(ForeignKey("mentions.id"), primary_key=True)
 
-    snipsel = relationship("Snipsel")
+    snipsel = relationship("Snipsel", back_populates="mentions")
     mention = relationship("Mention")
 
 
