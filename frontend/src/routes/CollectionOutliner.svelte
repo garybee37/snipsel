@@ -1182,9 +1182,15 @@
   }
   function getDeezerLink(text: string | null) {
     if (!text) return null;
-    const match = text.match(/https?:\/\/(?:www\.)?deezer\.com\/(track|album|artist)\/(\d+)/);
-    if (match) {
-      return { type: match[1] as 'track' | 'album' | 'artist', id: match[2], url: match[0] };
+    // Standard link
+    const stdMatch = text.match(/https?:\/\/(?:www\.)?deezer\.com\/(track|album|artist)\/(\d+)/);
+    if (stdMatch) {
+      return { type: stdMatch[1] as 'track' | 'album' | 'artist', id: stdMatch[2], url: stdMatch[0] };
+    }
+    // Short link
+    const shortMatch = text.match(/https?:\/\/link\.deezer\.com\/s\/[A-Za-z0-0]+/);
+    if (shortMatch) {
+      return { type: null, id: null, url: shortMatch[0] };
     }
     return null;
   }

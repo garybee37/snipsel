@@ -18,9 +18,30 @@ def proxy_deezer():
     """Proxy requests to Deezer API to avoid CORS issues."""
     media_type = request.args.get("type") # track, album, artist
     media_id = request.args.get("id")
+    short_url = request.args.get("url")
+
+    if short_url:
+        # Resolve short link (e.g. link.deezer.com)
+        try:
+            req = urllib_request.Request(short_url, headers={"User-Agent": "Snipsel/1.0"})
+            with urllib_request.urlopen(req, timeout=10) as response:
+                resolved_url = response.geturl()
+                # URL structure: https://www.deezer.com/{locale}/{type}/{id} or https://www.deezer.com/{type}/{id}
+                parts = resolved_url.split("/")
+                # Filter out empty strings from trailing slashes or multiple slashes
+                parts = [p for p in parts if p]
+                
+                # Look for track/album/artist
+                for i, part in enumerate(parts):
+                    if part in ["track", "album", "artist"] and i + 1 < len(parts):
+                        media_type = part
+                        media_id = parts[i+1].split("?")[0] # strip query params
+                        break
+        except Exception as e:
+            raise api_error(502, "external_error", f"Failed to resolve Deezer link: {str(e)}")
 
     if not media_type or not media_id:
-        raise api_error(400, "invalid_input", "type and id are required")
+        raise api_error(400, "invalid_input", "type and id (or a valid url) are required")
     
     if media_type not in ["track", "album", "artist"]:
         raise api_error(400, "invalid_input", "invalid media type")

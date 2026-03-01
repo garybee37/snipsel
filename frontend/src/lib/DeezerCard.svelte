@@ -19,11 +19,24 @@
     error = false;
     try {
       // Use the new backend proxy
-      const res = await fetch(`/api/proxy/deezer?type=${type}&id=${id}`, {
+      let query = '';
+      if (type && id) {
+        query = `type=${type}&id=${id}`;
+      } else if (url) {
+        query = `url=${encodeURIComponent(url)}`;
+      }
+
+      if (!query) throw new Error('Missing parameters');
+
+      const res = await fetch(`/api/proxy/deezer?${query}`, {
         credentials: 'include'
       });
       if (!res.ok) throw new Error('Failed to fetch');
-      data = await res.json();
+      const json = await res.json();
+      data = json;
+      
+      // If we got type/id back from resolving a short URL, we can use them
+      // although deriving from data is safer.
     } catch (e) {
       console.error('Deezer fetch error:', e);
       error = true;
