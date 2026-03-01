@@ -597,6 +597,41 @@
     }, 0);
   }
 
+  async function handlePaste(e: ClipboardEvent) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    let imageFile: File | null = null;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const blob = items[i].getAsFile();
+        if (blob) {
+          const extension = items[i].type.split('/')[1] || 'png';
+          const filename = `pasted-image-${Date.now()}.${extension}`;
+          imageFile = new File([blob], filename, { type: items[i].type });
+          break;
+        }
+      }
+    }
+
+    if (imageFile) {
+      const snipselId = $editingSnipselId;
+      if (!snipselId) return;
+      
+      e.preventDefault(); // Prevent pasting the image as text/binary if the browser tries
+      
+      uploadingAttachments = true;
+      try {
+        await api.attachments.upload(snipselId, imageFile);
+        await loadItems();
+      } catch (err) {
+        console.error('Failed to upload pasted image:', err);
+      } finally {
+        uploadingAttachments = false;
+      }
+    }
+  }
+
   function autosizeTextarea() {
     const el = textareaRef;
     if (!el) return;
@@ -1510,7 +1545,14 @@
                 bind:value={editContent}
                 oninput={handleEditInput}
                 onkeydown={handleKeydown}
+                onpaste={handlePaste}
               ></textarea>
+              {#if uploadingAttachments}
+                <div class="absolute right-3 top-3 flex items-center gap-2 text-xs text-slate-400">
+                  <div class="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-500"></div>
+                  Uploading...
+                </div>
+              {/if}
               {#if getDeezerLink(editContent)}
                 {@const dz = getDeezerLink(editContent)!}
                 <DeezerCard url={dz.url} type={dz.type} id={dz.id} />
