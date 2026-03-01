@@ -1194,6 +1194,14 @@
     }
     return null;
   }
+
+  function stripDeezerLink(text: string | null): string {
+    if (!text) return '';
+    const dz = getDeezerLink(text);
+    if (!dz) return text;
+    // Replace the specific link with empty string and trim
+    return text.replace(dz.url, '').trim();
+  }
 </script>
 
 
@@ -1631,7 +1639,7 @@
                     class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert"
                     style="--accent-light: {getToolboxBg()}"
                   >
-                    {@html renderWithWikiLinks(item.snipsel.content_markdown, item.collection_refs)}
+                    {@html renderWithWikiLinks(stripDeezerLink(item.snipsel.content_markdown), item.collection_refs)}
                   </div>
                   {#if getDeezerLink(item.snipsel.content_markdown)}
                     {@const dz = getDeezerLink(item.snipsel.content_markdown)!}
