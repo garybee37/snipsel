@@ -1630,8 +1630,8 @@
                     {new Date(item.snipsel.reminder_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                     {#if item.snipsel.reminder_rrule}
                       <svg class="h-2.5 w-2.5 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12a9 9 0 11-9-9c2.52 0 4.85.83 6.72 2.24" />
-                        <path d="M21 3v9h-9" />
+                        <path d="M12 3a9 9 0 1 1-9 9" />
+                        <path d="M8 12H3V7" />
                       </svg>
                     {/if}
                   </span>
