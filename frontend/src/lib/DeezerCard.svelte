@@ -52,28 +52,32 @@
   const title = $derived.by(() => {
     if (!data) return '';
     const activeType = data.type || type;
-    if (activeType === 'track') return data.title;
-    if (activeType === 'album') return data.title;
-    if (activeType === 'artist') return data.name;
-    return '';
+    if (activeType === 'track') return data.title || data.name || 'Unknown Track';
+    if (activeType === 'album') return data.title || data.name || 'Unknown Album';
+    if (activeType === 'artist') return data.name || data.title || 'Unknown Artist';
+    // Fallback to any available name/title
+    return data.title || data.name || 'Deezer Media';
   });
 
   const subtitle = $derived.by(() => {
     if (!data) return '';
     const activeType = data.type || type;
-    if (activeType === 'track') return data.artist?.name;
-    if (activeType === 'album') return data.artist?.name;
+    if (activeType === 'track') return data.artist?.name || 'Unknown Artist';
+    if (activeType === 'album') return data.artist?.name || 'Unknown Artist';
     if (activeType === 'artist') return 'Artist';
-    return '';
+    return data.artist?.name || '';
   });
 
   const coverUrl = $derived.by(() => {
     if (!data) return '';
     const activeType = data.type || type;
-    if (activeType === 'track') return data.album?.cover_medium || data.artist?.picture_medium;
-    if (activeType === 'album') return data.cover_medium;
-    if (activeType === 'artist') return data.picture_medium;
-    return '';
+    return (
+      data.album?.cover_medium || 
+      data.cover_medium || 
+      data.picture_medium || 
+      data.artist?.picture_medium || 
+      ''
+    );
   });
 </script>
 
