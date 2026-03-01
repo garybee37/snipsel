@@ -388,7 +388,9 @@ def insert_template(collection_id: str):
 
 
 def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) -> None:
-    if day != date.today():
+    # Relaxed date check: allow carry-over if the requested day is today or in the future
+    # (to handle timezone offsets between client and server)
+    if day < date.today():
         return
     if not getattr(user, "carry_over_open_tasks", True):
         return
@@ -415,6 +417,7 @@ def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) 
         return
 
     max_pos = db.session.execute(db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == today_collection.id)).scalar() or 0
+    moved_count = 0
 
     for src in past_collections:
         items = (
@@ -423,7 +426,8 @@ def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) 
                 .join(Snipsel, Snipsel.id == CollectionSnipsel.snipsel_id)
                 .where(
                     CollectionSnipsel.collection_id == src.id,
-                    Snipsel.owner_user_id == user.id,
+                    # Remove Snipsel.owner_user_id == user.id check to allow 
+                    # carrying over tasks added by shared users to this user's daily lists.
                     Snipsel.deleted_at.is_(None),
                     Snipsel.type == "task",
                     Snipsel.task_done == False,
@@ -435,6 +439,7 @@ def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) 
         )
 
         for cs in items:
+            # Check if this snipsel is already in today's collection
             already = (
                 db.session.execute(
                     db.select(CollectionSnipsel).where(
@@ -453,6 +458,13 @@ def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) 
             cs.collection_id = today_collection.id
             cs.position = max_pos
             cs.indent = 0
+            moved_count += 1
+
+    if moved_count > 0:
+        # Update modified_at to ensure frontend caches/lists are refreshed
+        today_collection.modified_at = datetime.utcnow()
+        today_collection.modified_by_id = user.id
+        print(f"[Carry Over] Moved {moved_count} tasks to collection {today_collection.id} for user {user.id}")
 
     db.session.commit()
 
