@@ -17,6 +17,8 @@
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let inputRef: HTMLInputElement | undefined = $state();
 
+  let displayItems = $derived(query.trim() ? searchResults : recentCollections);
+
   $effect(() => {
     if (inputRef) {
       inputRef.focus();
@@ -130,7 +132,6 @@
     </div>
 
     <div class="flex-1 overflow-y-auto px-6 pb-6">
-      {@const displayItems = query.trim() ? searchResults : recentCollections}
       
       {#if displayItems.length > 0}
         <div class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
