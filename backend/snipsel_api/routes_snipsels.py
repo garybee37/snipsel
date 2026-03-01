@@ -400,7 +400,7 @@ def update_snipsel(snipsel_id: str):
             if not old_done and s.reminder_rrule and s.reminder_at:
                 try:
                     rr = rrule.rrulestr(s.reminder_rrule, dtstart=s.reminder_at)
-                    next_at = rr.after(datetime.utcnow())
+                    next_at = rr.after(s.reminder_at)
                     if next_at:
                         # Create new snipsel
                         new_s = Snipsel(

@@ -248,6 +248,11 @@
         items.map((i) => (i.snipsel_id === item.snipsel_id ? { ...i, snipsel: { ...i.snipsel, task_done: nextDone } } : i))
       );
       
+      // If we marked as done, reload to show potential new recurring tasks
+      if (nextDone) {
+        await loadItems();
+      }
+      
       // Set success indicator
       saveStatuses[item.snipsel_id] = 'success';
       setTimeout(() => {
