@@ -2,6 +2,7 @@
   import MarkdownIt from 'markdown-it';
   import { api, type Attachment, type CollectionItem, type SearchSnipselHit } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
+  import CollectionSelectModal from '../lib/CollectionSelectModal.svelte';
   import DeezerCard from '../lib/DeezerCard.svelte';
   import YouTubeCard from '../lib/YouTubeCard.svelte';
 
@@ -38,6 +39,10 @@
   let itemsMutationSeq = 0;
 
   let hideDoneTasks = $state(false);
+
+  let showCollectionModal = $state(false);
+  let collectionModalMode = $state<'copy' | 'move' | 'link'>('copy');
+  let collectionModalTitle = $state('');
 
   let lastAnchorKey = $state<string | null>(null);
   let anchorHighlightId = $state<string | null>(null);
@@ -2083,7 +2088,7 @@
         type="button"
         aria-label="Copy"
         title="Copy"
-        onclick={copySelected}
+        onclick={() => openCollectionModal('copy')}
         disabled={!canWrite()}
       >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
@@ -2223,3 +2228,19 @@
   filename={modalImage?.filename ?? ''}
   onClose={closeImageModal}
 />
+
+{#if showCollectionModal}
+  <CollectionSelectModal
+    title={collectionModalTitle}
+    onClose={() => (showCollectionModal = false)}
+    onSelect={handleCollectionSelected}
+  />
+{/if}
+
+{#if showCollectionModal}
+  <CollectionSelectModal
+    title={collectionModalTitle}
+    onClose={() => (showCollectionModal = false)}
+    onSelect={handleCollectionSelected}
+  />
+{/if}
