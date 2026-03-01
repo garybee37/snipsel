@@ -207,6 +207,27 @@
                       {@const yt = getYouTubeLink(s.content_markdown)!}
                       <YouTubeCard url={yt.url} />
                     {/if}
+
+                    {#if (s.tags?.length ?? 0) > 0 || (s.mentions?.length ?? 0) > 0}
+                      <div class="mt-2 flex flex-wrap gap-1.5">
+                        {#each s.tags ?? [] as t (t)}
+                          <span 
+                            class="rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider"
+                            style="background-color: {getToolboxBg()}; color: {getHeaderColor()}; border: 1px solid rgba(0,0,0,0.05)"
+                          >
+                            #{t}
+                          </span>
+                        {/each}
+                        {#each s.mentions ?? [] as m (m)}
+                          <span 
+                            class="rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider"
+                            style="background-color: {getToolboxBg()}; color: {getHeaderColor()}; border: 1px solid rgba(0,0,0,0.05)"
+                          >
+                            @{m}
+                          </span>
+                        {/each}
+                      </div>
+                    {/if}
                     <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
                       <span class="font-semibold uppercase tracking-tight" style={`color: ${getAccent()}`}>{s.type}</span>
                       {#if s.collection_title}
