@@ -388,9 +388,8 @@ def insert_template(collection_id: str):
 
 
 def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) -> None:
-    # Relaxed date check: allow carry-over if the requested day is today or in the future
-    # (to handle timezone offsets between client and server)
-    if day < date.today():
+    # Strictly only carry over tasks to today's collection
+    if day != date.today():
         return
     if not getattr(user, "carry_over_open_tasks", True):
         return
