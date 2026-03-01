@@ -51,25 +51,28 @@
 
   const title = $derived.by(() => {
     if (!data) return '';
-    if (type === 'track') return data.title;
-    if (type === 'album') return data.title;
-    if (type === 'artist') return data.name;
+    const activeType = data.type || type;
+    if (activeType === 'track') return data.title;
+    if (activeType === 'album') return data.title;
+    if (activeType === 'artist') return data.name;
     return '';
   });
 
   const subtitle = $derived.by(() => {
     if (!data) return '';
-    if (type === 'track') return data.artist?.name;
-    if (type === 'album') return data.artist?.name;
-    if (type === 'artist') return 'Artist';
+    const activeType = data.type || type;
+    if (activeType === 'track') return data.artist?.name;
+    if (activeType === 'album') return data.artist?.name;
+    if (activeType === 'artist') return 'Artist';
     return '';
   });
 
   const coverUrl = $derived.by(() => {
     if (!data) return '';
-    if (type === 'track') return data.album?.cover_medium || data.artist?.picture_medium;
-    if (type === 'album') return data.cover_medium;
-    if (type === 'artist') return data.picture_medium;
+    const activeType = data.type || type;
+    if (activeType === 'track') return data.album?.cover_medium || data.artist?.picture_medium;
+    if (activeType === 'album') return data.cover_medium;
+    if (activeType === 'artist') return data.picture_medium;
     return '';
   });
 </script>
