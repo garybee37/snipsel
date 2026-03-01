@@ -3,6 +3,7 @@
   import { api, type Attachment, type CollectionItem, type SearchSnipselHit } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
   import DeezerCard from '../lib/DeezerCard.svelte';
+  import YouTubeCard from '../lib/YouTubeCard.svelte';
 
   import {
     collectionItems,
@@ -1195,12 +1196,26 @@
     return null;
   }
 
-  function stripDeezerLink(text: string | null): string {
+  function getYouTubeLink(text: string | null) {
+    if (!text) return null;
+    const match = text.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if (match) {
+      return { id: match[1], url: match[0] };
+    }
+    return null;
+  }
+
+  function stripMediaLinks(text: string | null): string {
     if (!text) return '';
+    let result = text;
+    
     const dz = getDeezerLink(text);
-    if (!dz) return text;
-    // Replace the specific link with empty string and trim
-    return text.replace(dz.url, '').trim();
+    if (dz) result = result.replace(dz.url, '');
+    
+    const yt = getYouTubeLink(text);
+    if (yt) result = result.replace(yt.url, '');
+    
+    return result.trim();
   }
 </script>
 
@@ -1639,11 +1654,15 @@
                     class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert"
                     style="--accent-light: {getToolboxBg()}"
                   >
-                    {@html renderWithWikiLinks(stripDeezerLink(item.snipsel.content_markdown), item.collection_refs)}
+                    {@html renderWithWikiLinks(stripMediaLinks(item.snipsel.content_markdown), item.collection_refs)}
                   </div>
                   {#if getDeezerLink(item.snipsel.content_markdown)}
                     {@const dz = getDeezerLink(item.snipsel.content_markdown)!}
                     <DeezerCard type={dz.type} id={dz.id} url={dz.url} />
+                  {/if}
+                  {#if getYouTubeLink(item.snipsel.content_markdown)}
+                    {@const yt = getYouTubeLink(item.snipsel.content_markdown)!}
+                    <YouTubeCard url={yt.url} />
                   {/if}
 
               {:else}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from urllib import request as urllib_request
+from urllib import parse as urllib_parse
 from urllib.error import URLError, HTTPError
 
 from flask import Blueprint, request
@@ -59,5 +60,28 @@ def proxy_deezer():
         return json_response({"error": str(e)}, status=e.code)
     except URLError as e:
         raise api_error(502, "external_error", f"Failed to connect to Deezer: {str(e)}")
+    except Exception as e:
+        raise api_error(500, "internal_error", str(e))
+
+@proxy_bp.route("/youtube", methods=["GET"])
+@require_auth
+def proxy_youtube():
+    """Proxy requests to YouTube oEmbed API."""
+    video_url = request.args.get("url")
+    if not video_url:
+        raise api_error(400, "invalid_input", "url is required")
+
+    # YouTube oEmbed endpoint
+    oembed_url = f"https://www.youtube.com/oembed?url={urllib_parse.quote(video_url)}&format=json"
+
+    try:
+        req = urllib_request.Request(oembed_url, headers={"User-Agent": "Snipsel/1.0"})
+        with urllib_request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return json_response(data)
+    except HTTPError as e:
+        return json_response({"error": str(e)}, status=e.code)
+    except URLError as e:
+        raise api_error(502, "external_error", f"Failed to connect to YouTube: {str(e)}")
     except Exception as e:
         raise api_error(500, "internal_error", str(e))
