@@ -818,43 +818,69 @@
     }
   }
 
-  async function copySelected() {
+  function openCollectionModal(mode: 'copy' | 'move' | 'link') {
     if (!$currentCollection) return;
     if (!canWrite()) return;
     if (selectedIds.size === 0) return;
+    
+    collectionModalMode = mode;
+    if (mode === 'copy') {
+      collectionModalTitle = `Copy ${selectedIds.size} ${selectedIds.size === 1 ? 'snipsel' : 'snipsels'}`;
+    } else if (mode === 'move') {
+      collectionModalTitle = `Move ${selectedIds.size} ${selectedIds.size === 1 ? 'snipsel' : 'snipsels'}`;
+    } else {
+      collectionModalTitle = `Link ${selectedIds.size} ${selectedIds.size === 1 ? 'snipsel' : 'snipsels'}`;
+    }
+    showCollectionModal = true;
+  }
 
+  async function handleCollectionSelected(targetCollectionId: string) {
+    if (!$currentCollection) return;
+    showCollectionModal = false;
     isLoading.set(true);
+    
     try {
       const ids = Array.from(selectedIds);
+      let newItems = [];
+      let removedItems = new Set<string>();
+
       for (const id of ids) {
-        const res = await api.snipsels.copy($currentCollection.id, id);
-        collectionItems.update((items) => [...items, res.item]);
+        if (collectionModalMode === 'copy') {
+          const res = await api.snipsels.copy(targetCollectionId, id);
+          if (targetCollectionId === $currentCollection.id) {
+             newItems.push(res.item);
+          }
+        } else if (collectionModalMode === 'link') {
+          const res = await api.snipsels.reference(targetCollectionId, id);
+          if (targetCollectionId === $currentCollection.id) {
+             newItems.push(res.item);
+          }
+        } else if (collectionModalMode === 'move') {
+          await api.snipsels.reference(targetCollectionId, id);
+          if (targetCollectionId !== $currentCollection.id) {
+            await api.snipsels.delete($currentCollection.id, id);
+            removedItems.add(id);
+          }
+        }
       }
+
+      if (newItems.length > 0) {
+        collectionItems.update((items) => [...items, ...newItems]);
+      }
+      if (removedItems.size > 0) {
+        collectionItems.update((items) => items.filter((item) => !removedItems.has(item.snipsel_id)));
+      }
+
       clearSelection();
+      // Force reload to get correct order & refs if we added locally
+      if (newItems.length > 0 || removedItems.size > 0) {
+        await loadItems();
+      }
+    } catch (err) {
+      console.error(`Failed to ${collectionModalMode} snipsels:`, err);
     } finally {
       isLoading.set(false);
     }
-  }
-
-  function moveSelectedToCollection() {
-    if (!$currentCollection) return;
-    if (!canWrite()) return;
-    if (selectedIds.size === 0) return;
-    pendingReference.set({
-      snipselIds: Array.from(selectedIds),
-      mode: 'move',
-      fromCollectionId: $currentCollection.id,
-    });
-    clearSelection();
-    currentView.set({ type: 'collections' });
-  }
-
-  function addSelectedToCollection() {
-    if (!canWrite()) return;
-    if (selectedIds.size === 0) return;
-    pendingReference.set({ snipselIds: Array.from(selectedIds), mode: 'add' });
-    clearSelection();
-    currentView.set({ type: 'collections' });
   }
 
   async function adjustIndentSelected(delta: number) {
@@ -2113,9 +2139,19 @@
       <button
         class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
+        aria-label="Copy"
+        title="Copy"
+        onclick={() => openCollectionModal('copy')}
+        disabled={!canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
+        type="button"
         aria-label="Move"
         title="Move"
-        onclick={moveSelectedToCollection}
+        onclick={() => openCollectionModal('move')}
         disabled={!canWrite()}
       >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4M2 12h20M6 8l-4 4 4 4"/></svg>
@@ -2125,7 +2161,7 @@
         type="button"
         aria-label="Add to collection"
         title="Add to collection"
-        onclick={addSelectedToCollection}
+        onclick={() => openCollectionModal('link')}
         disabled={!canWrite()}
       >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
