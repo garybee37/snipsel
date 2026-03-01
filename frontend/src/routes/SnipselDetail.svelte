@@ -4,6 +4,8 @@
   import { collectionAnchor, currentView, isLoading, searchError, searchQuery, searchResults } from '../lib/stores';
   import { currentUser } from '../lib/session';
   import { getCurrentUrl } from '../lib/router';
+  import DeezerCard from '../lib/DeezerCard.svelte';
+  import YouTubeCard from '../lib/YouTubeCard.svelte';
 
   interface Props {
     snipselId: string;
@@ -235,6 +237,38 @@
       (m, p1, token) =>
         `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${accent}">${token}</mark>`
     );
+  }
+
+  function getDeezerLink(text: string | null) {
+    if (!text) return null;
+    const stdMatch = text.match(/https?:\/\/(?:www\.)?deezer\.com\/(track|album|artist)\/(\d+)/);
+    if (stdMatch) {
+      return { type: stdMatch[1] as 'track' | 'album' | 'artist', id: stdMatch[2], url: stdMatch[0] };
+    }
+    const shortMatch = text.match(/https?:\/\/link\.deezer\.com\/s\/[A-Za-z0-9]+/);
+    if (shortMatch) {
+      return { type: null, id: null, url: shortMatch[0] };
+    }
+    return null;
+  }
+
+  function getYouTubeLink(text: string | null) {
+    if (!text) return null;
+    const match = text.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[^\s\)]*)/);
+    if (match) {
+      return { id: match[1], url: match[0] };
+    }
+    return null;
+  }
+
+  function stripMediaLinks(text: string | null): string {
+    if (!text) return '';
+    let result = text;
+    const dz = getDeezerLink(text);
+    if (dz) result = result.replace(dz.url, '');
+    const yt = getYouTubeLink(text);
+    if (yt) result = result.replace(yt.url, '');
+    return result.trim();
   }
 
 	function attachmentDownloadIcon() {

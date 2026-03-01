@@ -1198,7 +1198,9 @@
 
   function getYouTubeLink(text: string | null) {
     if (!text) return null;
-    const match = text.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    // Regex for standard and short YouTube links with optional query params (stopped by space or end of string)
+    // Using a simpler approach: Match the ID and everything after it that isn't a space or closing paren
+    const match = text.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[^\s\)]*)/);
     if (match) {
       return { id: match[1], url: match[0] };
     }
@@ -1509,6 +1511,14 @@
                 oninput={handleEditInput}
                 onkeydown={handleKeydown}
               ></textarea>
+              {#if getDeezerLink(editContent)}
+                {@const dz = getDeezerLink(editContent)!}
+                <DeezerCard url={dz.url} type={dz.type} id={dz.id} />
+              {/if}
+              {#if getYouTubeLink(editContent)}
+                {@const yt = getYouTubeLink(editContent)!}
+                <YouTubeCard url={yt.url} />
+              {/if}
               {#if showAutocomplete && suggestions.length > 0}
                 <div class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10">
                   {#each suggestions as suggestion, i (suggestion.id + suggestion.type)}
