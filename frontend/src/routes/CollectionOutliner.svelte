@@ -1188,7 +1188,7 @@
       return { type: stdMatch[1] as 'track' | 'album' | 'artist', id: stdMatch[2], url: stdMatch[0] };
     }
     // Short link
-    const shortMatch = text.match(/https?:\/\/link\.deezer\.com\/s\/[A-Za-z0-0]+/);
+    const shortMatch = text.match(/https?:\/\/link\.deezer\.com\/s\/[A-Za-z0-9]+/);
     if (shortMatch) {
       return { type: null, id: null, url: shortMatch[0] };
     }
