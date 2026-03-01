@@ -2,6 +2,8 @@
   import MarkdownIt from 'markdown-it';
   import { api, type Attachment, type CollectionItem, type SearchSnipselHit } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
+  import DeezerCard from '../lib/DeezerCard.svelte';
+
   import {
     collectionItems,
     collectionAnchor,
@@ -1178,7 +1180,16 @@
     }
     return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
   }
+  function getDeezerLink(text: string | null) {
+    if (!text) return null;
+    const match = text.match(/https?:\/\/(?:www\.)?deezer\.com\/(track|album|artist)\/(\d+)/);
+    if (match) {
+      return { type: match[1] as 'track' | 'album' | 'artist', id: match[2], url: match[0] };
+    }
+    return null;
+  }
 </script>
+
 
 <div class="space-y-3">
   <input
@@ -1616,6 +1627,11 @@
                   >
                     {@html renderWithWikiLinks(item.snipsel.content_markdown, item.collection_refs)}
                   </div>
+                  {#if getDeezerLink(item.snipsel.content_markdown)}
+                    {@const dz = getDeezerLink(item.snipsel.content_markdown)!}
+                    <DeezerCard type={dz.type} id={dz.id} url={dz.url} />
+                  {/if}
+
               {:else}
                 <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
               {/if}
