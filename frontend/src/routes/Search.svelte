@@ -198,7 +198,6 @@
               <div class="flex w-full items-center gap-3 px-1 py-2">
                 <button class="min-w-0 flex flex-1 items-start gap-3 text-left" type="button" onclick={() => openSnipsel(s)}>
                   <div class="min-w-0 flex-1">
-                    <div class="line-clamp-2 text-lg font-medium text-slate-900 dark:text-slate-100">{stripMediaLinks(s.content_markdown) || '(No content)'}</div>
                     {#if getDeezerLink(s.content_markdown)}
                       {@const dz = getDeezerLink(s.content_markdown)!}
                       <DeezerCard url={dz.url} type={null} id={null} />
@@ -207,6 +206,8 @@
                       {@const yt = getYouTubeLink(s.content_markdown)!}
                       <YouTubeCard url={yt.url} />
                     {/if}
+
+                    <div class="line-clamp-2 text-lg font-medium text-slate-900 dark:text-slate-100">{stripMediaLinks(s.content_markdown) || '(No content)'}</div>
 
                     {#if (s.tags?.length ?? 0) > 0 || (s.mentions?.length ?? 0) > 0}
                       <div class="mt-2 flex flex-wrap gap-1.5">

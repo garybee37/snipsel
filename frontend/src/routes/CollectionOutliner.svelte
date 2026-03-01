@@ -1660,12 +1660,6 @@
               onkeydown={(e) => e.key === 'Enter' && startEdit(item)}
             >
               {#if item.snipsel.content_markdown}
-                  <div 
-                    class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert"
-                    style="--accent-light: {getToolboxBg()}"
-                  >
-                    {@html renderWithWikiLinks(stripMediaLinks(item.snipsel.content_markdown), item.collection_refs)}
-                  </div>
                   {#if getDeezerLink(item.snipsel.content_markdown)}
                     {@const dz = getDeezerLink(item.snipsel.content_markdown)!}
                     <DeezerCard type={dz.type} id={dz.id} url={dz.url} />
@@ -1674,6 +1668,13 @@
                     {@const yt = getYouTubeLink(item.snipsel.content_markdown)!}
                     <YouTubeCard url={yt.url} />
                   {/if}
+
+                  <div 
+                    class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert"
+                    style="--accent-light: {getToolboxBg()}"
+                  >
+                    {@html renderWithWikiLinks(stripMediaLinks(item.snipsel.content_markdown), item.collection_refs)}
+                  </div>
 
                   {#if (item.snipsel.tags?.length ?? 0) > 0 || (item.snipsel.mentions?.length ?? 0) > 0}
                     <div class="mt-2 flex flex-wrap gap-1.5">

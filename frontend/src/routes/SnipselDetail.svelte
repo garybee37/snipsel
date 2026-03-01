@@ -525,23 +525,23 @@
 
     {#if snipsel.content_markdown}
       <div class="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
-        <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert">
-          {@html highlightTokens(stripMediaLinks(snipsel.content_markdown))}
-        </div>
-        
         {#if getDeezerLink(snipsel.content_markdown)}
           {@const dz = getDeezerLink(snipsel.content_markdown)!}
-          <div class="mt-4">
+          <div class="mb-4">
             <DeezerCard url={dz.url} type={dz.type} id={dz.id} />
           </div>
         {/if}
         
         {#if getYouTubeLink(snipsel.content_markdown)}
           {@const yt = getYouTubeLink(snipsel.content_markdown)!}
-          <div class="mt-4">
+          <div class="mb-4">
             <YouTubeCard url={yt.url} />
           </div>
         {/if}
+
+        <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert">
+          {@html highlightTokens(stripMediaLinks(snipsel.content_markdown))}
+        </div>
 
         {#if (snipsel.tags?.length ?? 0) > 0 || (snipsel.mentions?.length ?? 0) > 0}
           <div class="mt-4 flex flex-wrap gap-1.5 border-t border-slate-100 pt-4 dark:border-white/5">
