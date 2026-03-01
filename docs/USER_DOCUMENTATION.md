@@ -99,17 +99,23 @@ A snipsel is an individual item within a collection. It's the basic unit of cont
 ### Task Management
 
 For **task** type snipsels:
-- Click the checkbox to mark as done/undone
-- Done tasks show a strikethrough
-- Tasks assigned to you via @mention will appear in your notifications
+- Click the checkbox to mark as done/undone.
+- Done tasks show a strikethrough.
+- **Recurring Tasks**: When you mark a task with a recurring reminder as done, a new open task is automatically created for the next occurrence and placed directly below the completed one. This ensures you never "lose" a task that hasn't been finished yet.
+- Tasks assigned to you via @mention will appear in your notifications.
 
 ### Reminders
 
 You can set date-based reminders for any snipsel:
-1. Open the snipsel detail (click the "edit" or "expand" icon)
-2. Use the **Reminders** card to set a date and time
-3. **Recurrence**: Enter a standard iCalendar RRule (e.g., `FREQ=DAILY`) for repeating reminders
-4. **Display**: Reminders are shown in the collection view and the dedicated **Tasks** page (sorted by date)
+1. Open the snipsel detail (click the "edit" or "expand" icon).
+2. Use the **Reminders** card to set a date and time.
+3. **Recurrence**: Enter a standard iCalendar RRule (e.g., `FREQ=DAILY`) for repeating reminders.
+4. **Behavior**: 
+    - Reminders **stay on the task** even if the date passes, as long as the task is open.
+    - When a recurring task is **marked as done**, the system automatically creates a **copy** of the task with the next reminder date and places it directly below the completed task.
+    - If you complete a task early, the next date is still calculated based on the original series to maintain your schedule.
+5. **Icon**: Tasks with recurring reminders show a curved arrow icon next to the date.
+6. **Display**: Reminders are shown in the collection view and the dedicated **Tasks** page (sorted by date).
 
 ### Attachments
 
