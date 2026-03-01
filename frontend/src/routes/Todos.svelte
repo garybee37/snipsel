@@ -210,6 +210,12 @@
 										<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
 									</svg>
 									{new Date(t.reminder_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+									{#if t.reminder_rrule}
+										<svg class="h-3 w-3 ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+											<path d="M21 12a9 9 0 11-9-9c2.52 0 4.85.83 6.72 2.24" />
+											<path d="M21 3v9h-9" />
+										</svg>
+									{/if}
 								</span>
 							{/if}
 						</div>
