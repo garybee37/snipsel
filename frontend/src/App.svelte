@@ -615,7 +615,9 @@ import Importer from './routes/Importer.svelte';
           title="Notifications"
         >
           {#if $notificationsStore.filter(n => !n.is_read).length > 0}
-            <span class="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#4f46e5] px-1 text-xs font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900">
+            <span class="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-xs font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900"
+                  style="background-color: {getAccent()}"
+            >
               {$notificationsStore.filter(n => !n.is_read).length}
             </span>
           {/if}

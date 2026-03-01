@@ -609,7 +609,8 @@
                     {#each ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] as day}
                       <button
                         type="button"
-                        class="h-7 w-8 rounded text-[10px] font-bold transition-colors {rrByDay.includes(day) ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400'}"
+                        class="h-7 w-8 rounded text-[10px] font-bold transition-colors {rrByDay.includes(day) ? 'text-white' : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400'}"
+                        style={rrByDay.includes(day) ? `background-color: ${getAccent()}` : undefined}
                         onclick={() => toggleDay(day)}
                       >
                         {day}
@@ -622,7 +623,8 @@
               <div class="flex justify-end pt-1">
                 <button
                   type="button"
-                  class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500"
+                  class="rounded-md px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+                  style={`background-color: ${getAccent()}`}
                   onclick={applyRRuleBuilder}
                 >
                   Apply
