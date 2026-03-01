@@ -152,6 +152,7 @@ def create_snipsel(collection_id: str):
 @require_auth
 def reference_snipsel(collection_id: str, snipsel_id: str):
     user = current_user()
+    data = request.get_json(silent=True) or {}
     s = _get_owned_snipsel(user.id, snipsel_id)
     if not can_write_collection(user.id, collection_id):
         raise api_error(404, "not_found", "Collection not found")
@@ -188,6 +189,7 @@ def reference_snipsel(collection_id: str, snipsel_id: str):
 @require_auth
 def copy_snipsel(collection_id: str, snipsel_id: str):
     user = current_user()
+    data = request.get_json(silent=True) or {}
     if not can_write_collection(user.id, collection_id):
         raise api_error(404, "not_found", "Collection not found")
 
