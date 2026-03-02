@@ -267,13 +267,14 @@ def search():
         # name matches any registered User's username (case-insensitive).
         has_user_mention_sq = (
             db.select(literal(1))
+            .select_from(SnipselMention)
+            .join(Mention, Mention.id == SnipselMention.mention_id)
             .where(
                 SnipselMention.snipsel_id == Snipsel.id,
                 db.func.lower(Mention.name).in_(
-                    db.select(db.func.lower(User.username))
+                    db.select(db.func.lower(User.username)).scalar_subquery()
                 ),
             )
-            .join(Mention, Mention.id == SnipselMention.mention_id)
             .correlate(Snipsel)
             .exists()
         )
