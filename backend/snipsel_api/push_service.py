@@ -1,8 +1,9 @@
 import json
 from pywebpush import webpush, WebPushException
+from sqlalchemy import event
 
 from snipsel_api.extensions import db
-from snipsel_api.models import PushSubscription
+from snipsel_api.models import PushSubscription, Notification
 
 
 def send_push_notification(user_id: str, payload: dict):
@@ -52,3 +53,27 @@ def send_push_notification(user_id: str, payload: dict):
 
     db.session.commit()
     print("[PushService] Done.")
+
+
+def init_push_listeners():
+    """Register SQLAlchemy event listeners for push notifications."""
+    @event.listens_for(Notification, "after_insert")
+    def notification_after_insert(mapper, connection, target: Notification):
+        # We use a nested import to avoid circular dependencies
+        # Also, we send push only if it's not a background task or if we want immediate delivery
+        payload = {
+            "title": "Snipsel",
+            "body": target.message,
+            "url": f"/notifications" # Default landing page
+        }
+        
+        # Customize URL if linked to a snipsel or collection
+        if target.snipsel_id:
+            payload["url"] = f"/snipsels/{target.snipsel_id}"
+        elif target.collection_id:
+            payload["url"] = f"/collections/{target.collection_id}"
+
+        # Trigger the push
+        # Note: In a production app, this should be offloaded to a task queue (Celery/RQ)
+        # For this MVP, we run it synchronously (which might slow down the request slightly)
+        send_push_notification(target.user_id, payload)

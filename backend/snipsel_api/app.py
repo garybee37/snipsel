@@ -63,7 +63,6 @@ def create_app() -> Flask:
         supports_credentials=True,
     )
 
-
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(collections_bp, url_prefix="/api/collections")
     app.register_blueprint(snipsels_bp, url_prefix="/api")
@@ -78,6 +77,10 @@ def create_app() -> Flask:
 
     from snipsel_api import models
     from snipsel_api.commands import cleanup, db_init, process_reminders_command as process_reminders
+    from snipsel_api.push_service import init_push_listeners
+
+    # Initialize push listeners
+    init_push_listeners()
 
     app.cli.add_command(cleanup)
     app.cli.add_command(db_init)
