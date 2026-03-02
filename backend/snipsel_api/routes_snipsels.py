@@ -94,8 +94,8 @@ def list_collection_snipsels(collection_id: str):
 
 @snipsels_bp.post("/collections/<collection_id>/snipsels")
 @require_auth
+@enforce_json
 def create_snipsel(collection_id: str):
-    enforce_json()
     user = current_user()
     if not can_write_collection(user.id, collection_id):
         raise api_error(404, "not_found", "Collection not found")
@@ -353,8 +353,8 @@ def get_snipsel(snipsel_id: str):
 
 @snipsels_bp.patch("/snipsels/<snipsel_id>")
 @require_auth
+@enforce_json
 def update_snipsel(snipsel_id: str):
-    enforce_json()
     user = current_user()
     s = db.session.get(Snipsel, snipsel_id)
     if not s or s.deleted_at is not None:
@@ -530,8 +530,8 @@ def delete_from_collection(collection_id: str, snipsel_id: str):
 
 @snipsels_bp.patch("/collections/<collection_id>/snipsels/reorder")
 @require_auth
+@enforce_json
 def reorder_collection(collection_id: str):
-    enforce_json()
     user = current_user()
     if not can_write_collection(user.id, collection_id):
         raise api_error(404, "not_found", "Collection not found")

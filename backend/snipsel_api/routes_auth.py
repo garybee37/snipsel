@@ -18,8 +18,8 @@ auth_bp = Blueprint("auth", __name__)
 
 
 @auth_bp.post("/register")
+@enforce_json
 def register():
-    enforce_json()
     data = request.get_json() or {}
     username = (data.get("username") or "").strip()
     email = (data.get("email") or "").strip()
@@ -44,8 +44,8 @@ def register():
 
 
 @auth_bp.post("/login")
+@enforce_json
 def login():
-    enforce_json()
     data = request.get_json() or {}
     username = (data.get("username") or "").strip()
     password = data.get("password") or ""
@@ -80,8 +80,8 @@ def me():
 
 @auth_bp.patch("/me")
 @require_auth
+@enforce_json
 def update_me():
-    enforce_json()
     user = current_user()
     data = request.get_json() or {}
 
@@ -121,8 +121,8 @@ def update_me():
 
 
 @auth_bp.post("/password-reset/request")
+@enforce_json
 def password_reset_request():
-    enforce_json()
     data = request.get_json() or {}
     email = (data.get("email") or "").strip()
     if not email:
@@ -146,8 +146,8 @@ def password_reset_request():
 
 
 @auth_bp.post("/password-reset/confirm")
+@enforce_json
 def password_reset_confirm():
-    enforce_json()
     data = request.get_json() or {}
     token = data.get("token") or ""
     new_password = data.get("new_password") or ""
@@ -175,8 +175,8 @@ def password_reset_confirm():
 
 @auth_bp.post("/passcode/set")
 @require_auth
+@enforce_json
 def set_passcode():
-    enforce_json()
     user = current_user()
     data = request.get_json() or {}
     passcode = (data.get("passcode") or "").strip()
@@ -199,8 +199,8 @@ def set_passcode():
 
 @auth_bp.post("/passcode/verify")
 @require_auth
+@enforce_json
 def verify_passcode():
-    enforce_json()
     user = current_user()
     data = request.get_json() or {}
     passcode = (data.get("passcode") or "").strip()

@@ -368,8 +368,8 @@ def _insert_template_into_collection(
 
 @collections_bp.post("/<collection_id>/insert_template")
 @require_auth
+@enforce_json
 def insert_template(collection_id: str):
-    enforce_json()
     user = current_user()
     if not can_write_collection(user.id, collection_id):
         raise api_error(404, "not_found", "Collection not found")
@@ -580,8 +580,8 @@ def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) 
 
 @collections_bp.post("")
 @require_auth
+@enforce_json
 def create_collection():
-    enforce_json()
     user = current_user()
     data = request.get_json() or {}
 
@@ -656,8 +656,8 @@ def get_collection(collection_id: str):
 
 @collections_bp.patch("/<collection_id>")
 @require_auth
+@enforce_json
 def update_collection(collection_id: str):
-    enforce_json()
     user = current_user()
     c = _get_owned_collection(user.id, collection_id)
     data = request.get_json() or {}
@@ -964,8 +964,8 @@ def unfavorite_collection(collection_id: str):
 
 @collections_bp.post("/<collection_id>/shares")
 @require_auth
+@enforce_json
 def create_share(collection_id: str):
-    enforce_json()
     user = current_user()
     c = _get_owned_collection(user.id, collection_id)
     data = request.get_json() or {}
