@@ -77,6 +77,7 @@ def list_collection_snipsels(collection_id: str):
                 joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.created_by),
                 joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.modified_by),
                 joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.done_by),
+                joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.reactions),
             )
             .where(
                 CollectionSnipsel.collection_id == collection_id,
@@ -240,7 +241,12 @@ def get_snipsel(snipsel_id: str):
     s = (
         db.session.execute(
             db.select(Snipsel)
-            .options(joinedload(Snipsel.created_by), joinedload(Snipsel.modified_by), joinedload(Snipsel.done_by))
+            .options(
+                joinedload(Snipsel.created_by),
+                joinedload(Snipsel.modified_by),
+                joinedload(Snipsel.done_by),
+                joinedload(Snipsel.reactions)
+            )
             .where(Snipsel.id == snipsel_id)
         )
         .scalars()

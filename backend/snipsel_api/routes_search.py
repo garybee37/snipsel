@@ -9,7 +9,20 @@ from sqlalchemy import literal
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Attachment, Collection, CollectionShare, CollectionSnipsel, Mention, Snipsel, SnipselMention, SnipselTag, Tag, User
+from snipsel_api.models import (
+    Attachment,
+    Collection,
+    CollectionShare,
+    CollectionSnipsel,
+    Mention,
+    Snipsel,
+    SnipselReaction,
+    SnipselMention,
+    SnipselTag,
+    Tag,
+    User,
+)
+from sqlalchemy.orm import joinedload
 
 search_bp = Blueprint("search", __name__)
 
@@ -205,6 +218,7 @@ def search():
             Snipsel.deleted_at.is_(None),
             CollectionSnipsel.collection_id.in_(accessible_collection_ids) if accessible_collection_ids else db.false(),
         )
+        .options(joinedload(Snipsel.reactions))
         .distinct()
     )
     if snipsel_type:
@@ -325,6 +339,7 @@ def search():
                 Snipsel.task_done.is_(done_val),
                 Mention.name == uname,
             )
+            .options(joinedload(Snipsel.reactions))
             .distinct()
         )
 
@@ -468,7 +483,7 @@ def get_incoming_day_mentions():
         .distinct()
     )
     
-    rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(100)).all()
+    rows = db.session.execute(stmt.options(joinedload(Snipsel.reactions)).order_by(Snipsel.modified_at.desc()).limit(100)).all()
     print(f"[DEBUG] Found {len(rows)} snipsels mentioning {uname}")
     
     if rows:
@@ -511,6 +526,7 @@ def get_incoming_day_mentions():
                         "reminder_at": s.reminder_at.isoformat() + "Z" if s.reminder_at else None,
                         "reminder_rrule": s.reminder_rrule,
                         "attachments": attachments_by_snipsel.get(s.id, []),
+                        "reactions": s.get_reaction_summary(user.id),
                     }
                     for s, collection_id, position, owner_user_id, owner_username in rows
                 ]

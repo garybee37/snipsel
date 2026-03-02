@@ -1,7 +1,10 @@
 from flask import Blueprint, jsonify, request
+import logging
 from snipsel_api.auth_session import current_user, require_auth
 from snipsel_api.extensions import db
 from snipsel_api import models
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint("reactions", __name__)
 
@@ -13,13 +16,16 @@ def toggle_reaction(snipsel_id):
     emoji = data.get("emoji")
 
     if not emoji:
+        logger.warning(f"Reaction toggle failed: emoji is required. Snipsel: {snipsel_id}")
         return jsonify({"error": "Emoji is required"}), 400
 
     snipsel = db.session.get(models.Snipsel, snipsel_id)
     if not snipsel:
+        logger.warning(f"Reaction toggle failed: snipsel {snipsel_id} not found")
         return jsonify({"error": "Snipsel not found"}), 404
 
     if snipsel.created_by_id == user.id:
+        logger.warning(f"User {user.username} tried to react to their own snipsel {snipsel_id}")
         return jsonify({"error": "You cannot react to your own snipsel"}), 403
 
     # Check if the user has access to the snipsel (at least read access to any collection it's in)
@@ -38,6 +44,7 @@ def toggle_reaction(snipsel_id):
     if existing:
         db.session.delete(existing)
         db.session.commit()
+        logger.info(f"User {user.username} removed reaction {emoji} from snipsel {snipsel_id}")
         return jsonify({"message": "Reaction removed", "active": False})
     else:
         reaction = models.SnipselReaction(
@@ -58,4 +65,5 @@ def toggle_reaction(snipsel_id):
             db.session.add(n)
 
         db.session.commit()
+        logger.info(f"User {user.username} added reaction {emoji} to snipsel {snipsel_id}")
         return jsonify({"message": "Reaction added", "active": True})
