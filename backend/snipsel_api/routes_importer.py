@@ -188,13 +188,12 @@ def twos_login():
 @importer_bp.route("/twos/lists", methods=["POST"])
 @require_auth
 def twos_lists():
-    """Get all lists from TwoS via fullSync endpoint."""
+    """Get all lists from TwoS via paging endpoint."""
     from flask import request
 
     data = request.get_json() or {}
     token = data.get("token")
     user_id = data.get("userId")
-    last_sync = data.get("lastSync", "0")
 
     if not token:
         raise api_error(401, "auth_required", "TwoS token required")
@@ -202,26 +201,34 @@ def twos_lists():
         raise api_error(400, "invalid_input", "userId required")
 
     try:
-        # Use fullSync endpoint as specified
-        result = _twos_api_request(
-            "/apiV2/user/fullSync",
-            data={"lastSync": last_sync, "user_id": user_id, "token": token},
-        )
-
-        # Parse entries from fullSync response
-        lists_data = result.get("entries") or result.get("lists", [])
+        all_lists_data = []
+        page = 0
+        
+        while True:
+            print(f"[TwoS Import] Fetching lists page {page}...")
+            result = _twos_api_request(
+                f"/apiV2/user/{user_id}/entries/newest",
+                data={"page": page, "user_id": user_id, "token": token},
+            )
+            
+            entries = result.get("entries") or []
+            if not entries:
+                break
+                
+            all_lists_data.extend(entries)
+            page += 1
 
         lists = [
             {
                 "id": lst.get("_id"),
-                "name": lst.get("title") or lst.get("name", "Untitled"),
+                "name": lst.get("title") or lst.get("text") or "Untitled",
                 "emoji": lst.get("emoji"),
                 "favorited": lst.get("favorited", False),
                 "isDaily": lst.get("today", False),
                 "coverPhoto": lst.get("coverPhoto"),
                 "thingsCount": len(lst.get("things", [])),
             }
-            for lst in lists_data
+            for lst in all_lists_data
         ]
 
         return json_response({"lists": lists})
