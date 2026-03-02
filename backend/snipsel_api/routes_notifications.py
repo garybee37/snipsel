@@ -9,7 +9,6 @@ from snipsel_api.auth_session import (
 )
 from snipsel_api.extensions import db
 from snipsel_api.models import Notification, PushSubscription
-from snipsel_api.app import get_settings
 
 notifications_bp = Blueprint("notifications", __name__)
 
@@ -103,6 +102,7 @@ def delete_read_notifications():
 @notifications_bp.get("/vapid-public-key")
 @require_auth
 def get_vapid_public_key():
+    from snipsel_api.app import get_settings
     settings = get_settings()
     if not settings.vapid_public_key:
         return json_response({"error": "VAPID not configured"}, 500)
