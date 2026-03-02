@@ -19,6 +19,9 @@ def toggle_reaction(snipsel_id):
     if not snipsel:
         return jsonify({"error": "Snipsel not found"}), 404
 
+    if snipsel.created_by_id == user.id:
+        return jsonify({"error": "You cannot react to your own snipsel"}), 403
+
     # Check if the user has access to the snipsel (at least read access to any collection it's in)
     # For now, we assume if they have the ID, they can react (similar to other snipsel interactions
     # if not explicitly scoped by collection). 
