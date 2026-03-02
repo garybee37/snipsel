@@ -129,6 +129,7 @@ The **Tasks** page (accessible via the checkmark icon in the sidebar) provides a
 2. **My / Shared**: 
     - **My**: Shows tasks you created yourself that are NOT explicitly assigned to someone else via `@mention`.
     - **Shared**: Shows tasks created by others in collections shared with you, provided they are NOT explicitly assigned to a specific user.
+- **Template Exclusion**: Tasks from collections marked as **Templates** are hidden from the main Todos view to avoid clutter. However, they remain accessible via the global search.
 
 > [!NOTE]
 > Tasks that contain an `@username` mention of a known user are considered "assigned" and will not appear in the general **My** or **Shared** lists. They will instead appear in the notifications and mentions of the respective user.

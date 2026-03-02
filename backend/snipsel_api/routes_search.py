@@ -260,6 +260,9 @@ def search():
         )
 
     if snipsel_type == "task" and not mention and not q and not tag and not day_parsed:
+        # For the main Todos page (no specific search terms), we exclude template collections.
+        stmt = stmt.where(Collection.is_template.is_(False))
+
         # For task-specific scope filtering: filter by who created the task,
         # and exclude tasks that are explicitly @assigned to any known user.
         #
