@@ -86,9 +86,10 @@ def list_collection_snipsels(collection_id: str):
             .order_by(CollectionSnipsel.position.asc())
         )
         .scalars()
+        .unique()
         .all()
     )
-    return json_response({"items": [_collection_item_json(cs, user.id) for cs in items.unique()]})
+    return json_response({"items": [_collection_item_json(cs, user.id) for cs in items]})
 
 
 @snipsels_bp.post("/collections/<collection_id>/snipsels")
