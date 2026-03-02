@@ -88,7 +88,7 @@ def list_collection_snipsels(collection_id: str):
         .scalars()
         .all()
     )
-    return json_response({"items": [_collection_item_json(cs, user.id) for cs in items]})
+    return json_response({"items": [_collection_item_json(cs, user.id) for cs in items.unique()]})
 
 
 @snipsels_bp.post("/collections/<collection_id>/snipsels")
@@ -250,6 +250,7 @@ def get_snipsel(snipsel_id: str):
             .where(Snipsel.id == snipsel_id)
         )
         .scalars()
+        .unique()
         .first()
     )
     if not s or s.deleted_at is not None:

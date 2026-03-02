@@ -306,7 +306,7 @@ def search():
                 ~has_user_mention_sq,
             )
 
-    accessible_rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
+    accessible_rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).unique().all()
 
     hits_by_id: dict[str, tuple[Snipsel, str | None, int | None, str | None, str | None, bool, bool, bool]] = {}
     for s, collection_id, position, collection_title, collection_icon in accessible_rows:
@@ -343,7 +343,7 @@ def search():
             .distinct()
         )
 
-        mentioned_rows = db.session.execute(m_stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
+        mentioned_rows = db.session.execute(m_stmt.order_by(Snipsel.modified_at.desc()).limit(200)).unique().all()
         for (s,) in mentioned_rows:
             if s.id in hits_by_id:
                 continue
@@ -483,7 +483,7 @@ def get_incoming_day_mentions():
         .distinct()
     )
     
-    rows = db.session.execute(stmt.options(joinedload(Snipsel.reactions)).order_by(Snipsel.modified_at.desc()).limit(100)).all()
+    rows = db.session.execute(stmt.options(joinedload(Snipsel.reactions)).order_by(Snipsel.modified_at.desc()).limit(100)).unique().all()
     print(f"[DEBUG] Found {len(rows)} snipsels mentioning {uname}")
     
     if rows:
