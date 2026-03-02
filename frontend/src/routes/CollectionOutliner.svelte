@@ -1550,6 +1550,77 @@
           createSnipselFromUserGesture();
         }}
       ></button>
+
+      {#if incomingMentions.length > 0}
+        <div class="mt-6 border-t border-slate-200 pt-4">
+          <h3 class="mb-3 text-sm font-medium text-slate-500">
+            Mentioned by others on this day
+          </h3>
+          <div class="space-y-2">
+            {#each incomingMentions as snip (snip.id)}
+              <div
+                class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5"
+              >
+                {#if snip.created_by_username}
+                  <div class="mb-1 text-xs font-medium text-slate-500">
+                    @{snip.created_by_username}
+                  </div>
+                {/if}
+
+                {#if snip.content_markdown}
+                  {#if getDeezerLink(snip.content_markdown)?.type}
+                    {@const dz = getDeezerLink(snip.content_markdown)!}
+                    <DeezerCard type={dz.type!} id={dz.id!} url={dz.url} />
+                  {/if}
+                  {#if getYouTubeLink(snip.content_markdown)}
+                    {@const yt = getYouTubeLink(snip.content_markdown)!}
+                    <YouTubeCard url={yt.url} />
+                  {/if}
+                  <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 whitespace-pre-wrap dark:prose-invert">
+                    {@html renderMarkdown(stripMediaLinks(snip.content_markdown))}
+                  </div>
+                {:else if !snip.attachments || !snip.attachments.length}
+                  <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
+                {/if}
+
+                {#if snip.attachments && snip.attachments.length > 0 && snip.type === 'image'}
+                  {@const images = snip.attachments.filter((a) => a.mime_type?.startsWith('image/') || a.has_thumbnail)}
+                  {#if images.length > 0}
+                    <div class="mt-3 grid grid-cols-3 gap-3">
+                      {#each images.slice(0, 9) as a (a.id)}
+                        <button
+                          class="group relative aspect-square overflow-hidden rounded-2xl border border-white/30 bg-white/20 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition-all hover:scale-[1.03] hover:shadow-lg active:scale-95"
+                          type="button"
+                          aria-label="View image"
+                          onclick={(e) => {
+                            e.stopPropagation();
+                            openImageModal(a.id, a.filename);
+                          }}
+                        >
+                          <img
+                            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            src={a.has_thumbnail ? api.attachments.thumbnailUrl(a.id) : api.attachments.downloadUrl(a.id)}
+                            alt={a.filename}
+                            loading="lazy"
+                          />
+                          <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
+                        </button>
+                      {/each}
+                    </div>
+                    {#if images.length > 9}
+                      <div class="mt-2 text-sm text-slate-400">+{images.length - 9} more</div>
+                    {/if}
+                  {/if}
+                {/if}
+              </div>
+            {/each}
+          </div>
+        </div>
+      {:else if incomingMentionsLoading && $currentCollection?.list_for_day}
+        <div class="mt-6 border-t border-slate-200 pt-4">
+          <div class="text-sm text-slate-400">Loading mentions...</div>
+        </div>
+      {/if}
     </div>
   {:else}
     <div class="flex flex-col">
@@ -1903,10 +1974,18 @@
                 {/if}
 
                 {#if snip.content_markdown}
+                  {#if getDeezerLink(snip.content_markdown)?.type}
+                    {@const dz = getDeezerLink(snip.content_markdown)!}
+                    <DeezerCard type={dz.type!} id={dz.id!} url={dz.url} />
+                  {/if}
+                  {#if getYouTubeLink(snip.content_markdown)}
+                    {@const yt = getYouTubeLink(snip.content_markdown)!}
+                    <YouTubeCard url={yt.url} />
+                  {/if}
                   <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 whitespace-pre-wrap dark:prose-invert">
-                    {@html renderMarkdown(snip.content_markdown)}
+                    {@html renderMarkdown(stripMediaLinks(snip.content_markdown))}
                   </div>
-                {:else if !snip.attachments}
+                {:else if !snip.attachments || !snip.attachments.length}
                   <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
                 {/if}
 
