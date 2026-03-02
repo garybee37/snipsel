@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import date, datetime, timedelta
 
 from flask import Blueprint, request
 
 from sqlalchemy.exc import IntegrityError
+
+logger = logging.getLogger(__name__)
 
 from snipsel_api.auth_session import (
     current_user,
@@ -388,13 +391,26 @@ def insert_template(collection_id: str):
 
 
 def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) -> None:
-    # Strictly only carry over tasks to today's collection
+    """Move open tasks from past day-collections into today's collection.
+
+    Uses SELECT FOR UPDATE on the CollectionSnipsel rows to prevent two
+    concurrent requests (e.g. two open browser tabs) from racing and
+    producing a UniqueConstraint violation that would silently discard tasks.
+    The entire mutation is wrapped in try/except so a failed commit always
+    triggers a rollback and never leaves rows in an inconsistent state.
+    """
+    log_prefix = f"[CarryOver user={user.id} day={day} today_col={today_collection.id}]"
+
+    # Guard: only carry over to today
     if day != date.today():
+        logger.debug("%s Skipping – requested day %s is not today (%s)", log_prefix, day, date.today())
         return
     if not getattr(user, "carry_over_open_tasks", True):
+        logger.debug("%s Skipping – carry_over_open_tasks is disabled for user", log_prefix)
         return
 
     start_day = day - timedelta(days=30)
+    logger.debug("%s Looking for past day-collections between %s and %s", log_prefix, start_day, day)
 
     past_collections = (
         db.session.execute(
@@ -413,59 +429,151 @@ def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) 
     )
 
     if not past_collections:
+        logger.debug("%s No past day-collections found – nothing to carry over", log_prefix)
         return
 
-    max_pos = db.session.execute(db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == today_collection.id)).scalar() or 0
-    moved_count = 0
+    logger.debug("%s Found %d past day-collection(s): %s",
+                 log_prefix,
+                 len(past_collections),
+                 [(c.id, str(c.list_for_day)) for c in past_collections])
 
-    for src in past_collections:
-        items = (
+    max_pos = (
+        db.session.execute(
+            db.select(db.func.max(CollectionSnipsel.position))
+            .where(CollectionSnipsel.collection_id == today_collection.id)
+        ).scalar() or 0
+    )
+    logger.debug("%s Current max position in today's collection: %d", log_prefix, max_pos)
+
+    moved_count = 0
+    deleted_duplicate_count = 0
+
+    try:
+        for src in past_collections:
+            # Lock the candidate rows for this source collection so that a
+            # parallel request cannot modify them between our read and our
+            # UPDATE, which would cause a UniqueConstraint violation on
+            # (collection_id, snipsel_id) and silently drop tasks.
+            items = (
+                db.session.execute(
+                    db.select(CollectionSnipsel)
+                    .join(Snipsel, Snipsel.id == CollectionSnipsel.snipsel_id)
+                    .where(
+                        CollectionSnipsel.collection_id == src.id,
+                        Snipsel.deleted_at.is_(None),
+                        Snipsel.type == "task",
+                        Snipsel.task_done == False,
+                    )
+                    .order_by(CollectionSnipsel.position.asc())
+                    .with_for_update(skip_locked=True)  # skip rows locked by a concurrent request
+                )
+                .scalars()
+                .all()
+            )
+
+            logger.debug("%s Source collection %s (%s): %d open task(s) found (after lock)",
+                         log_prefix, src.id, src.list_for_day, len(items))
+
+            for cs in items:
+                snipsel_preview = ""
+                try:
+                    snipsel_preview = (cs.snipsel.content_markdown or "")[:60].replace("\n", " ")
+                except Exception:
+                    pass
+
+                # Check if this snipsel is already in today's collection
+                already = (
+                    db.session.execute(
+                        db.select(CollectionSnipsel).where(
+                            CollectionSnipsel.collection_id == today_collection.id,
+                            CollectionSnipsel.snipsel_id == cs.snipsel_id,
+                        )
+                    )
+                    .scalars()
+                    .first()
+                )
+                if already:
+                    logger.debug("%s  Snipsel %s already in today – removing duplicate src entry (cs.id=%s) | '%s'",
+                                 log_prefix, cs.snipsel_id, cs.id, snipsel_preview)
+                    db.session.delete(cs)
+                    deleted_duplicate_count += 1
+                    continue
+
+                max_pos += 1
+                old_collection_id = cs.collection_id
+                cs.collection_id = today_collection.id
+                cs.position = max_pos
+                cs.indent = 0
+                moved_count += 1
+                logger.debug("%s  Moved snipsel %s from collection %s → %s (pos=%d) | '%s'",
+                             log_prefix, cs.snipsel_id, old_collection_id, today_collection.id,
+                             max_pos, snipsel_preview)
+
+        # ── Orphan recovery ────────────────────────────────────────────────────
+        # Find open tasks owned by this user that are not linked to ANY
+        # collection (no CollectionSnipsel row exists). This catches tasks that
+        # lost their collection reference through previous bugs or unexpected
+        # database states, and rescues them back onto today's list.
+        orphaned_snipsels = (
             db.session.execute(
-                db.select(CollectionSnipsel)
-                .join(Snipsel, Snipsel.id == CollectionSnipsel.snipsel_id)
+                db.select(Snipsel)
                 .where(
-                    CollectionSnipsel.collection_id == src.id,
-                    # Remove Snipsel.owner_user_id == user.id check to allow 
-                    # carrying over tasks added by shared users to this user's daily lists.
+                    Snipsel.owner_user_id == user.id,
                     Snipsel.deleted_at.is_(None),
                     Snipsel.type == "task",
                     Snipsel.task_done == False,
+                    ~Snipsel.id.in_(
+                        db.select(CollectionSnipsel.snipsel_id)
+                    ),
                 )
-                .order_by(CollectionSnipsel.position.asc())
             )
             .scalars()
             .all()
         )
 
-        for cs in items:
-            # Check if this snipsel is already in today's collection
-            already = (
-                db.session.execute(
-                    db.select(CollectionSnipsel).where(
-                        CollectionSnipsel.collection_id == today_collection.id,
-                        CollectionSnipsel.snipsel_id == cs.snipsel_id,
-                    )
-                )
-                .scalars()
-                .first()
+        rescued_count = 0
+        for orphan in orphaned_snipsels:
+            orphan_preview = (orphan.content_markdown or "")[:60].replace("\n", " ")
+            logger.warning(
+                "%s  ORPHAN DETECTED – snipsel %s has no collection! Rescuing to today. | '%s'",
+                log_prefix, orphan.id, orphan_preview,
             )
-            if already:
-                db.session.delete(cs)
-                continue
-
             max_pos += 1
-            cs.collection_id = today_collection.id
-            cs.position = max_pos
-            cs.indent = 0
-            moved_count += 1
+            db.session.add(
+                CollectionSnipsel(
+                    collection_id=today_collection.id,
+                    snipsel_id=orphan.id,
+                    position=max_pos,
+                    indent=0,
+                )
+            )
+            rescued_count += 1
 
-    if moved_count > 0:
-        # Update modified_at to ensure frontend caches/lists are refreshed
-        today_collection.modified_at = datetime.utcnow()
-        today_collection.modified_by_id = user.id
-        print(f"[Carry Over] Moved {moved_count} tasks to collection {today_collection.id} for user {user.id}")
+        if rescued_count > 0:
+            logger.warning("%s  %d orphaned task(s) rescued to today's collection.", log_prefix, rescued_count)
+            today_collection.modified_at = datetime.utcnow()
+            today_collection.modified_by_id = user.id
+        # ── End orphan recovery ────────────────────────────────────────────────
 
-    db.session.commit()
+        logger.info("%s Summary before commit: moved=%d, duplicates_removed=%d, orphans_rescued=%d",
+                    log_prefix, moved_count, deleted_duplicate_count, rescued_count)
+
+        if moved_count > 0:
+            # Touch modified_at so frontend caches/lists refresh
+            today_collection.modified_at = datetime.utcnow()
+            today_collection.modified_by_id = user.id
+
+        db.session.commit()
+        logger.info("%s Commit successful. %d task(s) carried over, %d duplicate(s) cleaned up, %d orphan(s) rescued.",
+                    log_prefix, moved_count, deleted_duplicate_count, rescued_count)
+
+    except Exception as exc:
+        logger.error("%s ERROR during carry-over – rolling back! Exception: %s",
+                     log_prefix, exc, exc_info=True)
+        db.session.rollback()
+        # Do not re-raise: a carry-over failure should not break the
+        # GET /today response. The tasks remain in their source collections
+        # and will be picked up on the next request.
 
 
 @collections_bp.post("")

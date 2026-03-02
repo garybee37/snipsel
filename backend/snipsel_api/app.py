@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
@@ -23,6 +24,19 @@ from snipsel_api.routes_proxy import proxy_bp
 
 def create_app() -> Flask:
     settings = Settings.from_env()
+
+    # Configure application-level logging.
+    # snipsel_api.* loggers emit DEBUG by default so carry-over details,
+    # errors, and other diagnostic messages are visible in the server output.
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    ))
+    _pkg_logger = logging.getLogger("snipsel_api")
+    if not _pkg_logger.handlers:
+        _pkg_logger.addHandler(_handler)
+    _pkg_logger.setLevel(logging.DEBUG)
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.update(
