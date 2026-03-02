@@ -171,6 +171,13 @@
     return new Date(dateStr).getTime() < Date.now();
   }
 
+  function daysFromNow(dateStr: string): string {
+    const diff = Math.round((new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
+    if (diff === 0) return 'today';
+    if (diff > 0) return `in ${diff}d`;
+    return `${-diff}d ago`;
+  }
+
   type Rgb = { r: number; g: number; b: number };
 
   function clampByte(n: number): number {
@@ -1858,6 +1865,7 @@
                       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
                     </svg>
                     {new Date(item.snipsel.reminder_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                    <span class="opacity-60">· {daysFromNow(item.snipsel.reminder_at)}</span>
                     {#if item.snipsel.reminder_rrule}
                       <svg class="h-2.5 w-2.5 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 3a9 9 0 1 1-9 9" />
