@@ -1,14 +1,14 @@
 from flask import Blueprint, jsonify, request
-from snipsel_api.auth_session import auth_required, get_current_user
+from snipsel_api.auth_session import current_user, require_auth
 from snipsel_api.extensions import db
 from snipsel_api import models
 
 bp = Blueprint("reactions", __name__)
 
 @bp.route("/api/snipsels/<snipsel_id>/reactions", methods=["POST"])
-@auth_required
+@require_auth
 def toggle_reaction(snipsel_id):
-    user = get_current_user()
+    user = current_user()
     data = request.get_json() or {}
     emoji = data.get("emoji")
 
