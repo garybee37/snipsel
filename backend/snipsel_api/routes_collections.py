@@ -193,6 +193,8 @@ def get_today_collection():
             c.icon = tpl.icon
             c.header_image_url = tpl.header_image_url
             c.header_color = tpl.header_color
+            if tpl.default_snipsel_type:
+                c.default_snipsel_type = tpl.default_snipsel_type
     db.session.add(c)
 
     try:
@@ -681,8 +683,6 @@ def update_collection(collection_id: str):
         c.is_template = bool(data.get("is_template"))
     if "is_passcode_protected" in data:
         c.is_passcode_protected = bool(data.get("is_passcode_protected"))
-    if "default_snipsel_type" in data:
-        c.is_template = bool(data.get("is_template"))
     if "default_snipsel_type" in data:
         c.default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
 
