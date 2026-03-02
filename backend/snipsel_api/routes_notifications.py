@@ -111,7 +111,7 @@ def get_vapid_public_key():
 
 @notifications_bp.post("/subscribe")
 @require_auth
-@enforce_json
+@enforce_json()
 def subscribe():
     user = current_user()
     data = request.json
@@ -153,7 +153,7 @@ def subscribe():
 
 @notifications_bp.delete("/unsubscribe")
 @require_auth
-@enforce_json
+@enforce_json()
 def unsubscribe():
     user = current_user()
     data = request.json
