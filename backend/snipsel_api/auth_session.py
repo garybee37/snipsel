@@ -38,9 +38,14 @@ def current_user() -> User:
     return user
 
 
-def enforce_json() -> None:
-    if request.method in {"POST", "PUT", "PATCH"} and not request.is_json:
-        raise api_error(415, "unsupported_media_type", "Expected application/json")
+def enforce_json(fn: Callable[..., T]) -> Callable[..., T]:
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if request.method in {"POST", "PUT", "PATCH"} and not request.is_json:
+            raise api_error(415, "unsupported_media_type", "Expected application/json")
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 def json_response(payload: dict, status: int = 200) -> Response:
