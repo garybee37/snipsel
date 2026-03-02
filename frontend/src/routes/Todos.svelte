@@ -6,6 +6,7 @@
 
 	let items = $state<SearchSnipselHit[]>([]);
 	let showDone = $state(false);
+	let scope = $state<'my' | 'shared'>('my');
 	let saveStatuses = $state<Record<string, 'success' | 'error' | null>>({});
 
 
@@ -75,6 +76,7 @@
 				type: 'task',
 				mentions_me: Boolean(mentionName),
 				task_done: showDone,
+				scope: scope,
 			});
 			items = res.snipsels.sort((a, b) => {
 				if (a.reminder_at && b.reminder_at) {
@@ -93,6 +95,7 @@
 		const uname = ($currentUser?.username || '').trim();
 		void uname;
 		void showDone;
+		void scope;
 		load();
 	});
 
@@ -147,28 +150,55 @@
     <span>Todos</span>
 	</h2>
 
-	<div class="overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
-		<div class="grid grid-cols-2 divide-x divide-black/5 dark:divide-white/5">
-			<button
-				class="px-4 py-3 text-sm font-medium transition-colors {showDone
-					? 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
-					: 'text-slate-900 dark:text-white'}"
-				type="button"
-				onclick={() => (showDone = false)}
-				style={!showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-			>
-				Open
-			</button>
-			<button
-				class="px-4 py-3 text-sm font-medium transition-colors {showDone
-					? 'text-slate-900 dark:text-white'
-					: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
-				type="button"
-				onclick={() => (showDone = true)}
-				style={showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-			>
-				Done
-			</button>
+	<div class="flex flex-col gap-2 sm:flex-row">
+		<div class="flex-1 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
+			<div class="grid grid-cols-2 divide-x divide-black/5 dark:divide-white/5 text-center">
+				<button
+					class="px-4 py-2.5 text-sm font-medium transition-colors {!showDone
+						? 'text-slate-900 dark:text-white'
+						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+					type="button"
+					onclick={() => (showDone = false)}
+					style={!showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+				>
+					Open
+				</button>
+				<button
+					class="px-4 py-2.5 text-sm font-medium transition-colors {showDone
+						? 'text-slate-900 dark:text-white'
+						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+					type="button"
+					onclick={() => (showDone = true)}
+					style={showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+				>
+					Done
+				</button>
+			</div>
+		</div>
+
+		<div class="flex overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
+			<div class="flex divide-x divide-black/5 dark:divide-white/5 text-center">
+				<button
+					class="px-6 py-2.5 text-sm font-medium transition-colors {scope === 'my'
+						? 'text-slate-900 dark:text-white'
+						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+					type="button"
+					onclick={() => (scope = 'my')}
+					style={scope === 'my' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+				>
+					My
+				</button>
+				<button
+					class="px-6 py-2.5 text-sm font-medium transition-colors {scope === 'shared'
+						? 'text-slate-900 dark:text-white'
+						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+					type="button"
+					onclick={() => (scope = 'shared')}
+					style={scope === 'shared' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+				>
+					Shared
+				</button>
+			</div>
 		</div>
 	</div>
 

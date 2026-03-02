@@ -260,13 +260,33 @@ def search():
         )
 
     if snipsel_type == "task" and not mention and not q and not tag and not day_parsed:
-        # Relax the created_by_id check. 
-        # We still want to prioritize tasks created by the user, but we should also show 
-        # tasks assigned to the user or tasks moved into the user's daily collection 
-        # (even if created by someone else in a shared collection).
-        # Since 'accessible_collection_ids' already filters by the user's accessible collections,
-        # we can just remove this strict filter to allow seeing carried-over shared tasks.
-        pass
+        # For task-specific scope filtering: filter by who created the task,
+        # and exclude tasks that are explicitly @assigned to any known user.
+        #
+        # A "known user mention" subquery: snipsels that contain a @mention whose
+        # name matches any registered User's username (case-insensitive).
+        has_user_mention_sq = (
+            db.select(literal(1))
+            .where(
+                SnipselMention.snipsel_id == Snipsel.id,
+                db.func.lower(Mention.name).in_(
+                    db.select(db.func.lower(User.username))
+                ),
+            )
+            .join(Mention, Mention.id == SnipselMention.mention_id)
+            .correlate(Snipsel)
+            .exists()
+        )
+        if scope == "my":
+            stmt = stmt.where(
+                Snipsel.created_by_id == user.id,
+                ~has_user_mention_sq,
+            )
+        elif scope == "shared":
+            stmt = stmt.where(
+                Snipsel.created_by_id != user.id,
+                ~has_user_mention_sq,
+            )
 
     accessible_rows = db.session.execute(stmt.order_by(Snipsel.modified_at.desc()).limit(200)).all()
 
