@@ -156,6 +156,8 @@
   }
 
   let activeReactionPickerId = $state<string | null>(null);
+  let showCustomEmojiInputId = $state<string | null>(null);
+  let customEmojiInput = $state('');
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '🔥', '✨', '📌'];
 
   function updateReactionsArray(reactions: any[], emoji: string, active: boolean) {
@@ -203,6 +205,10 @@
     } catch (err) {
       console.error('Failed to toggle reaction:', err);
     }
+  }
+
+  function focusOnMount(node: HTMLInputElement) {
+    node.focus();
   }
 
   const DEFAULT_HEADER_COLOR = '#4f46e5';
@@ -1696,15 +1702,42 @@
 
                       {#if activeReactionPickerId === snip.id}
                         <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
-                          {#each REACTION_EMOJIS as emoji}
+                          {#if showCustomEmojiInputId === snip.id}
+                            <input
+                              type="text"
+                              class="h-8 w-24 bg-transparent px-3 py-1 text-sm focus:outline-none dark:text-white"
+                              placeholder="Emoji..."
+                              bind:value={customEmojiInput}
+                              use:focusOnMount
+                              onkeydown={(e) => {
+                                if (e.key === 'Enter' && customEmojiInput.trim()) {
+                                  toggleSnipselReaction(snip.id, customEmojiInput.trim());
+                                  showCustomEmojiInputId = null;
+                                  customEmojiInput = '';
+                                } else if (e.key === 'Escape') {
+                                  showCustomEmojiInputId = null;
+                                }
+                              }}
+                              onclick={(e) => e.stopPropagation()}
+                            />
+                          {#else}
+                            {#each REACTION_EMOJIS as emoji}
+                              <button
+                                type="button"
+                                class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                                onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, emoji); }}
+                              >
+                                {emoji}
+                              </button>
+                            {/each}
                             <button
                               type="button"
-                              class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
-                              onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, emoji); }}
+                              class="flex h-8 w-8 items-center justify-center rounded-full text-base font-medium text-slate-400 transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                              onclick={(e) => { e.stopPropagation(); showCustomEmojiInputId = snip.id; customEmojiInput = ''; }}
                             >
-                              {emoji}
+                              +
                             </button>
-                          {/each}
+                          {/if}
                         </div>
                       {/if}
                     </div>
@@ -2002,15 +2035,42 @@
 
                     {#if activeReactionPickerId === item.snipsel_id}
                       <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
-                        {#each REACTION_EMOJIS as emoji}
+                        {#if showCustomEmojiInputId === item.snipsel_id}
+                          <input
+                            type="text"
+                            class="h-8 w-24 bg-transparent px-3 py-1 text-sm focus:outline-none dark:text-white"
+                            placeholder="Emoji..."
+                            bind:value={customEmojiInput}
+                            use:focusOnMount
+                            onkeydown={(e) => {
+                              if (e.key === 'Enter' && customEmojiInput.trim()) {
+                                toggleSnipselReaction(item.snipsel_id, customEmojiInput.trim());
+                                showCustomEmojiInputId = null;
+                                customEmojiInput = '';
+                              } else if (e.key === 'Escape') {
+                                showCustomEmojiInputId = null;
+                              }
+                            }}
+                            onclick={(e) => e.stopPropagation()}
+                          />
+                        {#else}
+                          {#each REACTION_EMOJIS as emoji}
+                            <button
+                              type="button"
+                              class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                              onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(item.snipsel_id, emoji); }}
+                            >
+                              {emoji}
+                            </button>
+                          {/each}
                           <button
                             type="button"
-                            class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
-                            onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(item.snipsel_id, emoji); }}
+                            class="flex h-8 w-8 items-center justify-center rounded-full text-base font-medium text-slate-400 transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                            onclick={(e) => { e.stopPropagation(); showCustomEmojiInputId = item.snipsel_id; customEmojiInput = ''; }}
                           >
-                            {emoji}
+                            +
                           </button>
-                        {/each}
+                        {/if}
                       </div>
                     {/if}
                   </div>
@@ -2191,15 +2251,42 @@
 
                       {#if activeReactionPickerId === snip.id}
                         <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
-                          {#each REACTION_EMOJIS as emoji}
+                          {#if showCustomEmojiInputId === snip.id}
+                            <input
+                              type="text"
+                              class="h-8 w-24 bg-transparent px-3 py-1 text-sm focus:outline-none dark:text-white"
+                              placeholder="Emoji..."
+                              bind:value={customEmojiInput}
+                              use:focusOnMount
+                              onkeydown={(e) => {
+                                if (e.key === 'Enter' && customEmojiInput.trim()) {
+                                  toggleSnipselReaction(snip.id, customEmojiInput.trim());
+                                  showCustomEmojiInputId = null;
+                                  customEmojiInput = '';
+                                } else if (e.key === 'Escape') {
+                                  showCustomEmojiInputId = null;
+                                }
+                              }}
+                              onclick={(e) => e.stopPropagation()}
+                            />
+                          {#else}
+                            {#each REACTION_EMOJIS as emoji}
+                              <button
+                                type="button"
+                                class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                                onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, emoji); }}
+                              >
+                                {emoji}
+                              </button>
+                            {/each}
                             <button
                               type="button"
-                              class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
-                              onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, emoji); }}
+                              class="flex h-8 w-8 items-center justify-center rounded-full text-base font-medium text-slate-400 transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                              onclick={(e) => { e.stopPropagation(); showCustomEmojiInputId = snip.id; customEmojiInput = ''; }}
                             >
-                              {emoji}
+                              +
                             </button>
-                          {/each}
+                          {/if}
                         </div>
                       {/if}
                     </div>
