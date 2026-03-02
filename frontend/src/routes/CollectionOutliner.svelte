@@ -1106,6 +1106,7 @@
       )
       .replace(/==([^=]+)==/g, `<mark style="background-color:${tokenBg}; border-radius: 0.25rem; padding: 0 0.125rem">$1</mark>`)
       .replace(/<a /g, `<a style="color:${tokenFg}; text-decoration:underline" `)
+      .replace(/<blockquote>/g, `<blockquote style="border-left: 3px solid ${tokenFg}; background-color:${tokenBg}; margin: 0.25rem 0; padding: 0.25rem 0.75rem; border-radius: 0 0.25rem 0.25rem 0; opacity: 0.9;">`)
       .replace(/>\s+</g, '><');
   }
 
