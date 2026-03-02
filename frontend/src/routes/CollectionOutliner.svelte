@@ -299,13 +299,20 @@
       return;
     }
 
+    const fileArray = Array.from(files);
+    const hasImage = fileArray.some((f) => f.type.startsWith('image/'));
+
     uploadingAttachments = true;
     isLoading.set(true);
     try {
       const ids = Array.from(selectedIds);
       for (const snipselId of ids) {
-        for (const file of Array.from(files)) {
+        for (const file of fileArray) {
           await api.attachments.upload(snipselId, file);
+        }
+        // Auto-switch type to image if any uploaded file is an image
+        if (hasImage) {
+          await api.snipsels.update(snipselId, { type: 'image' });
         }
       }
       await loadItems();
@@ -635,6 +642,8 @@
       uploadingAttachments = true;
       try {
         await api.attachments.upload(snipselId, imageFile);
+        // Auto-switch type to image
+        await api.snipsels.update(snipselId, { type: 'image' });
         await loadItems();
       } catch (err) {
         console.error('Failed to upload pasted image:', err);
