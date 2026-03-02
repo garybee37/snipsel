@@ -93,7 +93,7 @@ A snipsel is an individual item within a collection. It's the basic unit of cont
 ### Editing Snipsel Content
 
 - Click on any snipsel to edit it
-- Supports Markdown formatting
+- Supports Markdown formatting (Bold, Italic, Lists, **Blockquotes** using `>`, etc.)
 - Tags and mentions are automatically extracted and linked
 
 ### Task Management
@@ -115,7 +115,27 @@ You can set date-based reminders for any snipsel:
     - When a recurring task is **marked as done**, the system automatically creates a **copy** of the task with the next reminder date and places it directly below the completed task.
     - If you complete a task early, the next date is still calculated based on the original series to maintain your schedule.
 5. **Icon**: Tasks with recurring reminders show a curved arrow icon next to the date.
-6. **Display**: Reminders are shown in the collection view and the dedicated **Tasks** page (sorted by date).
+6. **Display**: Reminders are shown in the collection view and the dedicated **Tasks** page.
+
+---
+
+## Tasks Page
+
+The **Tasks** page (accessible via the checkmark icon in the sidebar) provides a central view of all your tasks across all collections.
+
+### Filtering Tasks
+
+1. **Open / Done**: Switch between pending and completed tasks.
+2. **My / Shared**: 
+    - **My**: Shows tasks you created yourself that are NOT explicitly assigned to someone else via `@mention`.
+    - **Shared**: Shows tasks created by others in collections shared with you, provided they are NOT explicitly assigned to a specific user.
+
+> [!NOTE]
+> Tasks that contain an `@username` mention of a known user are considered "assigned" and will not appear in the general **My** or **Shared** lists. They will instead appear in the notifications and mentions of the respective user.
+
+### Sorting
+
+Tasks are sorted by their reminder date (if set), with the soonest or overdue tasks appearing at the top.
 
 ### Attachments
 
