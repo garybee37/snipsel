@@ -6,7 +6,7 @@ from snipsel_api.extensions import db
 from snipsel_api.models import PushSubscription, Notification
 
 
-def send_push_notification(user_id: str, payload: dict):
+def send_push_notification(user_id: str, payload: dict, commit: bool = True):
     from snipsel_api.config import Settings
     settings = Settings.from_env()
 
@@ -51,7 +51,8 @@ def send_push_notification(user_id: str, payload: dict):
                 print(f"[PushService] Subscription 410 Gone. Deleting...")
                 db.session.delete(sub)
 
-    db.session.commit()
+    if commit:
+        db.session.commit()
     print("[PushService] Done.")
 
 
@@ -60,11 +61,10 @@ def init_push_listeners():
     @event.listens_for(Notification, "after_insert")
     def notification_after_insert(mapper, connection, target: Notification):
         # We use a nested import to avoid circular dependencies
-        # Also, we send push only if it's not a background task or if we want immediate delivery
         payload = {
             "title": "Snipsel",
             "body": target.message,
-            "url": f"/notifications" # Default landing page
+            "url": "/notifications" # Default landing page
         }
         
         # Customize URL if linked to a snipsel or collection
@@ -74,6 +74,6 @@ def init_push_listeners():
             payload["url"] = f"/collections/{target.collection_id}"
 
         # Trigger the push
-        # Note: In a production app, this should be offloaded to a task queue (Celery/RQ)
-        # For this MVP, we run it synchronously (which might slow down the request slightly)
-        send_push_notification(target.user_id, payload)
+        # IMPORTANT: Pass commit=False here because we are inside a session flush/commit cycle.
+        # Committing here would cause recursive flushes and potential errors.
+        send_push_notification(target.user_id, payload, commit=False)
