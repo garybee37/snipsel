@@ -7,11 +7,13 @@ import { precacheAndRoute } from 'workbox-precaching'
 precacheAndRoute(self.__WB_MANIFEST || [])
 
 self.addEventListener('push', (event) => {
+    console.log('[ServiceWorker] Push event received!', event);
     let data: any = {}
     try {
         data = event.data?.json() ?? {}
+        console.log('[ServiceWorker] Push data:', data);
     } catch (err) {
-        console.error('Failed to parse push data', err)
+        console.error('[ServiceWorker] Failed to parse push data', err)
     }
 
     const title = data.title || 'Snipsel Notification'
@@ -22,12 +24,15 @@ self.addEventListener('push', (event) => {
         data: data.url,
     }
 
+    console.log('[ServiceWorker] Showing notification:', title, options);
     event.waitUntil(self.registration.showNotification(title, options))
 })
 
 self.addEventListener('notificationclick', (event) => {
+    console.log('[ServiceWorker] Notification click received!', event);
     event.notification.close()
     if (event.notification.data) {
+        console.log('[ServiceWorker] Opening URL:', event.notification.data);
         event.waitUntil(self.clients.openWindow(event.notification.data))
     }
 })
