@@ -62,10 +62,24 @@
   }
 
   function daysFromNow(dateStr: string): string {
-    const diff = Math.round((new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
-    if (diff === 0) return 'today';
-    if (diff > 0) return `in ${diff}d`;
-    return `${-diff}d ago`;
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.round((new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
+    
+    if (diffDays === 0) {
+      const diffMs = d.getTime() - now.getTime();
+      if (diffMs > 0) {
+        const hours = Math.floor(diffMs / 3600000);
+        const minutes = Math.floor((diffMs % 3600000) / 60000);
+        if (hours > 0) {
+          return `fällig in ${hours}h ${minutes}m`;
+        }
+        return `fällig in ${minutes}m`;
+      }
+      return 'heute fällig';
+    }
+    if (diffDays > 0) return `in ${diffDays}d`;
+    return `${-diffDays}d ago`;
   }
 
 	async function load() {
