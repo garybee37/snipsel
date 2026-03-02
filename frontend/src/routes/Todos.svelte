@@ -150,55 +150,59 @@
     <span>Todos</span>
 	</h2>
 
-	<div class="flex flex-col gap-2 sm:flex-row">
-		<div class="flex-1 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
-			<div class="grid grid-cols-2 divide-x divide-black/5 dark:divide-white/5 text-center">
-				<button
-					class="px-4 py-2.5 text-sm font-medium transition-colors {!showDone
-						? 'text-slate-900 dark:text-white'
-						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
-					type="button"
-					onclick={() => (showDone = false)}
-					style={!showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-				>
-					Open
-				</button>
-				<button
-					class="px-4 py-2.5 text-sm font-medium transition-colors {showDone
-						? 'text-slate-900 dark:text-white'
-						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
-					type="button"
-					onclick={() => (showDone = true)}
-					style={showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-				>
-					Done
-				</button>
-			</div>
+	<div class="flex items-center gap-2">
+		<div class="flex flex-1 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10" role="tablist">
+			<button
+				type="button"
+				role="tab"
+				aria-selected={!showDone}
+				class="flex-1 px-4 py-3 text-base font-medium transition-colors {!showDone
+					? 'text-slate-900 dark:text-white'
+					: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+				onclick={() => (showDone = false)}
+				style={!showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+			>
+				Open
+			</button>
+			<button
+				type="button"
+				role="tab"
+				aria-selected={showDone}
+				class="flex-1 border-l border-black/5 px-4 py-3 text-base font-medium transition-colors dark:border-white/5 {showDone
+					? 'text-slate-900 dark:text-white'
+					: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+				onclick={() => (showDone = true)}
+				style={showDone ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+			>
+				Done
+			</button>
 		</div>
 
-		<div class="flex overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10">
-			<div class="flex divide-x divide-black/5 dark:divide-white/5 text-center">
-				<button
-					class="px-6 py-2.5 text-sm font-medium transition-colors {scope === 'my'
-						? 'text-slate-900 dark:text-white'
-						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
-					type="button"
-					onclick={() => (scope = 'my')}
-					style={scope === 'my' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-				>
-					My
-				</button>
-				<button
-					class="px-6 py-2.5 text-sm font-medium transition-colors {scope === 'shared'
-						? 'text-slate-900 dark:text-white'
-						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
-					type="button"
-					onclick={() => (scope = 'shared')}
-					style={scope === 'shared' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-				>
-					Shared
-				</button>
-			</div>
+		<div class="flex overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-slate-900 dark:ring-white/10" role="tablist" aria-label="Scope">
+			<button
+				type="button"
+				role="tab"
+				aria-selected={scope === 'my'}
+				class="px-6 py-3 text-base font-medium transition-colors {scope === 'my'
+					? 'text-slate-900 dark:text-white'
+					: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+				onclick={() => (scope = 'my')}
+				style={scope === 'my' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+			>
+				My
+			</button>
+			<button
+				type="button"
+				role="tab"
+				aria-selected={scope === 'shared'}
+				class="border-l border-black/5 px-6 py-3 text-base font-medium transition-colors dark:border-white/5 {scope === 'shared'
+					? 'text-slate-900 dark:text-white'
+					: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+				onclick={() => (scope = 'shared')}
+				style={scope === 'shared' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+			>
+				Shared
+			</button>
 		</div>
 	</div>
 
