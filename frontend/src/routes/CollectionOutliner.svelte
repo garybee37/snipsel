@@ -1720,7 +1720,7 @@
                               }}
                               onclick={(e) => e.stopPropagation()}
                             />
-                          {#else}
+                          {:else}
                             {#each REACTION_EMOJIS as emoji}
                               <button
                                 type="button"
@@ -2053,7 +2053,7 @@
                             }}
                             onclick={(e) => e.stopPropagation()}
                           />
-                        {#else}
+                        {:else}
                           {#each REACTION_EMOJIS as emoji}
                             <button
                               type="button"
@@ -2269,7 +2269,7 @@
                               }}
                               onclick={(e) => e.stopPropagation()}
                             />
-                          {#else}
+                          {:else}
                             {#each REACTION_EMOJIS as emoji}
                               <button
                                 type="button"
