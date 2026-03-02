@@ -12,7 +12,8 @@ def process_reminders(user_id: str) -> int:
             models.Snipsel.owner_user_id == user_id,
             models.Snipsel.reminder_at.isnot(None),
             models.Snipsel.reminder_at <= now,
-            models.Snipsel.deleted_at.is_(None)
+            models.Snipsel.deleted_at.is_(None),
+            models.Snipsel.task_done == False
         )
     ).scalars().all()
     
