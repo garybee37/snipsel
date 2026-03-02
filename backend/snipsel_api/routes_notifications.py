@@ -109,6 +109,21 @@ def get_vapid_public_key():
     return json_response({"vapidPublicKey": settings.vapid_public_key})
 
 
+@notifications_bp.post("/test-push")
+@require_auth
+def test_push():
+    user = current_user()
+    
+    from snipsel_api.push_service import send_push_notification
+    send_push_notification(user.id, {
+        "title": "Test Notification",
+        "body": "It works! 🎉",
+        "url": "/api/notifications"
+    })
+    
+    return json_response({"success": True})
+
+
 @notifications_bp.post("/subscribe")
 @require_auth
 @enforce_json

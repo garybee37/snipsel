@@ -1,5 +1,4 @@
 import json
-from flask import current_app
 from pywebpush import webpush, WebPushException
 
 from snipsel_api.extensions import db
@@ -7,8 +6,8 @@ from snipsel_api.models import PushSubscription
 
 
 def send_push_notification(user_id: str, payload: dict):
-    from snipsel_api.app import get_settings
-    settings = get_settings()
+    from snipsel_api.config import Settings
+    settings = Settings.from_env()
 
     if not settings.vapid_private_key or not settings.vapid_subject:
         return

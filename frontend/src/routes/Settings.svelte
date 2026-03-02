@@ -146,6 +146,17 @@
     }
   }
 
+  async function sendTestPush() {
+    isBusy = true;
+    try {
+      await api.notifications.testPush();
+    } catch (err: any) {
+      alert(err.error?.message || 'Failed to send test notification');
+    } finally {
+      isBusy = false;
+    }
+  }
+
   $effect(() => {
     defaultHeaderColor = $currentUser?.default_collection_header_color ?? DEFAULT_ACCENT;
     dayTemplateId = $currentUser?.day_collection_template_id ?? '';
@@ -306,6 +317,23 @@
           {hasPushEnabled ? 'Enabled' : 'Disabled'}
         </button>
       </div>
+
+      {#if hasPushEnabled}
+        <div class="mt-3 flex items-center justify-end">
+          <button
+            class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5"
+            type="button"
+            onclick={sendTestPush}
+            disabled={isBusy}
+          >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              <path d="M8 7a4 4 0 1 1 8 0c0 4.99 2 6.7 2 6.7h-12s2-1.71 2-6.7" />
+            </svg>
+            Send Test Notification
+          </button>
+        </div>
+      {/if}
     </div>
 
     <!-- Security -->

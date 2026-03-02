@@ -378,6 +378,7 @@ export const api = {
     markRead: (id: string) => requestJson<{ success: boolean }>(`/api/notifications/${id}/mark-read`, { method: 'POST' }),
     markAllRead: () => requestJson<{ success: boolean }>('/api/notifications/mark-all-read', { method: 'POST' }),
     deleteRead: () => requestJson<{ success: boolean }>('/api/notifications/read', { method: 'DELETE' }),
+    testPush: () => requestJson<{ success: boolean }>('/api/notifications/test-push', { method: 'POST' }),
   },
 
   attachments: {
