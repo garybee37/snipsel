@@ -355,3 +355,18 @@ class CollectionVisit(db.Model):
 
     user = relationship("User")
     collection = relationship("Collection")
+
+
+class PushSubscription(db.Model):
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    
+    endpoint: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    keys_p256dh: Mapped[str] = mapped_column(String(255), nullable=False)
+    keys_auth: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+    user = relationship("User")

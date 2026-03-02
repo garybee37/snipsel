@@ -8,7 +8,8 @@ from snipsel_api.auth_session import (
     require_auth,
 )
 from snipsel_api.extensions import db
-from snipsel_api.models import Notification
+from snipsel_api.models import Notification, PushSubscription
+from snipsel_api.app import get_settings
 
 notifications_bp = Blueprint("notifications", __name__)
 
@@ -96,4 +97,80 @@ def delete_read_notifications():
     )
     
     db.session.commit()
+    return json_response({"success": True})
+
+
+@notifications_bp.get("/vapid-public-key")
+@require_auth
+def get_vapid_public_key():
+    settings = get_settings()
+    if not settings.vapid_public_key:
+        return json_response({"error": "VAPID not configured"}, 500)
+    return json_response({"vapidPublicKey": settings.vapid_public_key})
+
+
+@notifications_bp.post("/subscribe")
+@require_auth
+@enforce_json
+def subscribe():
+    user = current_user()
+    data = request.json
+
+    subscription = data.get("subscription")
+    if not subscription:
+        return json_response({"error": "Missing subscription"}, 400)
+
+    endpoint = subscription.get("endpoint")
+    keys = subscription.get("keys", {})
+    p256dh = keys.get("p256dh")
+    auth = keys.get("auth")
+
+    if not endpoint or not p256dh or not auth:
+        return json_response({"error": "Invalid subscription data"}, 400)
+
+    existing = db.session.execute(
+        db.select(PushSubscription).where(PushSubscription.endpoint == endpoint)
+    ).scalar_one_or_none()
+
+    if existing:
+        if existing.user_id != user.id:
+            existing.user_id = user.id
+            existing.keys_p256dh = p256dh
+            existing.keys_auth = auth
+            db.session.commit()
+    else:
+        new_sub = PushSubscription(
+            user_id=user.id,
+            endpoint=endpoint,
+            keys_p256dh=p256dh,
+            keys_auth=auth
+        )
+        db.session.add(new_sub)
+        db.session.commit()
+
+    return json_response({"success": True})
+
+
+@notifications_bp.delete("/unsubscribe")
+@require_auth
+@enforce_json
+def unsubscribe():
+    user = current_user()
+    data = request.json
+
+    endpoint = data.get("endpoint")
+    if not endpoint:
+        return json_response({"error": "Missing endpoint"}, 400)
+
+    existing = db.session.execute(
+        db.select(PushSubscription).where(
+            PushSubscription.endpoint == endpoint,
+            PushSubscription.user_id == user.id
+        )
+    ).scalar_one_or_none()
+
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+
     return json_response({"success": True})

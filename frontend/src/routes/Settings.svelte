@@ -2,6 +2,11 @@
   import { api, type Collection } from '../lib/api';
   import { currentUser } from '../lib/session';
   import { collectionAnchor, currentView } from '../lib/stores';
+  import {
+    checkPushSubscription,
+    subscribeToPushNotifications,
+    unsubscribeFromPushNotifications,
+  } from '../lib/pushManager';
 
   const DEFAULT_ACCENT = '#4f46e5';
   type Rgb = { r: number; g: number; b: number };
@@ -14,6 +19,7 @@
   let passcode = $state('');
   let passwordConfirm = $state('');
   let passcodeError = $state('');
+  let hasPushEnabled = $state(false);
 
   function clampByte(n: number): number {
     return Math.max(0, Math.min(255, Math.round(n)));
@@ -123,6 +129,23 @@
     }
   }
 
+  async function togglePush() {
+    isBusy = true;
+    try {
+      if (hasPushEnabled) {
+        await unsubscribeFromPushNotifications();
+        hasPushEnabled = false;
+      } else {
+        await subscribeToPushNotifications();
+        hasPushEnabled = true;
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to toggle push notifications');
+    } finally {
+      isBusy = false;
+    }
+  }
+
   $effect(() => {
     defaultHeaderColor = $currentUser?.default_collection_header_color ?? DEFAULT_ACCENT;
     dayTemplateId = $currentUser?.day_collection_template_id ?? '';
@@ -130,6 +153,10 @@
 
   $effect(() => {
     loadTemplates();
+  });
+
+  $effect(() => {
+    checkPushSubscription().then(v => hasPushEnabled = v);
   });
 </script>
 
@@ -257,6 +284,26 @@
           style={Boolean($currentUser?.carry_over_open_tasks ?? true) ? `border-color: ${getAccent()}; color: ${getAccent()}; background-color: ${getAccentTint()}` : undefined}
         >
           {Boolean($currentUser?.carry_over_open_tasks ?? true) ? 'On' : 'Off'}
+        </button>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
+      <div class="text-xs uppercase text-slate-500">Notifications</div>
+      <div class="mt-3 flex items-center justify-between gap-4">
+        <div>
+          <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Push Notifications</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Receive alerts on this device for reminders.</div>
+        </div>
+        <button
+          class="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold transition-all hover:bg-slate-50 disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
+          type="button"
+          onclick={togglePush}
+          disabled={isBusy}
+          style={hasPushEnabled ? `border-color: ${getAccent()}; color: ${getAccent()}; background-color: ${getAccentTint()}` : undefined}
+        >
+          {hasPushEnabled ? 'Enabled' : 'Disabled'}
         </button>
       </div>
     </div>

@@ -20,6 +20,9 @@ class Settings:
     smtp_use_tls: bool
     mail_from: str | None
     public_base_url: str | None
+    vapid_private_key: str | None
+    vapid_public_key: str | None
+    vapid_subject: str | None
 
     @staticmethod
     def from_env() -> "Settings":
@@ -45,6 +48,10 @@ class Settings:
         mail_from = os.environ.get("SNIPSEL_MAIL_FROM")
         public_base_url = os.environ.get("SNIPSEL_PUBLIC_BASE_URL")
 
+        vapid_private_key = os.environ.get("VAPID_PRIVATE_KEY")
+        vapid_public_key = os.environ.get("VAPID_PUBLIC_KEY")
+        vapid_subject = os.environ.get("VAPID_SUBJECT")
+
         return Settings(
             secret_key=secret_key,
             database_url=database_url,
@@ -60,4 +67,7 @@ class Settings:
             smtp_use_tls=smtp_use_tls,
             mail_from=mail_from,
             public_base_url=public_base_url,
+            vapid_private_key=vapid_private_key,
+            vapid_public_key=vapid_public_key,
+            vapid_subject=vapid_subject,
         )
