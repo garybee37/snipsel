@@ -87,7 +87,7 @@ def list_collection_snipsels(collection_id: str):
         .scalars()
         .all()
     )
-    return json_response({"items": [_collection_item_json(cs) for cs in items]})
+    return json_response({"items": [_collection_item_json(cs, user.id) for cs in items]})
 
 
 @snipsels_bp.post("/collections/<collection_id>/snipsels")
@@ -145,7 +145,7 @@ def create_snipsel(collection_id: str):
     _sync_backlinks(user_id=user.id, snipsel=s)
     db.session.commit()
 
-    return json_response({"item": _collection_item_json(cs)}, status=201)
+    return json_response({"item": _collection_item_json(cs, user.id)}, status=201)
 
 
 @snipsels_bp.post("/collections/<collection_id>/snipsels/<snipsel_id>/reference")
@@ -164,7 +164,7 @@ def reference_snipsel(collection_id: str, snipsel_id: str):
         )
     ).scalars().first()
     if exists:
-        return json_response({"item": _collection_item_json(exists)})
+        return json_response({"item": _collection_item_json(exists, user.id)})
 
     indent = data.get("indent", 0)
     
@@ -230,7 +230,7 @@ def copy_snipsel(collection_id: str, snipsel_id: str):
     _sync_tags_mentions(user_id=user.id, snipsel=s)
     _sync_backlinks(user_id=user.id, snipsel=s)
     db.session.commit()
-    return json_response({"item": _collection_item_json(cs)}, status=201)
+    return json_response({"item": _collection_item_json(cs, user.id)}, status=201)
 
 
 @snipsels_bp.get("/snipsels/<snipsel_id>")
@@ -316,7 +316,7 @@ def get_snipsel(snipsel_id: str):
 
     return json_response(
         {
-            "snipsel": _snipsel_json(s),
+            "snipsel": _snipsel_json(s, user.id),
             "has_collection_access": bool(has_collection_access),
             "has_write_access": bool(has_write_access),
             "can_toggle_task_done": bool(can_toggle_task_done),
@@ -475,7 +475,7 @@ def update_snipsel(snipsel_id: str):
         _sync_tags_mentions(user_id=s.owner_user_id, snipsel=s, newly_became_task=(old_type != "task" and s.type == "task"))
     _touch_collections_for_snipsel(snipsel_id=snipsel_id, modified_by_id=user.id)
     db.session.commit()
-    return json_response({"snipsel": _snipsel_json(s)})
+    return json_response({"snipsel": _snipsel_json(s, user.id)})
 
 
 @snipsels_bp.delete("/collections/<collection_id>/snipsels/<snipsel_id>")
@@ -677,7 +677,7 @@ def _sync_backlinks(*, user_id: str, snipsel: Snipsel) -> None:
     db.session.add(SnipselLink(from_snipsel_id=snipsel.id, to_snipsel_id=target_id))
 
 
-def _snipsel_json(s: Snipsel) -> dict:
+def _snipsel_json(s: Snipsel, user_id: str | None = None) -> dict:
     return {
         "id": s.id,
         "type": s.type,
@@ -700,6 +700,7 @@ def _snipsel_json(s: Snipsel) -> dict:
         "modified_at": s.modified_at.isoformat() + "Z",
         "modified_by_id": s.modified_by_id,
         "modified_by_username": s.modified_by.username if s.modified_by else None,
+        "reactions": s.get_reaction_summary(user_id) if user_id else [],
         "attachments": [
             {
                 "id": a.id,
@@ -713,7 +714,7 @@ def _snipsel_json(s: Snipsel) -> dict:
     }
 
 
-def _collection_item_json(cs: CollectionSnipsel) -> dict:
+def _collection_item_json(cs: CollectionSnipsel, user_id: str | None = None) -> dict:
     refs = db.session.execute(
         db.select(SnipselCollectionRef).where(SnipselCollectionRef.snipsel_id == cs.snipsel_id)
     ).scalars().all()
@@ -722,7 +723,7 @@ def _collection_item_json(cs: CollectionSnipsel) -> dict:
         "snipsel_id": cs.snipsel_id,
         "position": cs.position,
         "indent": cs.indent,
-        "snipsel": _snipsel_json(cs.snipsel),
+        "snipsel": _snipsel_json(cs.snipsel, user_id),
         "collection_refs": [
             {"title": r.collection.title, "collection_id": r.collection_id}
             for r in refs

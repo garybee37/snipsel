@@ -155,6 +155,56 @@
     showTemplateMenu = false;
   }
 
+  let activeReactionPickerId = $state<string | null>(null);
+  const REACTION_EMOJIS = ['👍', '❤️', '😂', '🔥', '✨', '📌'];
+
+  function updateReactionsArray(reactions: any[], emoji: string, active: boolean) {
+    const next = [...reactions];
+    const idx = next.findIndex((r: any) => r.emoji === emoji);
+    if (active) {
+      if (idx >= 0) {
+        next[idx] = { emoji, count: next[idx].count + 1, me: true };
+      } else {
+        next.push({ emoji, count: 1, me: true });
+      }
+    } else {
+      if (idx >= 0) {
+        if (next[idx].count > 1) {
+          next[idx] = { emoji, count: Math.max(0, next[idx].count - 1), me: false };
+        } else {
+          next.splice(idx, 1);
+        }
+      }
+    }
+    return next;
+  }
+
+  async function toggleSnipselReaction(snipselId: string, emoji: string) {
+    try {
+      const res = await api.snipsels.toggleReaction(snipselId, emoji);
+      
+      // Update in main list
+      collectionItems.update(items => items.map(i => {
+        if (i.snipsel_id === snipselId) {
+            return { ...i, snipsel: { ...i.snipsel, reactions: updateReactionsArray(i.snipsel.reactions || [], emoji, res.active) } };
+        }
+        return i;
+      }));
+
+      // Update in incoming mentions
+      incomingMentions = incomingMentions.map(m => {
+        if (m.id === snipselId) {
+            return { ...m, reactions: updateReactionsArray(m.reactions || [], emoji, res.active) };
+        }
+        return m;
+      });
+
+      activeReactionPickerId = null;
+    } catch (err) {
+      console.error('Failed to toggle reaction:', err);
+    }
+  }
+
   const DEFAULT_HEADER_COLOR = '#4f46e5';
   const TOOLBOX_BASE_COLOR = '#ffffff';
 
@@ -1617,6 +1667,48 @@
                   <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
                 {/if}
 
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                  {#if snip.reactions && snip.reactions.length > 0}
+                    {#each snip.reactions as r (r.emoji)}
+                      <button
+                        type="button"
+                        class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors {r.me ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400'}"
+                        onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, r.emoji); }}
+                      >
+                        <span>{r.emoji}</span>
+                        <span class="opacity-60">{r.count}</span>
+                      </button>
+                    {/each}
+                  {/if}
+
+                  <div class="relative">
+                    <button
+                      type="button"
+                      class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10"
+                      onclick={(e) => { e.stopPropagation(); activeReactionPickerId = activeReactionPickerId === snip.id ? null : snip.id; }}
+                      aria-label="Add reaction"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                    </button>
+
+                    {#if activeReactionPickerId === snip.id}
+                      <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
+                        {#each REACTION_EMOJIS as emoji}
+                          <button
+                            type="button"
+                            class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                            onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, emoji); }}
+                          >
+                            {emoji}
+                          </button>
+                        {/each}
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+
                 {#if snip.attachments && snip.attachments.length > 0 && snip.type === 'image'}
                   {@const images = snip.attachments.filter((a) => a.mime_type?.startsWith('image/') || a.has_thumbnail)}
                   {#if images.length > 0}
@@ -1879,6 +1971,48 @@
                 <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
               {/if}
 
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                {#if item.snipsel.reactions && item.snipsel.reactions.length > 0}
+                  {#each item.snipsel.reactions as r (r.emoji)}
+                    <button
+                      type="button"
+                      class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors {r.me ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400'}"
+                      onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(item.snipsel_id, r.emoji); }}
+                    >
+                      <span>{r.emoji}</span>
+                      <span class="opacity-60">{r.count}</span>
+                    </button>
+                  {/each}
+                {/if}
+
+                <div class="relative">
+                  <button
+                    type="button"
+                    class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10"
+                    onclick={(e) => { e.stopPropagation(); activeReactionPickerId = activeReactionPickerId === item.snipsel_id ? null : item.snipsel_id; }}
+                    aria-label="Add reaction"
+                  >
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+
+                  {#if activeReactionPickerId === item.snipsel_id}
+                    <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
+                      {#each REACTION_EMOJIS as emoji}
+                        <button
+                          type="button"
+                          class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                          onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(item.snipsel_id, emoji); }}
+                        >
+                          {emoji}
+                        </button>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              </div>
+
               {#if item.snipsel.reminder_at}
                 {@const expired = isExpired(item.snipsel.reminder_at)}
                 <div class="mt-1 flex flex-wrap items-center gap-1 text-[10px]">
@@ -2023,6 +2157,48 @@
                 {:else if !snip.attachments || !snip.attachments.length}
                   <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
                 {/if}
+
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                  {#if snip.reactions && snip.reactions.length > 0}
+                    {#each snip.reactions as r (r.emoji)}
+                      <button
+                        type="button"
+                        class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors {r.me ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400'}"
+                        onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, r.emoji); }}
+                      >
+                        <span>{r.emoji}</span>
+                        <span class="opacity-60">{r.count}</span>
+                      </button>
+                    {/each}
+                  {/if}
+
+                  <div class="relative">
+                    <button
+                      type="button"
+                      class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10"
+                      onclick={(e) => { e.stopPropagation(); activeReactionPickerId = activeReactionPickerId === snip.id ? null : snip.id; }}
+                      aria-label="Add reaction"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                    </button>
+
+                    {#if activeReactionPickerId === snip.id}
+                      <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
+                        {#each REACTION_EMOJIS as emoji}
+                          <button
+                            type="button"
+                            class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                            onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, emoji); }}
+                          >
+                            {emoji}
+                          </button>
+                        {/each}
+                      </div>
+                    {/if}
+                  </div>
+                </div>
 
                 {#if snip.attachments && snip.attachments.length > 0 && snip.type === 'image'}
                   {@const images = snip.attachments.filter((a) => a.mime_type?.startsWith('image/') || a.has_thumbnail)}

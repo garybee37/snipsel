@@ -67,6 +67,12 @@ export type Notification = {
   created_at: string;
 };
 
+export type ReactionSummary = {
+  emoji: string;
+  count: number;
+  me: boolean;
+};
+
 export type Snipsel = {
   id: string;
   type: string;
@@ -98,6 +104,7 @@ export type Snipsel = {
   }>;
   tags?: string[];
   mentions?: string[];
+  reactions?: ReactionSummary[];
 };
 
 export type SnipselDetailResponse = {
@@ -149,6 +156,7 @@ export type SearchSnipselHit = {
   reminder_at?: string | null;
   reminder_rrule?: string | null;
   attachments?: Attachment[];
+  reactions?: ReactionSummary[];
 };
 
 export type SearchCollectionHit = {
@@ -358,6 +366,11 @@ export const api = {
           body: JSON.stringify({ items }),
         }
       ),
+    toggleReaction: (snipselId: string, emoji: string) =>
+      requestJson<{ message: string; active: boolean }>(`/api/snipsels/${snipselId}/reactions`, {
+        method: 'POST',
+        body: JSON.stringify({ emoji }),
+      }),
   },
 
   notifications: {

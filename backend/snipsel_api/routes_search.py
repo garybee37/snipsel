@@ -379,6 +379,7 @@ def search():
                     "has_collection_access": has_collection_access,
                     "has_write_access": has_write_access,
                     "can_toggle_task_done": can_toggle_task_done,
+                    "reactions": s.get_reaction_summary(user.id),
                 }
                 for s, collection_id, position, collection_title, collection_icon, has_collection_access, has_write_access, can_toggle_task_done in rows
             ],

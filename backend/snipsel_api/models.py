@@ -170,6 +170,18 @@ class Snipsel(db.Model):
     )
     tags: Mapped[list["SnipselTag"]] = relationship("SnipselTag", back_populates="snipsel", cascade="all, delete-orphan")
     mentions: Mapped[list["SnipselMention"]] = relationship("SnipselMention", back_populates="snipsel", cascade="all, delete-orphan")
+    reactions: Mapped[list["SnipselReaction"]] = relationship("SnipselReaction", back_populates="snipsel", cascade="all, delete-orphan")
+
+    def get_reaction_summary(self, user_id: str):
+        summary = {}
+        for r in self.reactions:
+            e = r.emoji
+            if e not in summary:
+                summary[e] = {"emoji": e, "count": 0, "me": False}
+            summary[e]["count"] += 1
+            if r.user_id == user_id:
+                summary[e]["me"] = True
+        return sorted(summary.values(), key=lambda x: x["count"], reverse=True)
 
     __table_args__ = (
         CheckConstraint(
@@ -241,6 +253,23 @@ class SnipselMention(db.Model):
 
     snipsel = relationship("Snipsel", back_populates="mentions")
     mention = relationship("Mention")
+
+
+class SnipselReaction(db.Model):
+    __tablename__ = "snipsel_reactions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    snipsel_id: Mapped[str] = mapped_column(ForeignKey("snipsels.id"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    emoji: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+    snipsel = relationship("Snipsel", back_populates="reactions")
+    user = relationship("User")
+
+    __table_args__ = (
+        UniqueConstraint("snipsel_id", "user_id", "emoji", name="uq_snipsel_reaction_user_emoji"),
+    )
 
 
 class SnipselLink(db.Model):

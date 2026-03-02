@@ -20,6 +20,7 @@ from snipsel_api.routes_users import users_bp
 from snipsel_api.routes_notifications import notifications_bp
 from snipsel_api.routes_importer import importer_bp
 from snipsel_api.routes_proxy import proxy_bp
+from snipsel_api.routes_reactions import bp as reactions_bp
 
 
 def create_app() -> Flask:
@@ -72,6 +73,7 @@ def create_app() -> Flask:
     app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
     app.register_blueprint(importer_bp, url_prefix="/api/importer")
     app.register_blueprint(proxy_bp, url_prefix="/api/proxy")
+    app.register_blueprint(reactions_bp, url_prefix="/api")
     app.register_blueprint(errors_bp)
 
     from snipsel_api import models
