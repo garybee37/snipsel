@@ -3,8 +3,8 @@
   import { api } from './api';
 
   interface Props {
-    type: 'track' | 'album' | 'artist';
-    id: string;
+    type: 'track' | 'album' | 'artist' | null;
+    id: string | null;
     url: string;
   }
 

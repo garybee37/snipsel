@@ -1568,9 +1568,9 @@
                 {/if}
 
                 {#if snip.content_markdown}
-                  {#if getDeezerLink(snip.content_markdown)?.type}
+                  {#if getDeezerLink(snip.content_markdown)}
                     {@const dz = getDeezerLink(snip.content_markdown)!}
-                    <DeezerCard type={dz.type!} id={dz.id!} url={dz.url} />
+                    <DeezerCard type={dz.type} id={dz.id} url={dz.url} />
                   {/if}
                   {#if getYouTubeLink(snip.content_markdown)}
                     {@const yt = getYouTubeLink(snip.content_markdown)!}
@@ -1974,9 +1974,9 @@
                 {/if}
 
                 {#if snip.content_markdown}
-                  {#if getDeezerLink(snip.content_markdown)?.type}
+                  {#if getDeezerLink(snip.content_markdown)}
                     {@const dz = getDeezerLink(snip.content_markdown)!}
-                    <DeezerCard type={dz.type!} id={dz.id!} url={dz.url} />
+                    <DeezerCard type={dz.type} id={dz.id} url={dz.url} />
                   {/if}
                   {#if getYouTubeLink(snip.content_markdown)}
                     {@const yt = getYouTubeLink(snip.content_markdown)!}
