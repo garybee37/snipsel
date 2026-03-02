@@ -305,17 +305,7 @@ def twos_import():
     # Fetch notifications upfront to map reminders
     notification_lookup = {}
     try:
-        print("[TwoS Import] Fetching notifications for reminder mapping...")
-        notif_result = _twos_api_request(
-            f"/apiV2/notification/{twos_user_id}/interval",
-            data={
-                "currentDate": datetime.now(timezone.utc).isoformat().replace("+00:00", ".000Z"),
-                "startDate": "1980-01-01T00:00:00.000Z",
-                "endDate": "2030-01-01T23:59:59.000Z",
-                "user_id": twos_user_id,
-                "token": token
-            }
-        )
+
         notifications = notif_result.get("notifications", [])
         print(f"[TwoS Import] Found {len(notifications)} notifications.")
         for n in notifications:
