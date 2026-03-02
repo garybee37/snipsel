@@ -102,8 +102,8 @@ def delete_read_notifications():
 @notifications_bp.get("/vapid-public-key")
 @require_auth
 def get_vapid_public_key():
-    from snipsel_api.app import get_settings
-    settings = get_settings()
+    from snipsel_api.config import Settings
+    settings = Settings.from_env()
     if not settings.vapid_public_key:
         return json_response({"error": "VAPID not configured"}, 500)
     return json_response({"vapidPublicKey": settings.vapid_public_key})
