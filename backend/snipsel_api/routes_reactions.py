@@ -5,7 +5,7 @@ from snipsel_api import models
 
 bp = Blueprint("reactions", __name__)
 
-@bp.route("/api/snipsels/<snipsel_id>/reactions", methods=["POST"])
+@bp.route("/snipsels/<snipsel_id>/reactions", methods=["POST"])
 @require_auth
 def toggle_reaction(snipsel_id):
     user = current_user()
