@@ -1570,7 +1570,7 @@
     <div class="flex flex-col">
       <div class="py-8 text-center text-base text-slate-500">No snipsels yet</div>
       <button
-        class="mt-2 h-24 w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-left text-base text-slate-400 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+        class="mt-2 flex h-24 w-full items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-base text-slate-400 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
         aria-label="Add new snipsel"
         onclick={() => {
@@ -1580,7 +1580,10 @@
           }
           createSnipselFromUserGesture();
         }}
-      ></button>
+        disabled={!canWrite()}
+      >
+        add new snipsel
+      </button>
 
       {#if incomingMentions.length > 0}
         <div class="mt-6 border-t border-slate-200 pt-4">
