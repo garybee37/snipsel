@@ -26,7 +26,7 @@ from snipsel_api.config import Settings
 from snipsel_api.emailer import send_password_reset_email
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Collection, PasswordResetToken, User, UserPasskey
+from snipsel_api.models import Attachment, Collection, CollectionSnipsel, PasswordResetToken, Snipsel, User, UserPasskey
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -402,6 +402,53 @@ def logout():
 def me():
     user = current_user()
     return json_response({"user": _user_json(user)})
+
+
+@auth_bp.get("/me/stats")
+@require_auth
+def me_stats():
+    user = current_user()
+
+    collections_count = db.session.execute(
+        db.select(db.func.count(Collection.id)).where(
+            Collection.owner_user_id == user.id,
+            Collection.deleted_at.is_(None),
+        )
+    ).scalar() or 0
+
+    snipsels_count = db.session.execute(
+        db.select(db.func.count(Snipsel.id)).where(
+            Snipsel.owner_user_id == user.id,
+            Snipsel.deleted_at.is_(None),
+        )
+    ).scalar() or 0
+
+    completed_tasks_count = db.session.execute(
+        db.select(db.func.count(Snipsel.id)).where(
+            Snipsel.owner_user_id == user.id,
+            Snipsel.deleted_at.is_(None),
+            Snipsel.type == "task",
+            Snipsel.task_done == True,
+        )
+    ).scalar() or 0
+
+    attachments_count = db.session.execute(
+        db.select(db.func.count(Attachment.id))
+        .join(Snipsel, Attachment.snipsel_id == Snipsel.id)
+        .where(
+            Snipsel.owner_user_id == user.id,
+            Snipsel.deleted_at.is_(None),
+        )
+    ).scalar() or 0
+
+    return json_response({
+        "stats": {
+            "collections": collections_count,
+            "snipsels": snipsels_count,
+            "completed_tasks": completed_tasks_count,
+            "attachments": attachments_count,
+        }
+    })
 
 
 @auth_bp.patch("/me")

@@ -20,6 +20,13 @@ export type User = {
   passkeys_count?: number;
 };
 
+export type UserStats = {
+  collections: number;
+  snipsels: number;
+  completed_tasks: number;
+  attachments: number;
+};
+
 export type UserPasskey = {
   id: string;
   name: string;
@@ -266,6 +273,7 @@ export const api = {
       }),
   },
   me: () => requestJson<{ user: User }>('/api/auth/me'),
+  meStats: () => requestJson<{ stats: UserStats }>('/api/auth/me/stats'),
   updateMe: (input: {
     default_collection_header_color?: string | null;
     carry_over_open_tasks?: boolean;

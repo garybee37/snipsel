@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, type Collection } from '../lib/api';
+  import { api, type Collection, type UserStats } from '../lib/api';
   import { currentUser } from '../lib/session';
   import { collectionAnchor, currentView } from '../lib/stores';
   import {
@@ -20,6 +20,7 @@
   let passcode = $state('');
   let passcodeError = $state('');
   let hasPushEnabled = $state(false);
+  let userStats = $state<UserStats | null>(null);
 
   let isOtpSetupActive = $state(false);
   let isOtpDisableActive = $state(false);
@@ -327,6 +328,10 @@
   $effect(() => {
     loadPasskeys();
   });
+
+  $effect(() => {
+    api.meStats().then((res) => (userStats = res.stats)).catch(() => {});
+  });
 </script>
 
 <div class="space-y-4">
@@ -418,6 +423,30 @@
           </button>
         </div>
       {/if}
+    </div>
+
+    <!-- Your Content Stats -->
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
+      <div class="text-xs uppercase text-slate-500">Your Content</div>
+      <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {#each [
+          { label: 'Collections', icon: '🗂️', value: userStats?.collections },
+          { label: 'Snipsels',    icon: '📝', value: userStats?.snipsels },
+          { label: 'Tasks done',  icon: '✅', value: userStats?.completed_tasks },
+          { label: 'Attachments', icon: '📎', value: userStats?.attachments },
+        ] as stat}
+          <div class="flex flex-col items-center gap-1 rounded-lg bg-slate-50 px-3 py-3 dark:bg-white/5">
+            <span class="text-xl" aria-hidden="true">{stat.icon}</span>
+            <span
+              class="text-2xl font-bold tabular-nums"
+              style={`color: ${getAccent()}`}
+            >
+              {stat.value !== undefined ? stat.value.toLocaleString() : '–'}
+            </span>
+            <span class="text-center text-xs text-slate-500 dark:text-slate-400">{stat.label}</span>
+          </div>
+        {/each}
+      </div>
     </div>
 
     <!-- Appearance -->
