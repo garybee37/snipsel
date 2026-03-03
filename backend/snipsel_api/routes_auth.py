@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import secrets
 from datetime import datetime, timedelta
 
@@ -230,8 +231,9 @@ def passkeys_register_begin():
         ),
     )
 
-    session["passkey_registration_options"] = options_to_json(options)
-    return json_response(options_to_json(options))
+    options_json_str = options_to_json(options)
+    session["passkey_registration_options"] = options_json_str
+    return json_response(json.loads(options_json_str))
 
 
 @auth_bp.post("/passkeys/register/complete")
@@ -304,9 +306,10 @@ def passkeys_login_begin():
         user_verification=UserVerificationRequirement.PREFERRED,
     )
 
-    session["passkey_login_options"] = options_to_json(options)
+    options_json_str = options_to_json(options)
+    session["passkey_login_options"] = options_json_str
     session["pending_passkey_user_id"] = user.id
-    return json_response(options_to_json(options))
+    return json_response(json.loads(options_json_str))
 
 
 @auth_bp.post("/passkeys/login/complete")
