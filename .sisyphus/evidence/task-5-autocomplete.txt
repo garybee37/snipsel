@@ -1,9 +1,0 @@
-$ npm run check
-
-> frontend@0.0.0 check
-> svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json
-
-Loading svelte-check in workspace: /home/daniel/development/snipsel/frontend
-Getting Svelte diagnostics...
-
-svelte-check found 0 errors and 0 warnings

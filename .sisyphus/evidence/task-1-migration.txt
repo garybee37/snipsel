@@ -1,8 +1,0 @@
-CREATE TABLE snipsel_collection_refs (
-	snipsel_id VARCHAR(36) NOT NULL, 
-	collection_id VARCHAR(36) NOT NULL, 
-	created_at DATETIME NOT NULL, 
-	PRIMARY KEY (snipsel_id, collection_id), 
-	FOREIGN KEY(collection_id) REFERENCES collections (id), 
-	FOREIGN KEY(snipsel_id) REFERENCES snipsels (id)
-);
