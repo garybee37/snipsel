@@ -223,7 +223,7 @@
     {/each}
   </div>
 
-  <div class="relative overflow-hidden" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
+  <div class="cal-stack overflow-hidden" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
     {#key cursor}
       <div
         class="grid grid-cols-7 gap-1"
@@ -267,3 +267,14 @@
     {/key}
   </div>
 </div>
+
+<style>
+  /* Stack old and new grid in the same layout cell during transitions
+     so they don't push each other down and cause a height jump */
+  .cal-stack {
+    display: grid;
+  }
+  .cal-stack > * {
+    grid-area: 1 / 1;
+  }
+</style>
