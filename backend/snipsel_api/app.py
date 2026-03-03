@@ -6,7 +6,7 @@ from pathlib import Path
 
 from datetime import timedelta
 
-from flask import Flask
+from flask import Flask, send_from_directory
 
 from snipsel_api.config import Settings
 from snipsel_api.extensions import cors, db, migrate
@@ -91,5 +91,18 @@ def create_app() -> Flask:
     @app.get("/api/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    frontend_dir = os.environ.get("SNIPSEL_FRONTEND_DIR")
+    if frontend_dir and Path(frontend_dir).is_dir():
+        @app.route("/", defaults={"path": ""})
+        @app.route("/<path:path>")
+        def serve_frontend(path: str):
+            if path.startswith("api/"):
+                return {"error": {"code": "not_found", "message": "API endpoint not found"}}, 404
+            
+            fp = Path(str(frontend_dir)) / path
+            if path and fp.is_file():
+                return send_from_directory(str(frontend_dir), path)
+            return send_from_directory(str(frontend_dir), "index.html")
 
     return app

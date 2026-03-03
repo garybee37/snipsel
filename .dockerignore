@@ -1,0 +1,15 @@
+node_modules
+dist
+.vscode
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.env
+.DS_Store
+uploads/
+data/
+snipsel.db
+backend/.venv/
+backend/venv/

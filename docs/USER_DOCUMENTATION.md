@@ -432,3 +432,26 @@ This command:
 - Sessions managed via secure cookies
 - Passwords hashed with bcrypt
 - Passcode collections require code to access
+
+### Docker Deployment
+
+To deploy Snipsel using Docker (frontend and backend in one container):
+
+```bash
+# 1. Build the Docker image
+docker build -t snipsel .
+
+# 2. Run the container
+docker run -d \
+  --name snipsel \
+  -p 5000:5000 \
+  -v ./snipsel_data:/app/data \
+  -v ./snipsel_uploads:/app/uploads \
+  -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
+  -e SNIPSEL_DOMAIN="yourdomain.com" \
+  -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
+  snipsel
+```
+
+**Required Environment Variables for Passkeys:**
+If you want to use Passkeys, you *must* set `SNIPSEL_DOMAIN` and `SNIPSEL_FRONTEND_URL` to match your production domain. Without them, WebAuthn will fail.

@@ -2,6 +2,28 @@
 
 Mobile-first PWA notes app.
 
+## Deployment (Docker)
+
+Snipsel provides a multi-stage Dockerfile that bundles the frontend and backend into a single container.
+
+```bash
+# Build the image
+docker build -t snipsel .
+
+# Run the container
+docker run -d \
+  --name snipsel \
+  -p 5000:5000 \
+  -v ./data:/app/data \
+  -v ./uploads:/app/uploads \
+  -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
+  -e SNIPSEL_DOMAIN="yourdomain.com" \
+  -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
+  snipsel
+```
+
+*Note: `SNIPSEL_DOMAIN` and `SNIPSEL_FRONTEND_URL` are required for Passkey authentication to work correctly.*
+
 ## Development
 
 ### Backend (Flask)
