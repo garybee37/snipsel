@@ -19,6 +19,9 @@ docker run -d \
   -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
   -e SNIPSEL_DOMAIN="yourdomain.com" \
   -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
+  -e VAPID_PUBLIC_KEY="your_vapid_public_key" \
+  -e VAPID_PRIVATE_KEY="your_vapid_private_key" \
+  -e VAPID_SUBJECT="mailto:admin@yourdomain.com" \
   snipsel
 ```
 

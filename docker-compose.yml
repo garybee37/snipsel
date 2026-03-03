@@ -11,4 +11,7 @@ services:
       - SNIPSEL_SECRET_KEY=change-me-in-production
       - SNIPSEL_DOMAIN=localhost
       - SNIPSEL_FRONTEND_URL=http://localhost:5000
+      - VAPID_PUBLIC_KEY=your_vapid_public_key
+      - VAPID_PRIVATE_KEY=your_vapid_private_key
+      - VAPID_SUBJECT=mailto:admin@yourdomain.com
     restart: unless-stopped

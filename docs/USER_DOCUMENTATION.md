@@ -450,8 +450,12 @@ docker run -d \
   -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
   -e SNIPSEL_DOMAIN="yourdomain.com" \
   -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
+  -e VAPID_PUBLIC_KEY="your_vapid_public_key" \
+  -e VAPID_PRIVATE_KEY="your_vapid_private_key" \
+  -e VAPID_SUBJECT="mailto:admin@yourdomain.com" \
   snipsel
 ```
 
 **Required Environment Variables for Passkeys:**
 If you want to use Passkeys, you *must* set `SNIPSEL_DOMAIN` and `SNIPSEL_FRONTEND_URL` to match your production domain. Without them, WebAuthn will fail.
+For Push Notifications, you must set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT`.
