@@ -23,6 +23,8 @@ class Settings:
     vapid_private_key: str | None
     vapid_public_key: str | None
     vapid_subject: str | None
+    snipsel_domain: str | None
+    snipsel_frontend_url: str | None
 
     @staticmethod
     def from_env() -> "Settings":
@@ -51,6 +53,8 @@ class Settings:
         vapid_private_key = os.environ.get("VAPID_PRIVATE_KEY")
         vapid_public_key = os.environ.get("VAPID_PUBLIC_KEY")
         vapid_subject = os.environ.get("VAPID_SUBJECT")
+        snipsel_domain = os.environ.get("SNIPSEL_DOMAIN")
+        snipsel_frontend_url = os.environ.get("SNIPSEL_FRONTEND_URL")
 
         return Settings(
             secret_key=secret_key,
@@ -70,4 +74,6 @@ class Settings:
             vapid_private_key=vapid_private_key,
             vapid_public_key=vapid_public_key,
             vapid_subject=vapid_subject,
+            snipsel_domain=snipsel_domain,
+            snipsel_frontend_url=snipsel_frontend_url,
         )

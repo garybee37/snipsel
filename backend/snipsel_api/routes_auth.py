@@ -217,7 +217,7 @@ def disable_2fa():
 def passkeys_register_begin():
     user = current_user()
     settings = Settings.from_env()
-    rp_id = settings.SNIPSEL_DOMAIN or "localhost"
+    rp_id = settings.snipsel_domain or "localhost"
 
     options = generate_registration_options(
         rp_id=rp_id,
@@ -245,8 +245,8 @@ def passkeys_register_complete():
         raise api_error(400, "invalid_session", "Registration session expired")
 
     settings = Settings.from_env()
-    rp_id = settings.SNIPSEL_DOMAIN or "localhost"
-    origin = settings.SNIPSEL_FRONTEND_URL or f"https://{rp_id}"
+    rp_id = settings.snipsel_domain or "localhost"
+    origin = settings.snipsel_frontend_url or f"https://{rp_id}"
     if rp_id == "localhost":
         origin = "http://localhost:5173" # Assuming Vite default
 
@@ -293,7 +293,7 @@ def passkeys_login_begin():
         raise api_error(400, "no_passkeys", "No passkeys registered for this user")
 
     settings = Settings.from_env()
-    rp_id = settings.SNIPSEL_DOMAIN or "localhost"
+    rp_id = settings.snipsel_domain or "localhost"
 
     options = generate_authentication_options(
         rp_id=rp_id,
@@ -323,8 +323,8 @@ def passkeys_login_complete():
         raise api_error(401, "unauthorized", "User not found")
 
     settings = Settings.from_env()
-    rp_id = settings.SNIPSEL_DOMAIN or "localhost"
-    origin = settings.SNIPSEL_FRONTEND_URL or f"https://{rp_id}"
+    rp_id = settings.snipsel_domain or "localhost"
+    origin = settings.snipsel_frontend_url or f"https://{rp_id}"
     if rp_id == "localhost":
         origin = "http://localhost:5173"
 
