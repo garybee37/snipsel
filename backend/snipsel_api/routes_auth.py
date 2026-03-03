@@ -222,7 +222,7 @@ def passkeys_register_begin():
     options = generate_registration_options(
         rp_id=rp_id,
         rp_name="Snipsel",
-        user_id=user.id,
+        user_id=user.id.encode("utf-8"),
         user_name=user.username,
         user_display_name=user.username,
         authenticator_selection=AuthenticatorSelectionCriteria(
