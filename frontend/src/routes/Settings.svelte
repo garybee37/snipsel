@@ -84,6 +84,8 @@
       await api.twoFactor.disable(pass);
       const res = await api.me();
       currentUser.set(res.user);
+      isOtpDisableActive = false;
+      otpDisablePassword = '';
     } catch (e: any) {
       securityError = e.error?.message || 'Failed to disable 2FA';
     } finally {
@@ -664,6 +666,33 @@
             </button>
           {/if}
         </div>
+
+        {#if securityError}
+          <div class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">{securityError}</div>
+        {/if}
+
+        {#if isOtpDisableActive}
+          <div class="mt-4 space-y-4 rounded-xl bg-red-50/50 p-4 dark:bg-red-950/20">
+            <div>
+              <label for="otp-disable-pass" class="block text-sm font-medium text-red-800 dark:text-red-300">Confirm account password to disable 2FA</label>
+              <input
+                id="otp-disable-pass"
+                type="password"
+                class="mt-1 block w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-red-900/30 dark:bg-slate-800"
+                bind:value={otpDisablePassword}
+                placeholder="Your account password"
+              />
+            </div>
+            <button
+              class="w-full rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
+              type="button"
+              onclick={() => disableOtp(otpDisablePassword)}
+              disabled={isBusy || !otpDisablePassword}
+            >
+              Confirm Disable 2FA
+            </button>
+          </div>
+        {/if}
 
         {#if isOtpSetupActive}
           <div class="mt-4 space-y-4 rounded-xl bg-slate-50 p-4 dark:bg-white/5">

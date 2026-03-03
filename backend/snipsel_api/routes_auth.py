@@ -191,9 +191,10 @@ def disable_2fa():
     logger = logging.getLogger("snipsel_api.auth")
     user = current_user()
     data = request.get_json() or {}
-    password_confirm = (data.get("password_confirm") or "").strip()
+    raw_password = data.get("password_confirm") or ""
+    password_confirm = str(raw_password).strip()
 
-    logger.debug(f"Disable 2FA request for user {user.username}. Password provided length: {len(password_confirm)}, starts with: {password_confirm[:2]}...")
+    logger.debug(f"Disable 2FA request for user {user.username}. Password length: {len(password_confirm)}")
 
     if not password_confirm:
         logger.warning(f"Disable 2FA failed: password_confirm missing for user {user.username}")
