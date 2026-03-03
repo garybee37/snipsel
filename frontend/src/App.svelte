@@ -519,9 +519,12 @@ import Importer from './routes/Importer.svelte';
     <header class="sticky top-4 z-20 mx-auto max-w-3xl px-4 pointer-events-none">
       <div class="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/5">
         <button
-          class="flex items-center gap-2 pl-2 pr-1 font-bold text-lg text-slate-800 transition-colors hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400"
+          class="flex items-center gap-2 pl-2 pr-1 font-bold text-lg text-slate-800 transition-colors dark:text-slate-200"
+          style="--logo-hover: {getAccent()}"
           type="button"
           onclick={openToday}
+          onmouseenter={(e) => (e.currentTarget as HTMLButtonElement).style.color = getAccent()}
+          onmouseleave={(e) => (e.currentTarget as HTMLButtonElement).style.color = ''}
         >
           <img src="/logo.svg" alt="snipsel logo" class="h-6 w-6 dark:brightness-110" />
           <span class="hidden sm:inline">snipsel</span>
