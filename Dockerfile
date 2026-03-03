@@ -46,8 +46,10 @@ EXPOSE 5000
 RUN echo '#!/bin/sh\n\
 set -e\n\
 echo "Running database migrations..."\n\
+cd /app/backend\n\
 flask db upgrade\n\
 echo "Starting backend..."\n\
+cd /app\n\
 exec gunicorn -w 4 -b 0.0.0.0:5000 "snipsel_api.app:create_app()"\n\
 ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
