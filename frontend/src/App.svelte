@@ -526,7 +526,7 @@ import Importer from './routes/Importer.svelte';
           onmouseenter={(e) => (e.currentTarget as HTMLButtonElement).style.color = getAccent()}
           onmouseleave={(e) => (e.currentTarget as HTMLButtonElement).style.color = ''}
         >
-          <img src="/logo.svg" alt="snipsel logo" class="h-6 w-6 dark:brightness-110" />
+          <img src="/logo.svg" alt="snipsel logo" class="h-6 w-6 dark:brightness-110 dark:invert" />
           <span class="hidden sm:inline">snipsel</span>
         </button>
         <input
