@@ -157,6 +157,10 @@ export type SearchSnipselHit = {
   reminder_rrule?: string | null;
   attachments?: Attachment[];
   reactions?: ReactionSummary[];
+  created_by_id?: string;
+  created_by_username?: string | null;
+  tags?: string[];
+  mentions?: string[];
 };
 
 export type SearchCollectionHit = {
@@ -220,6 +224,9 @@ export const api = {
     carry_over_open_tasks?: boolean;
     theme?: 'light' | 'dark' | 'system' | null;
     day_collection_template_id?: string | null;
+    email?: string;
+    password?: string;
+    current_password?: string;
   }) =>
     requestJson<{ user: User }>('/api/auth/me', {
       method: 'PATCH',
@@ -314,6 +321,7 @@ export const api = {
         geo_lat?: number;
         geo_lng?: number;
         geo_accuracy_m?: number;
+        indent?: number;
       }
     ) =>
       requestJson<{ item: CollectionItem }>(

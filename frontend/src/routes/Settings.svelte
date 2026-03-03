@@ -20,6 +20,13 @@
   let passwordConfirm = $state('');
   let passcodeError = $state('');
   let hasPushEnabled = $state(false);
+  
+  let newEmail = $state('');
+  let newPassword = $state('');
+  let currentPasswordConfirm = $state('');
+  let accountUpdateError = $state('');
+  let accountUpdateSuccess = $state('');
+  let showAccountForm = $state(false);
 
   function clampByte(n: number): number {
     return Math.max(0, Math.min(255, Math.round(n)));
@@ -146,6 +153,38 @@
     }
   }
 
+  async function updateAccount() {
+    if (!newEmail && !newPassword) {
+      accountUpdateError = 'Please enter a new email or password';
+      return;
+    }
+    if (!currentPasswordConfirm) {
+      accountUpdateError = 'Current password is required to save changes';
+      return;
+    }
+    
+    isBusy = true;
+    accountUpdateError = '';
+    accountUpdateSuccess = '';
+    try {
+      const res = await api.updateMe({
+        email: newEmail || undefined,
+        password: newPassword || undefined,
+        current_password: currentPasswordConfirm
+      });
+      currentUser.set(res.user);
+      accountUpdateSuccess = 'Account updated successfully';
+      newEmail = '';
+      newPassword = '';
+      currentPasswordConfirm = '';
+      showAccountForm = false;
+    } catch (e: any) {
+      accountUpdateError = e.error?.message || 'Failed to update account';
+    } finally {
+      isBusy = false;
+    }
+  }
+
   async function sendTestPush() {
     isBusy = true;
     try {
@@ -189,15 +228,77 @@
           <div class="truncate text-lg font-medium text-slate-900 dark:text-slate-100">{$currentUser?.username}</div>
           <div class="truncate text-sm text-slate-500 dark:text-slate-400">{$currentUser?.email}</div>
         </div>
-        <button 
-          class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm ring-1 ring-black/5 hover:bg-red-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-950/30" 
-          type="button" 
-          onclick={logout}
-          disabled={isBusy}
-        >
-          Logout
-        </button>
+        <div class="flex gap-2">
+            <button 
+              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" 
+              type="button" 
+              onclick={() => { showAccountForm = !showAccountForm; accountUpdateError = ''; accountUpdateSuccess = ''; }}
+              disabled={isBusy}
+            >
+              {showAccountForm ? 'Cancel' : 'Edit'}
+            </button>
+            <button 
+              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm ring-1 ring-black/5 hover:bg-red-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-950/30" 
+              type="button" 
+              onclick={logout}
+              disabled={isBusy}
+            >
+              Logout
+            </button>
+        </div>
       </div>
+
+      {#if showAccountForm}
+        <div class="mt-4 space-y-4 border-t border-slate-100 pt-4 dark:border-white/5">
+          <div>
+            <label for="new-email" class="block text-sm font-medium text-slate-700 dark:text-slate-300">New Email Address (optional)</label>
+            <input
+              id="new-email"
+              type="email"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
+              bind:value={newEmail}
+              placeholder="new.email@example.com"
+            />
+          </div>
+          <div>
+            <label for="new-password" class="block text-sm font-medium text-slate-700 dark:text-slate-300">New Password (optional, min 4 chars)</label>
+            <input
+              id="new-password"
+              type="password"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
+              bind:value={newPassword}
+              placeholder="••••••••"
+            />
+          </div>
+          <div class="rounded-lg bg-slate-50 p-3 dark:bg-white/5">
+            <label for="account-password-confirm" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm Current Password to save</label>
+            <input
+              id="account-password-confirm"
+              type="password"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
+              bind:value={currentPasswordConfirm}
+              placeholder="Your current password"
+            />
+          </div>
+          
+          {#if accountUpdateError}
+            <div class="text-xs font-medium text-red-600 dark:text-red-400">{accountUpdateError}</div>
+          {/if}
+          {#if accountUpdateSuccess}
+            <div class="text-xs font-medium text-green-600 dark:text-green-400">{accountUpdateSuccess}</div>
+          {/if}
+          
+          <button
+            class="w-full rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-50 transition-all dark:opacity-90"
+            style={`background-color: ${getAccent()}`}
+            type="button"
+            onclick={updateAccount}
+            disabled={isBusy || (!newEmail && !newPassword) || !currentPasswordConfirm}
+          >
+            Save Account Changes
+          </button>
+        </div>
+      {/if}
     </div>
 
     <!-- Appearance -->

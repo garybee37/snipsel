@@ -112,7 +112,7 @@
 			snipsel = res.snipsel;
 			snipsel = { ...res.snipsel, tags: res.tags ?? [], mentions: res.mentions ?? [] };
 			hasWriteAccess = res.has_write_access !== false;
-			reminderAt = toLocalDatetimeString(res.snipsel.reminder_at);
+			reminderAt = toLocalDatetimeString(res.snipsel.reminder_at || null);
 			reminderRRule = res.snipsel.reminder_rrule ?? null;
 			const nextPlacements = res.placements ?? [];
 			placements = nextPlacements;

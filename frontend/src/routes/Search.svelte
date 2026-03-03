@@ -44,6 +44,23 @@
     return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : DEFAULT_ACCENT;
   }
 
+  const DEFAULT_HEADER_COLOR = '#4f46e5';
+  const TOOLBOX_BASE_COLOR = '#ffffff';
+
+  function getHeaderColor(): string {
+    const raw = ($currentUser?.default_collection_header_color || '').trim() || DEFAULT_HEADER_COLOR;
+    return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : DEFAULT_HEADER_COLOR;
+  }
+
+  function getToolboxBg(): string {
+    const isDark = document.documentElement.classList.contains('dark');
+    const baseColor = isDark ? '#1e293b' : TOOLBOX_BASE_COLOR;
+    const base = hexToRgb(baseColor) ?? { r: 255, g: 255, b: 255 };
+    const header = hexToRgb(getHeaderColor());
+    const mixed = header ? mixRgb(base, header, 0.14) : base;
+    return rgba(mixed, 0.96);
+  }
+
   function getAccentTint(): string {
     const isDark = document.documentElement.classList.contains('dark');
     const baseColor = isDark ? '#1e293b' : '#ffffff';

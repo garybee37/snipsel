@@ -13,6 +13,7 @@ export type View =
   | { type: 'calendar' }
   | { type: 'settings' }
   | { type: 'notifications' }
+  | { type: 'importer' }
   | { type: 'snipsel'; id: string; returnTo?: string };
 
 export const currentView = writable<View>({ type: 'loading' });
