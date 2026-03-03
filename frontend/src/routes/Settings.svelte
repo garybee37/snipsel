@@ -430,13 +430,37 @@
       <div class="text-xs uppercase text-slate-500">Your Content</div>
       <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {#each [
-          { label: 'Collections', icon: '🗂️', value: userStats?.collections },
-          { label: 'Snipsels',    icon: '📝', value: userStats?.snipsels },
-          { label: 'Tasks done',  icon: '✅', value: userStats?.completed_tasks },
-          { label: 'Attachments', icon: '📎', value: userStats?.attachments },
+          { label: 'Collections', type: 'collections', value: userStats?.collections },
+          { label: 'Snipsels',    type: 'snipsels',    value: userStats?.snipsels },
+          { label: 'Tasks done',  type: 'tasks',       value: userStats?.completed_tasks },
+          { label: 'Attachments', type: 'attachments', value: userStats?.attachments },
         ] as stat}
           <div class="flex flex-col items-center gap-1 rounded-lg bg-slate-50 px-3 py-3 dark:bg-white/5">
-            <span class="text-xl" aria-hidden="true">{stat.icon}</span>
+            <div class="mb-1 text-slate-500 dark:text-slate-400">
+              {#if stat.type === 'collections'}
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </svg>
+              {:else if stat.type === 'snipsels'}
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              {:else if stat.type === 'tasks'}
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              {:else if stat.type === 'attachments'}
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48" />
+                </svg>
+              {/if}
+            </div>
             <span
               class="text-2xl font-bold tabular-nums"
               style={`color: ${getAccent()}`}
