@@ -1,0 +1,14 @@
+services:
+  snipsel:
+    build: .
+    container_name: snipsel
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./snipsel_data:/app/data
+      - ./snipsel_uploads:/app/uploads
+    environment:
+      - SNIPSEL_SECRET_KEY=change-me-in-production
+      - SNIPSEL_DOMAIN=localhost
+      - SNIPSEL_FRONTEND_URL=http://localhost:5000
+    restart: unless-stopped
