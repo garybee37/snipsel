@@ -1,5 +1,6 @@
 <script lang="ts">
   import { api } from '../lib/api';
+  import { fly } from 'svelte/transition';
   import { collectionAnchor, currentCollection, currentView, isLoading, toLocalIsoDay } from '../lib/stores';
   import { currentUser } from '../lib/session';
 
@@ -121,7 +122,9 @@
     const val = (e.currentTarget as HTMLInputElement).value; // YYYY-MM
     if (!val) return;
     const [y, m] = val.split('-').map(Number);
-    cursor = new Date(y, m - 1, 1);
+    const next = new Date(y, m - 1, 1);
+    direction = next > cursor ? 1 : -1;
+    cursor = next;
   }
 
   function toMonthValue(d: Date) {
@@ -129,6 +132,13 @@
     const m = String(d.getMonth() + 1).padStart(2, '0');
     return `${y}-${m}`;
   }
+
+  // Direction for slide animation: 1 = forward (next), -1 = backward (prev)
+  let direction = $state(1);
+
+  function prevMonth() { direction = -1; cursor = addMonths(cursor, -1); }
+  function nextMonth() { direction =  1; cursor = addMonths(cursor,  1); }
+  function goToday()  { direction = new Date() > cursor ? 1 : -1; cursor = new Date(); }
 
   // Swipe handling
   let touchStartX = 0;
@@ -142,9 +152,8 @@
   function onTouchEnd(e: TouchEvent) {
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = e.changedTouches[0].clientY - touchStartY;
-    // Only trigger if horizontal movement is dominant and at least 50px
     if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
-    cursor = addMonths(cursor, dx < 0 ? 1 : -1);
+    dx < 0 ? nextMonth() : prevMonth();
   }
 </script>
 
@@ -167,21 +176,21 @@
         <button
           class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
           type="button"
-          onclick={() => (cursor = addMonths(cursor, -1))}
+          onclick={prevMonth}
         >
           Prev
         </button>
         <button
           class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
           type="button"
-          onclick={() => (cursor = new Date())}
+          onclick={goToday}
         >
           Today
         </button>
         <button
           class="flex-1 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
           type="button"
-          onclick={() => (cursor = addMonths(cursor, 1))}
+          onclick={nextMonth}
         >
           Next
         </button>
@@ -214,39 +223,47 @@
     {/each}
   </div>
 
-  <div class="grid grid-cols-7 gap-1" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
-    {#each getGridDays(cursor) as cell}
-      {@const iso = toLocalIsoDay(cell.day)}
-      {@const collectionData = dayCollections.get(iso)}
-      {@const hasCollection = !!collectionData}
-      {@const isToday = isSameLocalDay(cell.day, new Date())}
-      {@const showIcon = collectionData?.icon && collectionData.icon !== '📅'}
-      <button
-        class="relative aspect-square rounded-lg text-lg transition-colors {cell.inMonth
-          ? 'bg-white hover:bg-slate-50 dark:bg-slate-900/40 dark:hover:bg-slate-800/60'
-          : 'bg-slate-50 text-slate-400 hover:bg-slate-100 dark:bg-slate-950/40 dark:text-slate-600 dark:hover:bg-slate-900/40'}"
-        type="button"
-        onclick={() => openDay(cell.day)}
-        style={isToday ? `box-shadow: inset 0 0 0 2px ${getAccent()}` : undefined}
+  <div class="relative overflow-hidden" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
+    {#key cursor}
+      <div
+        class="grid grid-cols-7 gap-1"
+        in:fly={{ x: direction * 60, duration: 220, opacity: 0 }}
+        out:fly={{ x: direction * -60, duration: 220, opacity: 0 }}
       >
-        {#if showIcon}
-          <span class="absolute -right-1 -top-1 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white text-[12px] shadow-sm ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/10">
-            {collectionData.icon}
-          </span>
-        {/if}
-        <span
-          class="mx-auto grid h-10 w-10 place-items-center rounded-full text-base {hasCollection
-            ? 'font-semibold'
-            : isToday
-              ? 'bg-slate-100 font-semibold text-slate-900 dark:bg-slate-800 dark:text-white'
-              : cell.inMonth
-                ? 'text-slate-800 dark:text-slate-300'
-                : 'text-slate-400 dark:text-slate-600'}"
-          style={hasCollection ? `background-color: ${getAccent()}; color: white` : undefined}
-        >
-          {cell.day.getDate()}
-        </span>
-      </button>
-    {/each}
+        {#each getGridDays(cursor) as cell}
+          {@const iso = toLocalIsoDay(cell.day)}
+          {@const collectionData = dayCollections.get(iso)}
+          {@const hasCollection = !!collectionData}
+          {@const isToday = isSameLocalDay(cell.day, new Date())}
+          {@const showIcon = collectionData?.icon && collectionData.icon !== '📅'}
+          <button
+            class="relative aspect-square rounded-lg text-lg transition-colors {cell.inMonth
+              ? 'bg-white hover:bg-slate-50 dark:bg-slate-900/40 dark:hover:bg-slate-800/60'
+              : 'bg-slate-50 text-slate-400 hover:bg-slate-100 dark:bg-slate-950/40 dark:text-slate-600 dark:hover:bg-slate-900/40'}"
+            type="button"
+            onclick={() => openDay(cell.day)}
+            style={isToday ? `box-shadow: inset 0 0 0 2px ${getAccent()}` : undefined}
+          >
+            {#if showIcon}
+              <span class="absolute -right-1 -top-1 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white text-[12px] shadow-sm ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/10">
+                {collectionData.icon}
+              </span>
+            {/if}
+            <span
+              class="mx-auto grid h-10 w-10 place-items-center rounded-full text-base {hasCollection
+                ? 'font-semibold'
+                : isToday
+                  ? 'bg-slate-100 font-semibold text-slate-900 dark:bg-slate-800 dark:text-white'
+                  : cell.inMonth
+                    ? 'text-slate-800 dark:text-slate-300'
+                    : 'text-slate-400 dark:text-slate-600'}"
+              style={hasCollection ? `background-color: ${getAccent()}; color: white` : undefined}
+            >
+              {cell.day.getDate()}
+            </span>
+          </button>
+        {/each}
+      </div>
+    {/key}
   </div>
 </div>
