@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlparse
 from pywebpush import webpush, WebPushException
 from sqlalchemy import event
 
@@ -37,11 +38,17 @@ def send_push_notification(user_id: str, payload: dict, commit: bool = True):
 
         print(f"[PushService] Sending push to endpoint: {sub.endpoint[:30]}...")
         try:
+            # pywebpush 2.x requires the 'aud' claim to be the origin of the
+            # push endpoint (e.g. https://fcm.googleapis.com for Chrome).
+            parsed = urlparse(sub.endpoint)
+            endpoint_origin = f"{parsed.scheme}://{parsed.netloc}"
+            claims_with_aud = {**vapid_claims, "aud": endpoint_origin}
+
             response = webpush(
                 subscription_info=sub_info,
                 data=json.dumps(payload),
                 vapid_private_key=settings.vapid_private_key,
-                vapid_claims=vapid_claims
+                vapid_claims=claims_with_aud
             )
             print(f"[PushService] Push success! Response: {response.status_code if response else 'No Response'}")
         except WebPushException as ex:
