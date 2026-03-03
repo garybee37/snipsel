@@ -3,6 +3,7 @@
   import { api, type Attachment, type CollectionItem, type SearchSnipselHit } from '../lib/api';
   import ImageModal from '../lib/ImageModal.svelte';
   import CollectionSelectModal from '../lib/CollectionSelectModal.svelte';
+  import DeleteConfirmModal from '../lib/DeleteConfirmModal.svelte';
   import DeezerCard from '../lib/DeezerCard.svelte';
   import YouTubeCard from '../lib/YouTubeCard.svelte';
 
@@ -76,7 +77,7 @@
 
   let showTypeMenu = $state(false);
   let showScrollTop = $state(false);
-  let showDeleteConfirm = $state(false);
+  let showDeleteModal = $state(false);
 
   // Swipe navigation state (for daily collections)
   let swipeTouchStartX = $state(0);
@@ -423,7 +424,7 @@
 
   function clearSelection() {
     selectedIds = new Set();
-    showDeleteConfirm = false;
+    showDeleteModal = false;
   }
 
   function toggleHideDoneTasks() {
@@ -992,12 +993,16 @@
     if (!$currentCollection) return;
     if (!canWrite()) return;
     if (selectedIds.size === 0) return;
-    showDeleteConfirm = true;
+    showDeleteModal = true;
+  }
+
+  function cancelDeleteSelected() {
+    showDeleteModal = false;
   }
 
   async function confirmDeleteSelected() {
     if (!$currentCollection) return;
-    showDeleteConfirm = false;
+    showDeleteModal = false;
     isLoading.set(true);
     try {
       const ids = Array.from(selectedIds);
@@ -2717,37 +2722,16 @@
       >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
       </button>
-      {#if showDeleteConfirm}
-        <button
-          class="h-11 px-3 rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
-          type="button"
-          aria-label="Confirm delete"
-          title="Confirm delete"
-          onclick={confirmDeleteSelected}
-        >
-          Löschen?
-        </button>
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md text-slate-500 hover:bg-black/5 dark:text-slate-400 dark:hover:bg-white/5"
-          type="button"
-          aria-label="Cancel delete"
-          title="Abbrechen"
-          onclick={() => { showDeleteConfirm = false; }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
-      {:else}
-        <button
-          class="grid h-11 w-11 place-items-center rounded-md bg-red-600/90 text-lg text-white hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-600"
-          type="button"
-          aria-label="Delete"
-          title="Delete"
-          onclick={deleteSelected}
-          disabled={!canWrite()}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5v6m4-6v6"/></svg>
-        </button>
-      {/if}
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-red-600/90 text-lg text-white hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-600"
+        type="button"
+        aria-label="Delete"
+        title="Delete"
+        onclick={deleteSelected}
+        disabled={!canWrite()}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-9 5v6m4-6v6"/></svg>
+      </button>
       <button
         class="grid h-11 w-11 place-items-center rounded-md text-lg text-slate-600 hover:bg-black/5 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
         type="button"
@@ -2795,10 +2779,10 @@
   />
 {/if}
 
-{#if showCollectionModal}
-  <CollectionSelectModal
-    title={collectionModalTitle}
-    onClose={() => (showCollectionModal = false)}
-    onSelect={handleCollectionSelected}
+{#if showDeleteModal}
+  <DeleteConfirmModal
+    count={selectedIds.size}
+    onConfirm={confirmDeleteSelected}
+    onCancel={cancelDeleteSelected}
   />
 {/if}
