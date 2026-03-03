@@ -77,6 +77,60 @@
   let showTypeMenu = $state(false);
   let showScrollTop = $state(false);
 
+  // Swipe navigation state (for daily collections)
+  let swipeTouchStartX = $state(0);
+  let swipeTouchStartY = $state(0);
+  let swipeNavigating = $state(false);
+
+  function offsetDate(dateStr: string, days: number): string {
+    const d = new Date(dateStr + 'T12:00:00'); // noon to avoid DST issues
+    d.setDate(d.getDate() + days);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  async function navigateDayCollection(direction: -1 | 1) {
+    const col = $currentCollection;
+    if (!col?.list_for_day || swipeNavigating) return;
+    swipeNavigating = true;
+    try {
+      const targetDate = offsetDate(col.list_for_day, direction);
+      const res = await api.collections.today(targetDate);
+      currentCollection.set(res.collection);
+      currentView.set({ type: 'collection', id: res.collection.id });
+    } catch (err) {
+      console.error('Failed to navigate day collection:', err);
+    } finally {
+      swipeNavigating = false;
+    }
+  }
+
+  function handleSwipeTouchStart(e: TouchEvent) {
+    if (!$currentCollection?.list_for_day) return;
+    const t = e.touches[0];
+    swipeTouchStartX = t.clientX;
+    swipeTouchStartY = t.clientY;
+  }
+
+  function handleSwipeTouchEnd(e: TouchEvent) {
+    if (!$currentCollection?.list_for_day) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - swipeTouchStartX;
+    const dy = t.clientY - swipeTouchStartY;
+    const THRESHOLD = 60;
+    // Ignore mostly-vertical swipes
+    if (Math.abs(dx) < THRESHOLD || Math.abs(dy) > Math.abs(dx)) return;
+    if (dx < 0) {
+      // Swipe left → next day
+      navigateDayCollection(1);
+    } else {
+      // Swipe right → previous day
+      navigateDayCollection(-1);
+    }
+  }
+
   let expandedSnipsels = $state<Set<string>>(new Set());
 
   let collapsibleParentIds = $derived.by(() => {
@@ -1375,7 +1429,10 @@
 </script>
 
 
-<div class="space-y-3">
+<div class="space-y-3"
+  ontouchstart={handleSwipeTouchStart}
+  ontouchend={handleSwipeTouchEnd}
+>
   <input
     bind:this={focusProxyRef}
     class="pointer-events-none absolute left-0 top-0 h-0 w-0 opacity-0"
