@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from dateutil import rrule
 
@@ -642,6 +643,8 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel, newly_became_task: bo
                     if snipsel.type == "task":
                         task_lines = (snipsel.content_markdown or "").splitlines()
                         task_first = task_lines[0].strip() if task_lines else ""
+                        # Remove @mention tokens (e.g. @daniel) so they don't appear redundantly
+                        task_first = re.sub(r"@\w+", "", task_first).strip()
                         if len(task_first) > 80:
                             task_first = task_first[:80] + "..."
                         elif len(task_lines) > 1:
