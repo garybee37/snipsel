@@ -639,7 +639,16 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel, newly_became_task: bo
                 if snipsel.type == "task" or can_read_snipsel_via_collections(mentioned_user.id, snipsel.id):
                     author = db.session.get(User, user_id)
                     author_name = author.username if author else "Someone"
-                    msg = f"{author_name} assigned a task to you." if snipsel.type == "task" else f"{author_name} mentioned you in a snipsel."
+                    if snipsel.type == "task":
+                        task_lines = (snipsel.content_markdown or "").splitlines()
+                        task_first = task_lines[0].strip() if task_lines else ""
+                        if len(task_first) > 80:
+                            task_first = task_first[:80] + "..."
+                        elif len(task_lines) > 1:
+                            task_first = task_first + "..."
+                        msg = f"{author_name} assigned a task to you: {task_first}" if task_first else f"{author_name} assigned a task to you."
+                    else:
+                        msg = f"{author_name} mentioned you in a snipsel."
                     n = Notification(
                         user_id=mentioned_user.id,
                         message=msg,
