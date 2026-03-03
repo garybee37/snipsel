@@ -60,10 +60,9 @@
       const authResp = await startAuthentication(options);
       
       // 3. Verify response
-      await api.passkeys.loginVerify(authResp);
+      const res = await api.passkeys.loginComplete(authResp);
       
       // 4. Get user
-      const res = await api.me();
       currentUser.set(res.user);
     } catch (e: any) {
       console.error('Passkey login failed:', e);
