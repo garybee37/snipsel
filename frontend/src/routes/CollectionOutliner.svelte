@@ -82,6 +82,15 @@
   let swipeTouchStartY = $state(0);
   let swipeNavigating = $state(false);
 
+  // Pull-to-reload state
+  const PULL_THRESHOLD = 70; // px to trigger reload
+  const PULL_MAX = 110;      // max visual rubber-band distance
+  let pullStartY = $state(0);
+  let pullDeltaY = $state(0); // clamped pull distance for UI
+  let pullActive = $state(false);
+  let pullTriggered = $state(false);
+  let pullReloading = $state(false);
+
   function offsetDate(dateStr: string, days: number): string {
     const d = new Date(dateStr + 'T12:00:00'); // noon to avoid DST issues
     d.setDate(d.getDate() + days);
@@ -107,14 +116,64 @@
     }
   }
 
+  function isScrolledToTop(): boolean {
+    return window.scrollY <= 0;
+  }
+
   function handleSwipeTouchStart(e: TouchEvent) {
-    if (!$currentCollection?.list_for_day) return;
     const t = e.touches[0];
     swipeTouchStartX = t.clientX;
     swipeTouchStartY = t.clientY;
+    // Pull-to-reload: start tracking if at top
+    if (isScrolledToTop()) {
+      pullStartY = t.clientY;
+      pullActive = false;
+      pullTriggered = false;
+      pullDeltaY = 0;
+    }
   }
 
-  function handleSwipeTouchEnd(e: TouchEvent) {
+  function handleSwipeTouchMove(e: TouchEvent) {
+    if (pullReloading) return;
+    const t = e.touches[0];
+    const dy = t.clientY - pullStartY;
+    // Only activate pull if dragging downward from the top
+    if (dy > 10 && isScrolledToTop()) {
+      pullActive = true;
+      // Rubber-band: use a damping formula for pleasant feel
+      const raw = Math.max(0, dy);
+      pullDeltaY = Math.min(PULL_MAX, raw * (PULL_MAX / (PULL_MAX + raw)));
+      pullTriggered = pullDeltaY >= PULL_THRESHOLD * (PULL_MAX / (PULL_MAX + PULL_THRESHOLD));
+      // Prevent the browser from scrolling up while pulling
+      if (pullActive) e.preventDefault();
+    } else {
+      pullActive = false;
+      pullDeltaY = 0;
+      pullTriggered = false;
+    }
+  }
+
+  async function handleSwipeTouchEnd(e: TouchEvent) {
+    // Pull-to-reload release
+    if (pullActive) {
+      if (pullTriggered && !pullReloading) {
+        pullReloading = true;
+        pullActive = false;
+        pullDeltaY = 0;
+        try {
+          await Promise.all([loadItems(), loadIncomingMentions()]);
+        } finally {
+          pullReloading = false;
+          pullTriggered = false;
+        }
+      } else {
+        pullActive = false;
+        pullDeltaY = 0;
+        pullTriggered = false;
+      }
+    }
+
+    // Horizontal swipe navigation (daily collections only)
     if (!$currentCollection?.list_for_day) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - swipeTouchStartX;
@@ -1431,8 +1490,34 @@
 
 <div class="space-y-3"
   ontouchstart={handleSwipeTouchStart}
+  ontouchmove={handleSwipeTouchMove}
   ontouchend={handleSwipeTouchEnd}
 >
+  <!-- Pull-to-reload indicator -->
+  {#if pullActive || pullReloading}
+    <div
+      class="pointer-events-none flex flex-col items-center justify-center overflow-hidden transition-all duration-200"
+      style="height: {pullReloading ? 52 : pullDeltaY}px; opacity: {pullReloading ? 1 : Math.min(1, pullDeltaY / 30)};"
+    >
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md dark:border-white/10 dark:bg-slate-900"
+        style="transform: scale({pullReloading ? 1 : 0.6 + 0.4 * Math.min(1, pullDeltaY / PULL_THRESHOLD)});"
+      >
+        {#if pullReloading || pullTriggered}
+          <!-- Spinning loader -->
+          <svg class="h-5 w-5 animate-spin" style="color: {getHeaderColor()}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        {:else}
+          <!-- Arrow down -->
+          <svg class="h-5 w-5 transition-transform duration-150" style="color: {getHeaderColor()}; transform: rotate({Math.min(180, pullDeltaY * 180 / PULL_THRESHOLD)}deg)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        {/if}
+      </div>
+    </div>
+  {/if}
   <input
     bind:this={focusProxyRef}
     class="pointer-events-none absolute left-0 top-0 h-0 w-0 opacity-0"
