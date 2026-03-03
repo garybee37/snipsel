@@ -54,6 +54,9 @@ class User(db.Model):
     passcode_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     passcode_failed_attempts: Mapped[int] = mapped_column(default=0, nullable=False)
 
+    otp_secret: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    otp_enabled: Mapped[bool] = mapped_column(default=False, nullable=False)
+
 
 class Collection(db.Model):
     __tablename__ = "collections"
@@ -366,6 +369,22 @@ class PushSubscription(db.Model):
     endpoint: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     keys_p256dh: Mapped[str] = mapped_column(String(255), nullable=False)
     keys_auth: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+    user = relationship("User")
+
+
+class UserPasskey(db.Model):
+    __tablename__ = "user_passkeys"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+
+    credential_id: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    public_key: Mapped[str] = mapped_column(Text, nullable=False)
+    sign_count: Mapped[int] = mapped_column(default=0, nullable=False)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 

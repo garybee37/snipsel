@@ -1,10 +1,23 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import secrets
 from datetime import datetime, timedelta
 
-from flask import Blueprint, request, session
+import pyotp
+import qrcode
+import webauthn
+from webauthn import (
+    generate_authentication_options,
+    generate_registration_options,
+    verify_authentication_response,
+    verify_registration_response,
+)
+from webauthn.helpers import bytes_to_base64url, options_to_json
+from webauthn.helpers.structs import AuthenticatorSelectionCriteria, UserVerificationRequirement
+
+from flask import Blueprint, request, send_file, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from snipsel_api.auth_session import current_user, enforce_json, json_response, require_auth
@@ -12,7 +25,7 @@ from snipsel_api.config import Settings
 from snipsel_api.emailer import send_password_reset_email
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Collection, PasswordResetToken, User
+from snipsel_api.models import Collection, PasswordResetToken, User, UserPasskey
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -60,9 +73,310 @@ def login():
     if not check_password_hash(user.password_hash, password):
         raise api_error(401, "invalid_credentials", "Invalid credentials")
 
+    if user.otp_enabled:
+        session["pending_2fa_user_id"] = user.id
+        return json_response({"status": "2fa_required"})
+
+    passkeys = db.session.execute(db.select(UserPasskey).where(UserPasskey.user_id == user.id)).scalars().all()
+    if passkeys:
+        # If they have passkeys, we could force it, or offer it.
+        # But usually OTP is the fallback.
+        # For now, if OTP is NOT enabled but passkeys ARE, we just log in with password.
+        # Or we could have a setting to force 2FA if any 2FA method is set.
+        pass
+
     session.permanent = True
     session["user_id"] = user.id
     return json_response({"user": _user_json(user)})
+
+
+@auth_bp.post("/login/otp")
+@enforce_json
+def login_otp():
+    data = request.get_json() or {}
+    code = (data.get("code") or "").strip()
+    user_id = session.get("pending_2fa_user_id")
+
+    if not user_id or not code:
+        raise api_error(400, "invalid_input", "Code and pending session required")
+
+    user = db.session.get(User, user_id)
+    if not user or not user.otp_enabled or not user.otp_secret:
+        session.pop("pending_2fa_user_id", None)
+        raise api_error(401, "unauthorized", "Invalid session")
+
+    totp = pyotp.TOTP(user.otp_secret)
+    if not totp.verify(code):
+        raise api_error(401, "invalid_code", "Invalid OTP code")
+
+    session.pop("pending_2fa_user_id", None)
+    session.permanent = True
+    session["user_id"] = user.id
+    return json_response({"user": _user_json(user)})
+
+
+@auth_bp.post("/2fa/generate")
+@require_auth
+def generate_2fa():
+    user = current_user()
+    if user.otp_enabled:
+        raise api_error(400, "already_enabled", "2FA is already enabled")
+
+    secret = pyotp.random_base32()
+    user.otp_secret = secret
+    db.session.commit()
+
+    totp = pyotp.TOTP(secret)
+    provisioning_url = totp.provisioning_uri(name=user.email, issuer_name="Snipsel")
+
+    return json_response({"secret": secret, "provisioning_url": provisioning_url})
+
+
+@auth_bp.get("/2fa/qr")
+@require_auth
+def get_2fa_qr():
+    user = current_user()
+    if not user.otp_secret:
+        raise api_error(400, "not_initiated", "2FA setup not initiated")
+    
+    if user.otp_enabled:
+        raise api_error(400, "already_enabled", "2FA is already enabled")
+
+    totp = pyotp.TOTP(user.otp_secret)
+    provisioning_url = totp.provisioning_uri(name=user.email, issuer_name="Snipsel")
+
+    img = qrcode.make(provisioning_url)
+    buf = io.BytesIO()
+    img.save(buf)
+    buf.seek(0)
+    
+    return send_file(buf, mimetype="image/png")
+
+
+@auth_bp.post("/2fa/enable")
+@require_auth
+@enforce_json
+def enable_2fa():
+    user = current_user()
+    if user.otp_enabled:
+        raise api_error(400, "already_enabled", "2FA is already enabled")
+
+    data = request.get_json() or {}
+    code = (data.get("code") or "").strip()
+    password_confirm = data.get("password_confirm") or ""
+
+    if not code or not password_confirm:
+        raise api_error(400, "invalid_input", "Code and password_confirm are required")
+
+    if not check_password_hash(user.password_hash, password_confirm):
+        raise api_error(401, "invalid_credentials", "Invalid account password")
+
+    if not user.otp_secret:
+        raise api_error(400, "not_initiated", "2FA setup not initiated")
+
+    totp = pyotp.TOTP(user.otp_secret)
+    if not totp.verify(code):
+        raise api_error(401, "invalid_code", "Invalid OTP code")
+
+    user.otp_enabled = True
+    db.session.commit()
+    return json_response({"ok": True})
+
+
+@auth_bp.post("/2fa/disable")
+@require_auth
+@enforce_json
+def disable_2fa():
+    user = current_user()
+    data = request.get_json() or {}
+    password_confirm = data.get("password_confirm") or ""
+
+    if not password_confirm:
+        raise api_error(400, "invalid_input", "password_confirm is required")
+
+    if not check_password_hash(user.password_hash, password_confirm):
+        raise api_error(401, "invalid_credentials", "Invalid account password")
+
+    user.otp_enabled = False
+    user.otp_secret = None
+    db.session.commit()
+    return json_response({"ok": True})
+
+
+@auth_bp.post("/passkeys/register/begin")
+@require_auth
+def passkeys_register_begin():
+    user = current_user()
+    settings = Settings.from_env()
+    rp_id = settings.SNIPSEL_DOMAIN or "localhost"
+
+    options = generate_registration_options(
+        rp_id=rp_id,
+        rp_name="Snipsel",
+        user_id=user.id,
+        user_name=user.username,
+        user_display_name=user.username,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.PREFERRED,
+        ),
+    )
+
+    session["passkey_registration_options"] = options_to_json(options)
+    return json_response(options_to_json(options))
+
+
+@auth_bp.post("/passkeys/register/complete")
+@require_auth
+@enforce_json
+def passkeys_register_complete():
+    user = current_user()
+    data = request.get_json() or {}
+    options_json = session.get("passkey_registration_options")
+    if not options_json:
+        raise api_error(400, "invalid_session", "Registration session expired")
+
+    settings = Settings.from_env()
+    rp_id = settings.SNIPSEL_DOMAIN or "localhost"
+    origin = settings.SNIPSEL_FRONTEND_URL or f"https://{rp_id}"
+    if rp_id == "localhost":
+        origin = "http://localhost:5173" # Assuming Vite default
+
+    try:
+        verification = verify_registration_response(
+            credential=data,
+            expected_challenge=webauthn.helpers.parse_registration_options_json(options_json).challenge,
+            expected_origin=origin,
+            expected_rp_id=rp_id,
+        )
+    except Exception as e:
+        raise api_error(400, "verification_failed", str(e))
+
+    name = (data.get("name") or "New Passkey").strip()
+    
+    passkey = UserPasskey(
+        user_id=user.id,
+        credential_id=bytes_to_base64url(verification.credential_id),
+        public_key=bytes_to_base64url(verification.credential_public_key),
+        sign_count=verification.sign_count,
+        name=name,
+    )
+    db.session.add(passkey)
+    db.session.commit()
+    session.pop("passkey_registration_options", None)
+
+    return json_response({"ok": True})
+
+
+@auth_bp.post("/passkeys/login/begin")
+@enforce_json
+def passkeys_login_begin():
+    data = request.get_json() or {}
+    username = (data.get("username") or "").strip()
+    if not username:
+        raise api_error(400, "invalid_input", "username is required")
+
+    user = db.session.execute(db.select(User).where(User.username == username)).scalars().first()
+    if not user or not user.is_active or user.deleted_at is not None:
+        raise api_error(401, "invalid_credentials", "Invalid user")
+
+    passkeys = db.session.execute(db.select(UserPasskey).where(UserPasskey.user_id == user.id)).scalars().all()
+    if not passkeys:
+        raise api_error(400, "no_passkeys", "No passkeys registered for this user")
+
+    settings = Settings.from_env()
+    rp_id = settings.SNIPSEL_DOMAIN or "localhost"
+
+    options = generate_authentication_options(
+        rp_id=rp_id,
+        allow_credentials=[
+            webauthn.helpers.structs.PublicKeyCredentialDescriptor(id=webauthn.helpers.base64url_to_bytes(p.credential_id))
+            for p in passkeys
+        ],
+        user_verification=UserVerificationRequirement.PREFERRED,
+    )
+
+    session["passkey_login_options"] = options_to_json(options)
+    session["pending_passkey_user_id"] = user.id
+    return json_response(options_to_json(options))
+
+
+@auth_bp.post("/passkeys/login/complete")
+@enforce_json
+def passkeys_login_complete():
+    data = request.get_json() or {}
+    user_id = session.get("pending_passkey_user_id")
+    options_json = session.get("passkey_login_options")
+    if not user_id or not options_json:
+        raise api_error(400, "invalid_session", "Login session expired")
+
+    user = db.session.get(User, user_id)
+    if not user:
+        raise api_error(401, "unauthorized", "User not found")
+
+    settings = Settings.from_env()
+    rp_id = settings.SNIPSEL_DOMAIN or "localhost"
+    origin = settings.SNIPSEL_FRONTEND_URL or f"https://{rp_id}"
+    if rp_id == "localhost":
+        origin = "http://localhost:5173"
+
+    credential_id = data.get("id")
+    passkey = db.session.execute(
+        db.select(UserPasskey).where(UserPasskey.credential_id == credential_id, UserPasskey.user_id == user.id)
+    ).scalars().first()
+    
+    if not passkey:
+        raise api_error(401, "invalid_credential", "Passkey not found for this user")
+
+    try:
+        verification = verify_authentication_response(
+            credential=data,
+            expected_challenge=webauthn.helpers.parse_authentication_options_json(options_json).challenge,
+            expected_origin=origin,
+            expected_rp_id=rp_id,
+            credential_public_key=webauthn.helpers.base64url_to_bytes(passkey.public_key),
+            credential_current_sign_count=passkey.sign_count,
+        )
+    except Exception as e:
+        raise api_error(401, "verification_failed", str(e))
+
+    passkey.sign_count = verification.new_sign_count
+    db.session.commit()
+
+    session.pop("passkey_login_options", None)
+    session.pop("pending_passkey_user_id", None)
+    session.permanent = True
+    session["user_id"] = user.id
+    return json_response({"user": _user_json(user)})
+
+
+@auth_bp.get("/passkeys")
+@require_auth
+def list_passkeys():
+    user = current_user()
+    passkeys = db.session.execute(db.select(UserPasskey).where(UserPasskey.user_id == user.id)).scalars().all()
+    return json_response({
+        "passkeys": [
+            {
+                "id": p.id,
+                "name": p.name,
+                "created_at": p.created_at.isoformat() + "Z",
+            }
+            for p in passkeys
+        ]
+    })
+
+
+@auth_bp.delete("/passkeys/<id>")
+@require_auth
+def delete_passkey(id):
+    user = current_user()
+    passkey = db.session.get(UserPasskey, id)
+    if not passkey or passkey.user_id != user.id:
+        raise api_error(404, "not_found", "Passkey not found")
+
+    db.session.delete(passkey)
+    db.session.commit()
+    return json_response({"ok": True})
 
 
 @auth_bp.post("/logout")
@@ -250,6 +564,10 @@ def verify_passcode():
     return json_response({"ok": True, "unlocked_until": unlocked_until})
 
 def _user_json(user: User) -> dict:
+    passkeys_count = db.session.execute(
+        db.select(db.func.count(UserPasskey.id)).where(UserPasskey.user_id == user.id)
+    ).scalar() or 0
+
     return {
         "id": user.id,
         "username": user.username,
@@ -259,5 +577,7 @@ def _user_json(user: User) -> dict:
         "theme": user.theme,
         "day_collection_template_id": getattr(user, "day_collection_template_id", None),
         "passcode_set": user.passcode_hash is not None,
+        "otp_enabled": user.otp_enabled,
+        "passkeys_count": passkeys_count,
         "created_at": user.created_at.isoformat() + "Z",
     }

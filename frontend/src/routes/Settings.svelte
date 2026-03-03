@@ -20,6 +20,17 @@
   let passwordConfirm = $state('');
   let passcodeError = $state('');
   let hasPushEnabled = $state(false);
+
+  let isOtpSetupActive = $state(false);
+  let otpSecret = $state('');
+  let otpProvisioningUrl = $state('');
+  let otpCodeInput = $state('');
+  let otpSetupError = $state('');
+
+  let passkeys = $state<import('../lib/api').UserPasskey[]>([]);
+  let isPasskeyAddActive = $state(false);
+  let newPasskeyName = $state('');
+  let passkeyError = $state('');
   
   let newEmail = $state('');
   let newPassword = $state('');
@@ -27,6 +38,144 @@
   let accountUpdateError = $state('');
   let accountUpdateSuccess = $state('');
   let showAccountForm = $state(false);
+
+  function base64urlToBuffer(baseurl: string): Uint8Array {
+    const padding = '='.repeat((4 - (baseurl.length % 4)) % 4);
+    const base64 = (baseurl + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  function bufferToBase64url(buffer: ArrayBuffer | Uint8Array): string {
+    const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  async function startOtpSetup() {
+    isBusy = true;
+    otpSetupError = '';
+    try {
+      const res = await api.twoFactor.generate();
+      otpSecret = res.secret;
+      otpProvisioningUrl = res.provisioning_url;
+      isOtpSetupActive = true;
+    } catch (e: any) {
+      otpSetupError = e.error?.message || 'Failed to initiate 2FA';
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  async function enableOtp() {
+    if (!otpCodeInput || !passwordConfirm) return;
+    isBusy = true;
+    otpSetupError = '';
+    try {
+      await api.twoFactor.enable({ code: otpCodeInput, password_confirm: passwordConfirm });
+      const res = await api.me();
+      currentUser.set(res.user);
+      isOtpSetupActive = false;
+      otpCodeInput = '';
+      passwordConfirm = '';
+    } catch (e: any) {
+      otpSetupError = e.error?.message || 'Failed to enable 2FA';
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  async function disableOtp() {
+    if (!passwordConfirm) {
+      accountUpdateError = 'Password required to disable 2FA';
+      return;
+    }
+    isBusy = true;
+    try {
+      await api.twoFactor.disable(passwordConfirm);
+      const res = await api.me();
+      currentUser.set(res.user);
+      passwordConfirm = '';
+    } catch (e: any) {
+      accountUpdateError = e.error?.message || 'Failed to disable 2FA';
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  async function loadPasskeys() {
+    try {
+      const res = await api.passkeys.list();
+      passkeys = res.passkeys;
+    } catch (err) {
+      console.error('Failed to load passkeys', err);
+    }
+  }
+
+  async function addPasskey() {
+    if (!newPasskeyName) return;
+    isBusy = true;
+    passkeyError = '';
+    try {
+      const options = await api.passkeys.registerBegin();
+      
+      // Fix types for navigator
+      options.challenge = base64urlToBuffer(options.challenge);
+      options.user.id = base64urlToBuffer(options.user.id);
+      if (options.excludeCredentials) {
+        for (let cred of options.excludeCredentials) {
+          cred.id = base64urlToBuffer(cred.id);
+        }
+      }
+
+      const credential = (await navigator.credentials.create({ publicKey: options })) as any;
+      if (!credential) throw new Error('Failed to create credential');
+
+      const response = {
+        id: credential.id,
+        rawId: bufferToBase64url(credential.rawId),
+        type: credential.type,
+        response: {
+          attestationObject: bufferToBase64url(credential.response.attestationObject),
+          clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+        },
+      };
+
+      await api.passkeys.registerComplete(response, newPasskeyName);
+      await loadPasskeys();
+      const meRes = await api.me();
+      currentUser.set(meRes.user);
+      isPasskeyAddActive = false;
+      newPasskeyName = '';
+    } catch (e: any) {
+      console.error(e);
+      passkeyError = e.error?.message || e.message || 'Failed to register passkey';
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  async function removePasskey(id: string) {
+    if (!confirm('Are you sure you want to remove this passkey?')) return;
+    isBusy = true;
+    try {
+      await api.passkeys.delete(id);
+      await loadPasskeys();
+      const meRes = await api.me();
+      currentUser.set(meRes.user);
+    } catch (e: any) {
+      alert(e.error?.message || 'Failed to delete passkey');
+    } finally {
+      isBusy = false;
+    }
+  }
 
   function clampByte(n: number): number {
     return Math.max(0, Math.min(255, Math.round(n)));
@@ -440,16 +589,7 @@
     <!-- Security -->
     <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
       <div class="flex items-center gap-2 text-xs uppercase text-slate-500">
-        <svg 
-          class="h-3 w-3 transition-colors" 
-          viewBox="0 0 24 24" 
-          fill={$currentUser?.passcode_set ? 'currentColor' : 'none'} 
-          stroke="currentColor" 
-          stroke-width="2.5" 
-          stroke-linecap="round" 
-          stroke-linejoin="round"
-          style={$currentUser?.passcode_set ? `color: ${getAccent()}` : 'color: #94a3b8'}
-        >
+        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>

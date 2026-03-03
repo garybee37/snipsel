@@ -16,6 +16,14 @@ export type User = {
   theme?: 'light' | 'dark' | 'system';
   day_collection_template_id?: string | null;
   passcode_set?: boolean;
+  otp_enabled?: boolean;
+  passkeys_count?: number;
+};
+
+export type UserPasskey = {
+  id: string;
+  name: string;
+  created_at: string;
 };
 
 export type Collection = {
@@ -201,10 +209,49 @@ export const api = {
       body: JSON.stringify(input),
     }),
   login: (input: { username: string; password: string }) =>
-    requestJson<{ user: User }>('/api/auth/login', {
+    requestJson<{ user?: User; status?: '2fa_required' }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  loginOtp: (code: string) =>
+    requestJson<{ user: User }>('/api/auth/login/otp', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
+  twoFactor: {
+    generate: () => requestJson<{ secret: string; provisioning_url: string }>('/api/auth/2fa/generate', { method: 'POST' }),
+    qrUrl: () => '/api/auth/2fa/qr',
+    enable: (input: { code: string; password_confirm: string }) =>
+      requestJson<{ ok: true }>('/api/auth/2fa/enable', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    disable: (password_confirm: string) =>
+      requestJson<{ ok: true }>('/api/auth/2fa/disable', {
+        method: 'POST',
+        body: JSON.stringify({ password_confirm }),
+      }),
+  },
+  passkeys: {
+    list: () => requestJson<{ passkeys: UserPasskey[] }>('/api/auth/passkeys'),
+    registerBegin: () => requestJson<any>('/api/auth/passkeys/register/begin', { method: 'POST' }),
+    registerComplete: (credential: any, name: string) =>
+      requestJson<{ ok: true }>('/api/auth/passkeys/register/complete', {
+        method: 'POST',
+        body: JSON.stringify({ ...credential, name }),
+      }),
+    loginBegin: (username: string) =>
+      requestJson<any>('/api/auth/passkeys/login/begin', {
+        method: 'POST',
+        body: JSON.stringify({ username }),
+      }),
+    loginComplete: (credential: any) =>
+      requestJson<{ user: User }>('/api/auth/passkeys/login/complete', {
+        method: 'POST',
+        body: JSON.stringify(credential),
+      }),
+    delete: (id: string) => requestJson<{ ok: true }>(`/api/auth/passkeys/${id}`, { method: 'DELETE' }),
+  },
   logout: () => requestJson<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
   passcode: {
     set: (input: { passcode: string; password_confirm: string }) =>
