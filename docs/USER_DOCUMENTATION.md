@@ -338,6 +338,33 @@ The calendar shows your daily collections organized by date.
 
 ---
 
+## Security & Authentication
+
+Snipsel provides modern security features to keep your account safe. These can be configured in your **Settings**.
+
+### Two-Factor Authentication (2FA)
+
+You can enable 2FA to add an extra layer of security to your account.
+1. Open Settings and click **Enable 2FA**.
+2. Scan the QR code with your authenticator app (e.g., Google Authenticator, Authy, Apple Passwords).
+3. Enter the 6-digit code and your current password to verify and enable.
+4. On future logins, you will be prompted to enter a 6-digit code after your password.
+
+### Passkeys
+
+Passkeys allow you to log in securely without a password using your device's built-in authentication (Touch ID, Face ID, Windows Hello) or a hardware security key.
+
+**Adding a Passkey:**
+1. Open Settings and look for the **Login with Passkey** section.
+2. Enter a name for your device (e.g., "MacBook Pro" or "iPhone").
+3. Click **Add Passkey** and follow your browser/device prompts.
+
+**Logging in with a Passkey:**
+1. On the login screen, click the **Login with Passkey** button.
+2. If you only have one passkey or have used one recently, your device will prompt you to authenticate. Alternatively, you can type your username first, and then click the button.
+
+---
+
 ## Settings
 
 ### Personal Settings

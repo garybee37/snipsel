@@ -43,6 +43,8 @@ Backend environment variables:
 - `SNIPSEL_DATABASE_URL` (default: `sqlite:///snipsel.db`)
 - `SNIPSEL_UPLOAD_DIR` (default: `./uploads`)
 - `SNIPSEL_MAX_UPLOAD_BYTES` (default: `10485760`)
+- `SNIPSEL_DOMAIN` (default: `localhost` - required for Passkeys)
+- `SNIPSEL_FRONTEND_URL` (default: `http://localhost:5173` - required for Passkeys)
 
 SMTP (optional, password reset):
 
