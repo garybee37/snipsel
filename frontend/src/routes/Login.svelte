@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api } from '../lib/api';
   import { currentUser } from '../lib/session';
+  import { startAuthentication } from '@simplewebauthn/browser';
 
   let mode: 'login' | 'register' = 'login';
   let username = '';
@@ -50,7 +51,6 @@
       const options = await api.passkeys.loginOptions(username || undefined);
       
       // 2. Start authentication
-      const { startAuthentication } = await import('@simplewebauthn/browser');
       const authResp = await startAuthentication(options);
       
       // 3. Verify response

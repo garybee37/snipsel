@@ -7,6 +7,7 @@
     subscribeToPushNotifications,
     unsubscribeFromPushNotifications,
   } from '../lib/pushManager';
+  import { startRegistration } from '@simplewebauthn/browser';
 
   const DEFAULT_ACCENT = '#4f46e5';
   type Rgb = { r: number; g: number; b: number };
@@ -39,25 +40,6 @@
   let accountUpdateSuccess = $state('');
   let showAccountForm = $state(false);
 
-  function base64urlToBuffer(baseurl: string): Uint8Array {
-    const padding = '='.repeat((4 - (baseurl.length % 4)) % 4);
-    const base64 = (baseurl + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  }
-
-  function bufferToBase64url(buffer: ArrayBuffer | Uint8Array): string {
-    const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  }
 
   async function startOtpSetup() {
     isBusy = true;
@@ -125,30 +107,9 @@
     passkeyError = '';
     try {
       const options = await api.passkeys.registerBegin();
+      const attResp = await startRegistration(options);
+      await api.passkeys.registerComplete(attResp, newPasskeyName);
       
-      // Fix types for navigator
-      options.challenge = base64urlToBuffer(options.challenge);
-      options.user.id = base64urlToBuffer(options.user.id);
-      if (options.excludeCredentials) {
-        for (let cred of options.excludeCredentials) {
-          cred.id = base64urlToBuffer(cred.id);
-        }
-      }
-
-      const credential = (await navigator.credentials.create({ publicKey: options })) as any;
-      if (!credential) throw new Error('Failed to create credential');
-
-      const response = {
-        id: credential.id,
-        rawId: bufferToBase64url(credential.rawId),
-        type: credential.type,
-        response: {
-          attestationObject: bufferToBase64url(credential.response.attestationObject),
-          clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
-        },
-      };
-
-      await api.passkeys.registerComplete(response, newPasskeyName);
       await loadPasskeys();
       const meRes = await api.me();
       currentUser.set(meRes.user);
