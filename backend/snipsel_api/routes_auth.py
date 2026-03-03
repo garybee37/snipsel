@@ -187,19 +187,26 @@ def enable_2fa():
 @require_auth
 @enforce_json
 def disable_2fa():
+    import logging
+    logger = logging.getLogger("snipsel_api.auth")
     user = current_user()
     data = request.get_json() or {}
     password_confirm = data.get("password_confirm") or ""
 
+    logger.debug(f"Disable 2FA request for user {user.username}. Password confirm provided: {bool(password_confirm)}")
+
     if not password_confirm:
+        logger.warning(f"Disable 2FA failed: password_confirm missing for user {user.username}")
         raise api_error(400, "invalid_input", "password_confirm is required")
 
     if not check_password_hash(user.password_hash, password_confirm):
+        logger.warning(f"Disable 2FA failed: password mismatch for user {user.username}")
         raise api_error(401, "invalid_credentials", "Invalid account password")
 
     user.otp_enabled = False
     user.otp_secret = None
     db.session.commit()
+    logger.info(f"2FA disabled for user {user.username}")
     return json_response({"ok": True})
 
 

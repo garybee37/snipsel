@@ -27,6 +27,7 @@
   let otpProvisioningUrl = $state('');
   let otpCodeInput = $state('');
   let otpSetupError = $state('');
+  let securityError = $state('');
 
   let passkeys = $state<import('../lib/api').UserPasskey[]>([]);
   let isPasskeyAddActive = $state(false);
@@ -74,19 +75,15 @@
     }
   }
 
-  async function disableOtp() {
-    if (!passwordConfirm) {
-      accountUpdateError = 'Password required to disable 2FA';
-      return;
-    }
+  async function disableOtp(pass: string) {
     isBusy = true;
+    securityError = '';
     try {
-      await api.twoFactor.disable(passwordConfirm);
+      await api.twoFactor.disable(pass);
       const res = await api.me();
       currentUser.set(res.user);
-      passwordConfirm = '';
     } catch (e: any) {
-      accountUpdateError = e.error?.message || 'Failed to disable 2FA';
+      securityError = e.error?.message || 'Failed to disable 2FA';
     } finally {
       isBusy = false;
     }
@@ -646,8 +643,7 @@
               onclick={() => {
                 const pass = prompt('Confirm password to disable 2FA:');
                 if (pass) {
-                  passwordConfirm = pass;
-                  disableOtp();
+                  disableOtp(pass);
                 }
               }}
               disabled={isBusy}
