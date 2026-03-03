@@ -1,4 +1,5 @@
 .DS_Store
+.sisyphus/
 *.py[cod]
 __pycache__/
 .pytest_cache/
@@ -23,3 +24,4 @@ concept.md
 concept_clarified_v1.md
 opencode.json
 backend/backend.log
+/frontend/snipsel.db
