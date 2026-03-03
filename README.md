@@ -1,12 +1,97 @@
-# snipsel
+# 📓 Snipsel
 
-Mobile-first PWA notes app.
+**Your personal, self-hosted notes & tasks app — mobile-first, beautifully simple.**
 
-## Deployment via GitHub Container Registry
+Snipsel is an open-source PWA for capturing ideas, notes, tasks, bookmarks, and media — all in one place. No subscriptions, no cloud lock-in, runs on your own server in minutes.
 
-A pre-built Docker image is automatically published to the GitHub Container Registry on every push to `main`.
+<p align="center">
+  <img src="docs/screenshot_collections.png" width="180" alt="Collections list" />
+  &nbsp;
+  <img src="docs/screenshot_detail_light.png" width="180" alt="Collection detail (light)" />
+  &nbsp;
+  <img src="docs/screenshot_detail_dark.png" width="180" alt="Dark mode" />
+  &nbsp;
+  <img src="docs/screenshot_todos.png" width="180" alt="Todos view" />
+</p>
+<p align="center">
+  <img src="docs/screenshot_tags.png" width="180" alt="Tags page" />
+  &nbsp;
+  <img src="docs/screenshot_mentions.png" width="180" alt="Mentions view" />
+  &nbsp;
+  <img src="docs/screenshot_reminder.png" width="180" alt="Snipsel with reminder" />
+  &nbsp;
+  <img src="docs/screenshot_media_cards.png" width="180" alt="YouTube & Deezer cards" />
+</p>
 
-### Quick Start
+---
+
+## ✨ Why Snipsel?
+
+Most note apps are either too simple (just plain text) or too heavy (Notion, Obsidian). Snipsel hits the sweet spot: structured collections, multiple content types, sharing, reminders — yet still feels as lightweight and instant as a sticky note.
+
+| Feature | Snipsel | Standard Notes | Joplin | Notesnook |
+|---|:---:|:---:|:---:|:---:|
+| PWA / mobile-first | ✅ | ✅ | ⚠️ | ✅ |
+| Multiple content types | ✅ | ❌ | ❌ | ❌ |
+| Collection sharing | ✅ | ❌ | ❌ | ❌ |
+| Daily journal / carry-over tasks | ✅ | ❌ | ❌ | ❌ |
+| Passkey login | ✅ | ❌ | ❌ | ❌ |
+| Push notifications & reminders | ✅ | ❌ | ❌ | ❌ |
+| Self-hosted, single container | ✅ | ✅ | ✅ | ✅ |
+| Import from Twos | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+## 🚀 Features
+
+### 📋 Collections & Snipsels
+Organize everything in **collections** — from grocery lists to project notes. Each item inside is a **snipsel**, which can be one of six types:
+- 📝 **Text** — plain notes with Markdown support
+- ✅ **Task** — checkable to-dos with done tracking
+- 🔗 **External link** — save URLs with labels
+- 📎 **Internal link** — reference another snipsel
+- 🖼️ **Image** — attach and view photos
+- 📁 **File attachment** — store any file
+
+### 📅 Daily Journal
+A built-in **daily collection** auto-created for each day. Open tasks from the past 30 days are automatically **carried over** so nothing falls through the cracks.
+
+### ⏰ Reminders & Recurrence
+Set one-off or recurring reminders on any snipsel using the powerful **RRule recurrence** builder — daily, weekly, monthly, yearly, or fully custom intervals.
+
+### 🔔 Push Notifications
+Native browser push notifications keep you on top of reminders — even when Snipsel isn't open.
+
+### 🤝 Sharing & Collaboration
+Share any collection with other users in **read or write** mode. React to snipsels with emoji, @mention collaborators, and stay in the loop with an in-app notification feed.
+
+### 🏷️ Tags & Mentions
+Tag your snipsels with `#hashtags` and `@mention` people. Browse everything by tag or mention for instant filtering.
+
+### 🔒 Security-first
+- **Passkeys** (WebAuthn / FIDO2) — log in with Face ID, Touch ID, or a hardware key
+- **TOTP 2FA** — standard authenticator app support
+- **Passcode lock** — protect individual collections with a PIN
+- **Password reset via email**
+
+### 🎨 Beautiful & Adaptive UI
+- Light, dark, or system-adaptive theme
+- Custom accent color per collection
+- Cover images for collections
+- Installable as a PWA on any device
+
+### 📥 Import from Twos
+Coming from [Twos](https://www.twosapp.com/)? Snipsel can import all your lists, tasks, photos, and reminders with a single click — including recurrence rules.
+
+<p align="center">
+  <img src="docs/screenshot_settings.png" width="180" alt="Settings" />
+  &nbsp;
+  <img src="docs/screenshot_search.png" width="180" alt="Search" />
+</p>
+
+---
+
+## 🐳 Quick Start (Docker)
 
 ```bash
 docker run -d \
@@ -17,105 +102,28 @@ docker run -d \
   -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
   -e SNIPSEL_DOMAIN="yourdomain.com" \
   -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
-  -e VAPID_PUBLIC_KEY="your_vapid_public_key" \
-  -e VAPID_PRIVATE_KEY="your_vapid_private_key" \
-  -e VAPID_SUBJECT="mailto:admin@yourdomain.com" \
-  ghcr.io/mcfetz/snipsel:latest
+  ghcr.io/danielheise/snipsel:latest
 ```
 
-### docker-compose example
+That's it. Snipsel runs as a **single container** — no separate database server, no Redis, no complex setup.
 
-```yaml
-services:
-  snipsel:
-    image: ghcr.io/mcfetz/snipsel:latest
-    restart: unless-stopped
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./data:/app/data        # persistent database
-      - ./uploads:/app/uploads  # user-uploaded files
-    environment:
-      SNIPSEL_SECRET_KEY: "your-secure-secret-key"
-      SNIPSEL_DOMAIN: "yourdomain.com"
-      SNIPSEL_FRONTEND_URL: "https://yourdomain.com"
-      VAPID_PUBLIC_KEY: "your_vapid_public_key"
-      VAPID_PRIVATE_KEY: "your_vapid_private_key"
-      VAPID_SUBJECT: "mailto:admin@yourdomain.com"
-```
-
-### Environment Variables
-
-#### Required
-
-| Variable | Default | Description |
-|---|---|---|
-| `SNIPSEL_SECRET_KEY` | `dev` | Flask secret key used for session signing. **Use a long random string in production.** |
-| `SNIPSEL_DOMAIN` | `localhost` | Domain name of the server (without protocol). Required for Passkey (WebAuthn) authentication. |
-| `SNIPSEL_FRONTEND_URL` | `http://localhost:5000` | Full URL the app is reachable at (with protocol). Required for Passkey (WebAuthn) authentication. |
-
-#### Storage
-
-| Variable | Default | Description |
-|---|---|---|
-| `SNIPSEL_DATABASE_URL` | `sqlite:////app/data/snipsel.db` | SQLAlchemy database URL. The default SQLite path maps to the `/app/data` volume. |
-| `SNIPSEL_UPLOAD_DIR` | `/app/uploads` | Directory where uploaded files are stored. Maps to the `/app/uploads` volume. |
-| `SNIPSEL_MAX_UPLOAD_BYTES` | `10485760` | Maximum allowed file upload size in bytes (default: 10 MB). |
-
-#### Push Notifications (optional, but required for PWA notifications)
-
-| Variable | Default | Description |
-|---|---|---|
-| `VAPID_PUBLIC_KEY` | – | VAPID public key for Web Push. Generate with `npx web-push generate-vapid-keys`. |
-| `VAPID_PRIVATE_KEY` | – | VAPID private key for Web Push. |
-| `VAPID_SUBJECT` | – | Contact URI for the push service, e.g. `mailto:admin@yourdomain.com`. |
-
-#### SMTP / E-Mail (optional, for password reset)
-
-| Variable | Default | Description |
-|---|---|---|
-| `SNIPSEL_SMTP_HOST` | – | SMTP server hostname. |
-| `SNIPSEL_SMTP_PORT` | `587` | SMTP server port. |
-| `SNIPSEL_SMTP_USERNAME` | – | SMTP login username. |
-| `SNIPSEL_SMTP_PASSWORD` | – | SMTP login password. |
-| `SNIPSEL_SMTP_USE_TLS` | `1` | Set to `0` to disable STARTTLS. |
-| `SNIPSEL_MAIL_FROM` | – | Sender address used for outgoing emails. |
-| `SNIPSEL_PUBLIC_BASE_URL` | – | If set, password-reset emails contain a clickable link instead of a raw token. |
-
-### Volumes
-
-| Container path | Purpose |
-|---|---|
-| `/app/data` | SQLite database file (`snipsel.db`). Mount a named volume or host directory here to persist your data across container restarts and updates. |
-| `/app/uploads` | User-uploaded files (images, attachments). Mount a named volume or host directory here to persist uploads. |
-
-> **Important:** Without persistent mounts on both paths all data is lost when the container is removed or updated.
-
----
-
-## Deployment (build from source)
+Or with Docker Compose:
 
 ```bash
 # Build the image
 docker build -t snipsel .
 
-# Run the container
-docker run -d \
-  --name snipsel \
-  -p 5000:5000 \
-  -v ./data:/app/data \
-  -v ./uploads:/app/uploads \
-  -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
-  -e SNIPSEL_DOMAIN="yourdomain.com" \
-  -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
-  snipsel
+# Run with compose
+docker compose up -d
 ```
+
+> **Note:** `SNIPSEL_DOMAIN` and `SNIPSEL_FRONTEND_URL` are required for Passkey authentication to work correctly.
 
 ---
 
-## Development
+## 🔧 Development
 
-### Backend (Flask)
+### Backend (Flask + SQLite)
 
 ```bash
 cd backend
@@ -125,12 +133,9 @@ pip install -r requirements.txt
 pip install -e .
 
 export SNIPSEL_SECRET_KEY="dev"
-export SNIPSEL_DATABASE_URL="sqlite:///snipsel.db"
-export SNIPSEL_UPLOAD_DIR="./uploads"
-
 flask --app snipsel_api.app run --debug --port 5000
 
-# database migrations
+# Run database migrations
 flask --app snipsel_api.app db upgrade
 ```
 
@@ -142,4 +147,52 @@ npm install
 npm run dev
 ```
 
-The frontend proxies `/api/*` requests to the backend during development.
+The frontend proxies `/api/*` to the backend in dev mode.
+
+---
+
+## ⚙️ Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `SNIPSEL_SECRET_KEY` | `dev` | Session secret — **change in production!** |
+| `SNIPSEL_DATABASE_URL` | `sqlite:///snipsel.db` | Database URL |
+| `SNIPSEL_UPLOAD_DIR` | `./uploads` | Directory for uploaded files |
+| `SNIPSEL_MAX_UPLOAD_BYTES` | `10485760` | Max upload size (10 MB) |
+| `SNIPSEL_DOMAIN` | `localhost` | Domain for Passkey auth |
+| `SNIPSEL_FRONTEND_URL` | `http://localhost:5173` | Frontend URL for CORS & Passkeys |
+
+**Optional SMTP (password reset):**
+
+| Variable | Description |
+|---|---|
+| `SNIPSEL_SMTP_HOST` | SMTP server host |
+| `SNIPSEL_SMTP_PORT` | SMTP port (default: `587`) |
+| `SNIPSEL_SMTP_USERNAME` | SMTP username |
+| `SNIPSEL_SMTP_PASSWORD` | SMTP password |
+| `SNIPSEL_SMTP_USE_TLS` | Enable TLS (default: `1`) |
+| `SNIPSEL_MAIL_FROM` | Sender address |
+| `SNIPSEL_PUBLIC_BASE_URL` | If set, emails include a reset link |
+
+**Optional VAPID (push notifications):**
+
+| Variable | Description |
+|---|---|
+| `VAPID_PUBLIC_KEY` | VAPID public key |
+| `VAPID_PRIVATE_KEY` | VAPID private key |
+| `VAPID_SUBJECT` | e.g. `mailto:admin@yourdomain.com` |
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend:** Python · Flask · SQLAlchemy · SQLite · Flask-Migrate
+- **Frontend:** Svelte 5 · TypeScript · Vite · PWA (Service Worker)
+- **Auth:** Session cookies · WebAuthn (Passkeys) · TOTP · bcrypt
+- **Deployment:** Docker (multi-stage build) · single container
+
+---
+
+## 📄 License
+
+MIT
