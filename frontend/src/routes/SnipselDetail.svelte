@@ -631,8 +631,9 @@
             <div class="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3 dark:border-white/5 dark:bg-white/5">
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-[10px] uppercase tracking-wider text-slate-400">Frequency</label>
+                  <label for="rr-freq" class="block text-[10px] uppercase tracking-wider text-slate-400">Frequency</label>
                   <select
+                    id="rr-freq"
                     bind:value={rrFreq}
                     class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-sm dark:border-white/10 dark:bg-slate-800"
                   >
@@ -643,8 +644,9 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[10px] uppercase tracking-wider text-slate-400">Interval</label>
+                  <label for="rr-interval" class="block text-[10px] uppercase tracking-wider text-slate-400">Interval</label>
                   <input
+                    id="rr-interval"
                     type="number"
                     min="1"
                     bind:value={rrInterval}
@@ -655,7 +657,7 @@
 
               {#if rrFreq === 'WEEKLY'}
                 <div>
-                  <label class="block text-[10px] uppercase tracking-wider text-slate-400">Days</label>
+                  <div class="block text-[10px] uppercase tracking-wider text-slate-400">Days</div>
                   <div class="mt-1 flex flex-wrap gap-1">
                     {#each ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] as day}
                       <button

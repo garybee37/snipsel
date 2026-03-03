@@ -3,10 +3,10 @@
   import { currentUser } from '../lib/session';
   import { startAuthentication } from '@simplewebauthn/browser';
 
-  let mode: 'login' | 'register' = 'login';
-  let username = '';
-  let email = '';
-  let password = '';
+  let mode = $state<'login' | 'register'>('login');
+  let username = $state('');
+  let email = $state('');
+  let password = $state('');
   let otpCode = $state('');
   let isOtpStep = $state(false);
   let errorMessage = $state<string | null>(null);
@@ -130,7 +130,6 @@
             inputmode="numeric"
             maxlength="6"
             placeholder="000000"
-            autofocus
           />
         </label>
         <button 
