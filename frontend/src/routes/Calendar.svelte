@@ -129,6 +129,23 @@
     const m = String(d.getMonth() + 1).padStart(2, '0');
     return `${y}-${m}`;
   }
+
+  // Swipe handling
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  function onTouchStart(e: TouchEvent) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }
+
+  function onTouchEnd(e: TouchEvent) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    // Only trigger if horizontal movement is dominant and at least 50px
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+    cursor = addMonths(cursor, dx < 0 ? 1 : -1);
+  }
 </script>
 
 <div class="space-y-4">
@@ -197,7 +214,7 @@
     {/each}
   </div>
 
-  <div class="grid grid-cols-7 gap-1">
+  <div class="grid grid-cols-7 gap-1" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
     {#each getGridDays(cursor) as cell}
       {@const iso = toLocalIsoDay(cell.day)}
       {@const collectionData = dayCollections.get(iso)}
