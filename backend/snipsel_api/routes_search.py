@@ -432,15 +432,10 @@ def get_incoming_day_mentions():
     
     uname = str(user.username).casefold()
     
-    # DEBUG: Check what users exist and what mentions exist
-    print(f"[DEBUG] user={user.username}, uname={uname}, day={day_parsed}")
-    
     # First check: how many mentions exist for this user?
     mentions_for_user = db.session.execute(
         db.select(Mention).where(Mention.name == uname)
     ).all()
-    print(f"[DEBUG] Mentions for '{uname}': {len(mentions_for_user)}")
-    
     # Second check: how many daily collections exist for this day?
     daily_collections = db.session.execute(
         db.select(Collection, User.username)
@@ -451,12 +446,6 @@ def get_incoming_day_mentions():
             Collection.owner_user_id != user.id,
         )
     ).all()
-    print(f"[DEBUG] Daily collections for {day_parsed}: {len(daily_collections)}")
-    for c, owner in daily_collections[:3]:
-        print(f"[DEBUG]   - collection {c.id} owned by {owner}")
-    
-    # Find snipsels from OTHER users' daily collections on this day that mention the current user
-    
     # Find snipsels from OTHER users' daily collections on this day that mention the current user
     # Note: We don't require the collection to be shared - we just need to find any daily
     # collection from another user on the same day that mentions the current user
@@ -484,7 +473,6 @@ def get_incoming_day_mentions():
     )
     
     rows = db.session.execute(stmt.options(joinedload(Snipsel.reactions)).order_by(Snipsel.modified_at.desc()).limit(100)).unique().all()
-    print(f"[DEBUG] Found {len(rows)} snipsels mentioning {uname}")
     
     if rows:
         # Fetch attachments for all snipsels
