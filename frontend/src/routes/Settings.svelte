@@ -557,75 +557,264 @@
         <span>Security</span>
       </div>
       
-      {#if !showPasscodeForm}
-        <div class="mt-3 flex items-center justify-between gap-4">
+      <!-- Passcode -->
+      <div class="border-b border-slate-100 pb-4 dark:border-white/5">
+        {#if !showPasscodeForm}
+          <div class="mt-3 flex items-center justify-between gap-4">
+            <div>
+              <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Personal Passcode</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">
+                {$currentUser?.passcode_set ? 'Passcode is active.' : 'Set a passcode to protect sensitive collections.'}
+              </div>
+            </div>
+            <button
+              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
+              style={`color: ${getAccent()}`}
+              type="button"
+              onclick={() => { showPasscodeForm = true; passcodeError = ''; }}
+              disabled={isBusy}
+            >
+              {$currentUser?.passcode_set ? 'Change' : 'Set Passcode'}
+            </button>
+          </div>
+        {:else}
+          <div class="mt-4 space-y-4 transition-all">
+            <div>
+              <label for="new-passcode" class="block text-sm font-medium text-slate-700 dark:text-slate-300">New 4-digit passcode</label>
+              <input
+                id="new-passcode"
+                type="password"
+                inputmode="numeric"
+                maxlength="12"
+                class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
+                bind:value={passcode}
+                oninput={(e) => passcode = e.currentTarget.value.replace(/\D/g, '')}
+                placeholder="••••"
+              />
+            </div>
+            <div>
+              <label for="password-confirm" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm account password</label>
+              <input
+                id="password-confirm"
+                type="password"
+                class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
+                bind:value={passwordConfirm}
+                placeholder="Your account password"
+              />
+            </div>
+            
+            {#if passcodeError}
+              <div class="text-xs font-medium text-red-600 dark:text-red-400">{passcodeError}</div>
+            {/if}
+            
+            <div class="flex items-center gap-2 pt-2">
+              <button
+                class="flex-1 rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-50 transition-all dark:opacity-90"
+                style={`background-color: ${getAccent()}`}
+                type="button"
+                onclick={savePasscode}
+                disabled={isBusy || passcode.length < 4 || !passwordConfirm}
+              >
+                Save Passcode
+              </button>
+              <button
+                class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                type="button"
+                onclick={() => { showPasscodeForm = false; passcode = ''; passwordConfirm = ''; }}
+                disabled={isBusy}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        {/if}
+      </div>
+
+      <!-- Two-Factor Authentication -->
+      <div class="border-b border-slate-100 py-4 dark:border-white/5">
+        <div class="flex items-center justify-between gap-4">
           <div>
-            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Personal Passcode</div>
+            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Two-Factor Authentication (OTP)</div>
             <div class="text-xs text-slate-500 dark:text-slate-400">
-              {$currentUser?.passcode_set ? 'Passcode is active.' : 'Set a passcode to protect sensitive collections.'}
+              {$currentUser?.otp_enabled ? 'Active. Extra security for your account.' : 'Enhance security by requiring a code from an authenticator app.'}
+            </div>
+          </div>
+          {#if $currentUser?.otp_enabled}
+            <button
+              class="rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-black/5 hover:bg-red-50 disabled:opacity-50 dark:border-red-900/30 dark:bg-slate-800 dark:text-red-400"
+              type="button"
+              onclick={() => {
+                const pass = prompt('Confirm password to disable 2FA:');
+                if (pass) {
+                  passwordConfirm = pass;
+                  disableOtp();
+                }
+              }}
+              disabled={isBusy}
+            >
+              Disable
+            </button>
+          {:else}
+            <button
+              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
+              style={`color: ${getAccent()}`}
+              type="button"
+              onclick={startOtpSetup}
+              disabled={isBusy}
+            >
+              Set up 2FA
+            </button>
+          {/if}
+        </div>
+
+        {#if isOtpSetupActive}
+          <div class="mt-4 space-y-4 rounded-xl bg-slate-50 p-4 dark:bg-white/5">
+            <div class="text-sm font-medium">Scan this QR code in your app</div>
+            <div class="flex justify-center rounded-lg bg-white p-2">
+              <img src={`/api/auth/2fa/qr?provisioning_url=${encodeURIComponent(otpProvisioningUrl)}`} alt="2FA QR Code" class="h-48 w-48" />
+            </div>
+            <div class="text-xs text-slate-500 text-center">
+              Or enter manually: <code class="bg-slate-200 px-1 dark:bg-white/10">{otpSecret}</code>
+            </div>
+            
+            <div class="space-y-3">
+              <div>
+                <label for="otp-code" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Enter code from app</label>
+                <input
+                  id="otp-code"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="6"
+                  class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-white/10 dark:bg-slate-800"
+                  bind:value={otpCodeInput}
+                  placeholder="000000"
+                />
+              </div>
+              <div>
+                <label for="otp-password-confirm" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm account password</label>
+                <input
+                  id="otp-password-confirm"
+                  type="password"
+                  class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-white/10 dark:bg-slate-800"
+                  bind:value={passwordConfirm}
+                  placeholder="Your account password"
+                />
+              </div>
+            </div>
+
+            {#if otpSetupError}
+              <div class="text-xs font-medium text-red-600 dark:text-red-400">{otpSetupError}</div>
+            {/if}
+
+            <div class="flex gap-2">
+              <button
+                class="flex-1 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+                style={`background-color: ${getAccent()}`}
+                type="button"
+                onclick={enableOtp}
+                disabled={isBusy || otpCodeInput.length < 6 || !passwordConfirm}
+              >
+                Enable 2FA
+              </button>
+              <button
+                class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                type="button"
+                onclick={() => { isOtpSetupActive = false; otpCodeInput = ''; passwordConfirm = ''; }}
+                disabled={isBusy}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        {/if}
+      </div>
+
+      <!-- Passkeys -->
+      <div class="mt-4">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Passkeys</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">
+              Use biometric or hardware keys to log in without a password.
             </div>
           </div>
           <button
             class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
             style={`color: ${getAccent()}`}
             type="button"
-            onclick={() => { showPasscodeForm = true; passcodeError = ''; }}
+            onclick={() => { isPasskeyAddActive = true; passkeyError = ''; loadPasskeys(); }}
             disabled={isBusy}
           >
-            {$currentUser?.passcode_set ? 'Change' : 'Set Passcode'}
+            Add Key
           </button>
         </div>
-      {:else}
-        <div class="mt-4 space-y-4 transition-all">
-          <div>
-            <label for="new-passcode" class="block text-sm font-medium text-slate-700 dark:text-slate-300">New 4-digit passcode</label>
-            <input
-              id="new-passcode"
-              type="password"
-              inputmode="numeric"
-              maxlength="12"
-              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
-              bind:value={passcode}
-              oninput={(e) => passcode = e.currentTarget.value.replace(/\D/g, '')}
-              placeholder="••••"
-            />
+
+        {#if isPasskeyAddActive}
+          <div class="mt-4 space-y-4 rounded-xl bg-slate-50 p-4 dark:bg-white/5">
+            <div>
+              <label for="passkey-name" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Key Name</label>
+              <input
+                id="passkey-name"
+                type="text"
+                class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-white/10 dark:bg-slate-800"
+                bind:value={newPasskeyName}
+                placeholder="e.g. MacBook Air, YubiKey"
+              />
+            </div>
+            
+            {#if passkeyError}
+              <div class="text-xs font-medium text-red-600 dark:text-red-400">{passkeyError}</div>
+            {/if}
+
+            <div class="flex gap-2">
+              <button
+                class="flex-1 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+                style={`background-color: ${getAccent()}`}
+                type="button"
+                onclick={addPasskey}
+                disabled={isBusy || !newPasskeyName}
+              >
+                Continue
+              </button>
+              <button
+                class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                type="button"
+                onclick={() => { isPasskeyAddActive = false; newPasskeyName = ''; }}
+                disabled={isBusy}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-          <div>
-            <label for="password-confirm" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm account password</label>
-            <input
-              id="password-confirm"
-              type="password"
-              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
-              bind:value={passwordConfirm}
-              placeholder="Your account password"
-            />
+        {/if}
+
+        {#if passkeys.length > 0}
+          <div class="mt-4 space-y-2">
+            {#each passkeys as pk (pk.id)}
+              <div class="flex items-center justify-between rounded-lg border border-slate-100 bg-white/50 px-3 py-2 dark:border-white/5 dark:bg-slate-900/50">
+                <div class="flex items-center gap-2">
+                  <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 2l-2 2" />
+                    <circle cx="7" cy="15" r="5" />
+                    <path d="M12 9l2 2" />
+                    <path d="M16 5l2 2" />
+                    <path d="M9 18l3 3" />
+                  </svg>
+                  <span class="text-sm font-medium">{pk.name}</span>
+                </div>
+                <button
+                  class="text-xs font-medium text-red-500 hover:text-red-600"
+                  type="button"
+                  onclick={() => removePasskey(pk.id)}
+                  disabled={isBusy}
+                >
+                  Remove
+                </button>
+              </div>
+            {/each}
           </div>
-          
-          {#if passcodeError}
-            <div class="text-xs font-medium text-red-600 dark:text-red-400">{passcodeError}</div>
-          {/if}
-          
-          <div class="flex items-center gap-2 pt-2">
-            <button
-              class="flex-1 rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-50 transition-all dark:opacity-90"
-              style={`background-color: ${getAccent()}`}
-              type="button"
-              onclick={savePasscode}
-              disabled={isBusy || passcode.length < 4 || !passwordConfirm}
-            >
-              Save Passcode
-            </button>
-            <button
-              class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-              type="button"
-              onclick={() => { showPasscodeForm = false; passcode = ''; passwordConfirm = ''; }}
-              disabled={isBusy}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      {/if}
+        {/if}
+      </div>
     </div>
 
     <!-- Data & Migration -->
