@@ -17,18 +17,24 @@
     busy = true;
     try {
       if (mode === 'login') {
-        const res = await api.login({ username, password, otp_code: otpCode || undefined });
-        if (res.requires_2fa) {
-          isOtpStep = true;
-          busy = false;
-          return;
+        if (isOtpStep) {
+          const res = await api.loginOtp(otpCode);
+          currentUser.set(res.user);
+        } else {
+          const res = await api.login({ username, password });
+          if (res.status === '2fa_required') {
+            isOtpStep = true;
+            busy = false;
+            return;
+          }
+          if (res.user) {
+            currentUser.set(res.user);
+          }
         }
       } else {
-        await api.register({ username, email, password });
+        const res = await api.register({ username, email, password });
+        currentUser.set(res.user);
       }
-
-      const res = await api.me();
-      currentUser.set(res.user);
     } catch (e) {
       if (typeof e === 'object' && e && 'status' in e && (e as any).status === 401 && isOtpStep) {
         errorMessage = 'Invalid 2FA code';
