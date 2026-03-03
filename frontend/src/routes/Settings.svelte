@@ -23,6 +23,8 @@
   let hasPushEnabled = $state(false);
 
   let isOtpSetupActive = $state(false);
+  let isOtpDisableActive = $state(false);
+  let otpDisablePassword = $state('');
   let otpSecret = $state('');
   let otpProvisioningUrl = $state('');
   let otpCodeInput = $state('');
@@ -638,17 +640,17 @@
           </div>
           {#if $currentUser?.otp_enabled}
             <button 
-              class="rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-50"
+              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
+              style={`color: ${isOtpDisableActive ? '#ef4444' : getAccent()}`}
               type="button"
-              onclick={() => {
-                const pass = prompt('Confirm password to disable 2FA:');
-                if (pass) {
-                  disableOtp(pass);
-                }
+              onclick={() => { 
+                isOtpDisableActive = !isOtpDisableActive; 
+                securityError = ''; 
+                otpDisablePassword = '';
               }}
               disabled={isBusy}
             >
-              Disable
+              {isOtpDisableActive ? 'Cancel' : 'Disable'}
             </button>
           {:else}
             <button
