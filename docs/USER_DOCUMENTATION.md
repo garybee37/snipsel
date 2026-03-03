@@ -45,6 +45,7 @@ Daily collections are automatically created for each day. They provide a quick w
 - Shown in the Calendar view
 - When viewing your daily collection, you can see snipsels from other users that mention you (read-only)
 - Useful for daily standups, journal entries, or daily task lists
+- **Navigation**: You can swipe left or right on the daily collection to navigate between days quickly.
 
 ![Screenshot: Daily Collection in Calendar View - PLACEHOLDER]
 
@@ -78,7 +79,7 @@ A snipsel is an individual item within a collection. It's the basic unit of cont
 
 1. **Text** - Plain text or markdown content
 2. **Task** - A task that can be marked as done/undone
-3. **Link** - External URL with optional label
+3. **Link** - External URL with optional label. Clicking a link opens it automatically in a new browser tab.
 4. **Image** - Image attachments displayed in a grid
 5. **Attachment** - File attachments
 
@@ -89,6 +90,8 @@ A snipsel is an individual item within a collection. It's the basic unit of cont
 3. The new snipsel inherits the indent level from the previous snipsel
 4. Select the type using the dropdown (text, task, link, image)
 5. Enter content and press **Save**
+
+**Refreshing content**: On mobile devices or touch screens, you can "pull-to-reload" at the top of a collection to refresh the snipsel list.
 
 ### Editing Snipsel Content
 
@@ -209,6 +212,9 @@ Mention other users with `@username` to:
 2. When saved, the mentioned user receives a notification
 3. For tasks: "User assigned a task to you"
 4. For other content: "User mentioned you in a snipsel"
+
+> [!TIP]
+> Push notifications for tasks and mentions now include the first line of the actual content, giving you instant context without opening the app.
 
 ### Viewing Mentions
 
@@ -333,6 +339,7 @@ The calendar shows your daily collections organized by date.
 - Click any day to view that day's collection
 - Navigate between months
 - Today's collection highlighted
+- **Navigation**: Swipe left or right to navigate between months with smooth animations.
 
 ![Screenshot: Calendar View - PLACEHOLDER]
 
@@ -372,6 +379,7 @@ Passkeys allow you to log in securely without a password using your device's bui
 Access via the settings icon (gear):
 - Change username
 - View account info
+- **Content Statistics**: View counts for your collections, snipsels, completed tasks, and attachments to track your usage.
 
 ### Collection Settings
 
