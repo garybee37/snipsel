@@ -3,6 +3,24 @@ from datetime import datetime
 from snipsel_api.extensions import db
 from snipsel_api import models
 
+
+def _reminder_message(content_markdown: str | None) -> str:
+    """Build a notification message from task content.
+    
+    Uses only the first line and appends '...' if the task has more lines
+    or if the first line exceeds 80 characters.
+    """
+    if not content_markdown:
+        return "Snipsel reminder"
+    lines = content_markdown.splitlines()
+    first_line = lines[0].strip()
+    has_more_lines = len(lines) > 1
+    if len(first_line) > 80:
+        return first_line[:80] + "..."
+    if has_more_lines:
+        return first_line + "..."
+    return first_line
+
 def process_reminders(user_id: str | None = None) -> int:
     """Check for due reminders and create notifications. 
     If user_id is None, processes reminders for all users.
@@ -37,7 +55,7 @@ def process_reminders(user_id: str | None = None) -> int:
             # Create notification
             n = models.Notification(
                 user_id=s.owner_user_id,
-                message=f"Reminder: {s.content_markdown[:100] if s.content_markdown else 'Snipsel reminder'}",
+                message=_reminder_message(s.content_markdown),
                 snipsel_id=s.id
             )
             db.session.add(n)
