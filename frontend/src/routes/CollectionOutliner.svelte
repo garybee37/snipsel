@@ -2219,83 +2219,83 @@
                     {@const yt = getYouTubeLink(snip.content_markdown)!}
                     <YouTubeCard url={yt.url} />
                   {/if}
-                  <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 whitespace-pre-wrap dark:prose-invert">
-                    {@html renderMarkdown(stripMediaLinks(snip.content_markdown))}
+                  <div class="flex items-start gap-2">
+                    <div class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 whitespace-pre-wrap dark:prose-invert flex-1 min-w-0">
+                      {@html renderMarkdown(stripMediaLinks(snip.content_markdown))}
+                    </div>
+
+                    {#if snip.created_by_id !== $currentUser?.id && snip.created_by_username !== $currentUser?.username}
+                      <div class="relative shrink-0 self-center ml-1">
+                        <button
+                          type="button"
+                          class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10"
+                          onclick={(e) => { e.stopPropagation(); activeReactionPickerId = activeReactionPickerId === snip.id ? null : snip.id; }}
+                          aria-label="Add reaction"
+                        >
+                          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12h14" />
+                          </svg>
+                        </button>
+
+                        {#if activeReactionPickerId === snip.id}
+                          <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
+                            {#if showCustomEmojiInputId === snip.id}
+                              <input
+                                type="text"
+                                class="h-8 w-24 bg-transparent px-3 py-1 text-sm focus:outline-none dark:text-white"
+                                placeholder="Emoji..."
+                                bind:value={customEmojiInput}
+                                use:focusOnMount
+                                onkeydown={(e) => {
+                                  if (e.key === 'Enter' && customEmojiInput.trim()) {
+                                    toggleSnipselReaction(snip.id, customEmojiInput.trim());
+                                    showCustomEmojiInputId = null;
+                                    customEmojiInput = '';
+                                  } else if (e.key === 'Escape') {
+                                    showCustomEmojiInputId = null;
+                                  }
+                                }}
+                                onclick={(e) => e.stopPropagation()}
+                              />
+                            {:else}
+                              {#each REACTION_EMOJIS as emoji}
+                                <button
+                                  type="button"
+                                  class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                                  onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, emoji); }}
+                                >
+                                  {emoji}
+                                </button>
+                              {/each}
+                              <button
+                                type="button"
+                                class="flex h-8 w-8 items-center justify-center rounded-full text-base font-medium text-slate-400 transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
+                                onclick={(e) => { e.stopPropagation(); showCustomEmojiInputId = snip.id; customEmojiInput = ''; }}
+                              >
+                                +
+                              </button>
+                            {/if}
+                          </div>
+                        {/if}
+                      </div>
+                    {/if}
                   </div>
                 {:else if !snip.attachments || !snip.attachments.length}
                   <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
                 {/if}
 
-                {#if (snip.reactions && snip.reactions.length > 0) || (snip.created_by_id !== $currentUser?.id && snip.created_by_username !== $currentUser?.username)}
+                {#if snip.reactions && snip.reactions.length > 0}
                 <div class="mt-3 flex flex-wrap items-center gap-2">
-                  {#if snip.reactions && snip.reactions.length > 0}
-                    {#each snip.reactions as r (r.emoji)}
-                      <button
-                        type="button"
-                        class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors {r.me ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400'}"
-                        onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, r.emoji); }}
-                      >
-                        <span>{r.emoji}</span>
-                        <span class="opacity-60">{r.count}</span>
-                      </button>
-                    {/each}
-                  {/if}
-
-                  {#if snip.created_by_id !== $currentUser?.id && snip.created_by_username !== $currentUser?.username}
-                    <div class="relative">
-                      <button
-                        type="button"
-                        class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10"
-                        onclick={(e) => { e.stopPropagation(); activeReactionPickerId = activeReactionPickerId === snip.id ? null : snip.id; }}
-                        aria-label="Add reaction"
-                      >
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M12 5v14M5 12h14" />
-                        </svg>
-                      </button>
-
-                      {#if activeReactionPickerId === snip.id}
-                        <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
-                          {#if showCustomEmojiInputId === snip.id}
-                            <input
-                              type="text"
-                              class="h-8 w-24 bg-transparent px-3 py-1 text-sm focus:outline-none dark:text-white"
-                              placeholder="Emoji..."
-                              bind:value={customEmojiInput}
-                              use:focusOnMount
-                              onkeydown={(e) => {
-                                if (e.key === 'Enter' && customEmojiInput.trim()) {
-                                  toggleSnipselReaction(snip.id, customEmojiInput.trim());
-                                  showCustomEmojiInputId = null;
-                                  customEmojiInput = '';
-                                } else if (e.key === 'Escape') {
-                                  showCustomEmojiInputId = null;
-                                }
-                              }}
-                              onclick={(e) => e.stopPropagation()}
-                            />
-                          {:else}
-                            {#each REACTION_EMOJIS as emoji}
-                              <button
-                                type="button"
-                                class="flex h-8 w-8 items-center justify-center rounded-full text-base transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
-                                onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, emoji); }}
-                              >
-                                {emoji}
-                              </button>
-                            {/each}
-                            <button
-                              type="button"
-                              class="flex h-8 w-8 items-center justify-center rounded-full text-base font-medium text-slate-400 transition-all hover:scale-110 hover:bg-slate-100 dark:hover:bg-white/10"
-                              onclick={(e) => { e.stopPropagation(); showCustomEmojiInputId = snip.id; customEmojiInput = ''; }}
-                            >
-                              +
-                            </button>
-                          {/if}
-                        </div>
-                      {/if}
-                    </div>
-                  {/if}
+                  {#each snip.reactions as r (r.emoji)}
+                    <button
+                      type="button"
+                      class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors {r.me ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400'}"
+                      onclick={(e) => { e.stopPropagation(); toggleSnipselReaction(snip.id, r.emoji); }}
+                    >
+                      <span>{r.emoji}</span>
+                      <span class="opacity-60">{r.count}</span>
+                    </button>
+                  {/each}
                 </div>
                 {/if}
 
