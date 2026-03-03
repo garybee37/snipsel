@@ -61,7 +61,7 @@
   }
 
   async function enableOtp() {
-    if (!otpCodeInput || !passwordConfirm) return;
+    if (!otpCodeInput || !otpSetupConfirmPassword) return;
     isBusy = true;
     otpSetupError = '';
     try {
