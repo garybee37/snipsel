@@ -2781,7 +2781,8 @@
 
 {#if showDeleteModal}
   <DeleteConfirmModal
-    count={selectedIds.size}
+    title="Snipsels löschen?"
+    message={selectedIds.size === 1 ? 'Möchtest du wirklich diesen Snipsel dauerhaft löschen?' : `Möchtest du wirklich diese ${selectedIds.size} Snipsels dauerhaft löschen?`}
     onConfirm={confirmDeleteSelected}
     onCancel={cancelDeleteSelected}
   />

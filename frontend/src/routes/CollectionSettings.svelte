@@ -2,6 +2,7 @@
   import { api, type Collection, type CollectionShare, type UserLite, type CollectionBacklink } from '../lib/api';
   import { collectionAnchor, collections, currentCollection, currentView, isLoading } from '../lib/stores';
   import { currentUser } from '../lib/session';
+  import DeleteConfirmModal from '../lib/DeleteConfirmModal.svelte';
 
   interface Props {
     collectionId: string;
@@ -17,6 +18,7 @@
   let isFavorite = $state(false);
   let defaultSnipselType = $state('');
   let saving = $state(false);
+  let showDeleteModal = $state(false);
 
   let users = $state<UserLite[]>([]);
   let shares = $state<CollectionShare[]>([]);
@@ -190,9 +192,18 @@
     currentCollection.update((c) => (c?.id === res.collection.id ? res.collection : c));
   }
 
-  async function deleteCollection() {
+  function deleteCollection() {
     if (!collection) return;
-    if (!confirm('Delete collection?')) return;
+    showDeleteModal = true;
+  }
+
+  function cancelDeleteCollection() {
+    showDeleteModal = false;
+  }
+
+  async function confirmDeleteCollection() {
+    if (!collection) return;
+    showDeleteModal = false;
     const id = collection.id;
     try {
       await api.collections.delete(id);
@@ -516,3 +527,12 @@
     </div>
   {/if}
 </div>
+
+{#if showDeleteModal}
+  <DeleteConfirmModal
+    title="Collection löschen?"
+    message={`Möchtest du die Collection "${title}" wirklich dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+    onConfirm={confirmDeleteCollection}
+    onCancel={cancelDeleteCollection}
+  />
+{/if}
