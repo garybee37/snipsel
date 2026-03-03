@@ -233,7 +233,7 @@
     const tokenBg = isDark ? `rgba(30, 41, 59, 0.8)` : `rgba(255, 255, 255, 0.96)`;
 
     return escaped.replace(
-      /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
+      /(^|[^\p{L}\p{N}_])(#[A-Za-z\p{L}][\p{L}\p{N}_-]*|@[A-Za-z\p{L}][\p{L}\p{N}_-]*)/gu,
       (m, p1, token) =>
         `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${accent}">${token}</mark>`
     );

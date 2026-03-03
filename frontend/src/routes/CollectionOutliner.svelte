@@ -613,8 +613,8 @@
       const before = editContent.slice(0, cursor);
 
       const wikiMatch = /\[\[([^\[\]]*)$/.exec(before);
-      const tagMatch = /(?:^|\s)#(\w*)$/.exec(before);
-      const mentionMatch = /(?:^|\s)@(\w*)$/.exec(before);
+      const tagMatch = /(?:^|\s)#([\p{L}\p{N}_]*)$/u.exec(before);
+      const mentionMatch = /(?:^|\s)@([\p{L}\p{N}_]*)$/u.exec(before);
 
       let q = '';
       let type: 'collection' | 'tag' | 'mention' | null = null;
@@ -672,9 +672,9 @@
     if (suggestion.type === 'collection') {
       newBefore = before.replace(/\[\[([^\[\]]*)$/, `[[${suggestion.label}]]`);
     } else if (suggestion.type === 'tag') {
-      newBefore = before.replace(/#(\w*)$/, `#${suggestion.label} `);
+      newBefore = before.replace(/#([\p{L}\p{N}_]*)$/u, `#${suggestion.label} `);
     } else if (suggestion.type === 'mention') {
-      newBefore = before.replace(/@(\w*)$/, `@${suggestion.label} `);
+      newBefore = before.replace(/@([\p{L}\p{N}_]*)$/u, `@${suggestion.label} `);
     }
 
     editContent = newBefore + after;
@@ -1170,7 +1170,7 @@
     const tokenFg = getHeaderColor();
     return html
       .replace(
-        /(^|[^\w])(#[A-Za-z][\w-]*|@[A-Za-z][\w-]*)/g,
+        /(^|[^\p{L}\p{N}_])(#[A-Za-z\p{L}][\p{L}\p{N}_-]*|@[A-Za-z\p{L}][\p{L}\p{N}_-]*)/gu,
         (m, p1, token) =>
           `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${tokenFg}">${token}</mark>`
       )
