@@ -1673,6 +1673,7 @@
                   <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
                 {/if}
 
+                {#if (snip.reactions && snip.reactions.length > 0) || (snip.created_by_id !== $currentUser?.id && snip.created_by_username !== $currentUser?.username)}
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                   {#if snip.reactions && snip.reactions.length > 0}
                     {#each snip.reactions as r (r.emoji)}
@@ -1743,6 +1744,7 @@
                     </div>
                   {/if}
                 </div>
+                {/if}
 
                 {#if snip.attachments && snip.attachments.length > 0 && snip.type === 'image'}
                   {@const images = snip.attachments.filter((a) => a.mime_type?.startsWith('image/') || a.has_thumbnail)}
@@ -2006,6 +2008,7 @@
                 <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
               {/if}
 
+              {#if (item.snipsel.reactions && item.snipsel.reactions.length > 0) || item.snipsel.created_by_id !== $currentUser?.id}
               <div class="mt-2 flex flex-wrap items-center gap-2">
                 {#if item.snipsel.reactions && item.snipsel.reactions.length > 0}
                   {#each item.snipsel.reactions as r (r.emoji)}
@@ -2076,6 +2079,7 @@
                   </div>
                 {/if}
               </div>
+              {/if}
 
               {#if item.snipsel.reminder_at}
                 {@const expired = isExpired(item.snipsel.reminder_at)}
@@ -2222,6 +2226,7 @@
                   <span class="text-sm italic text-slate-400 dark:text-slate-500">Empty snipsel</span>
                 {/if}
 
+                {#if (snip.reactions && snip.reactions.length > 0) || (snip.created_by_id !== $currentUser?.id && snip.created_by_username !== $currentUser?.username)}
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                   {#if snip.reactions && snip.reactions.length > 0}
                     {#each snip.reactions as r (r.emoji)}
@@ -2292,6 +2297,7 @@
                     </div>
                   {/if}
                 </div>
+                {/if}
 
                 {#if snip.attachments && snip.attachments.length > 0 && snip.type === 'image'}
                   {@const images = snip.attachments.filter((a) => a.mime_type?.startsWith('image/') || a.has_thumbnail)}
