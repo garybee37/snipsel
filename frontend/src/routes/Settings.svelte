@@ -323,6 +323,10 @@
   $effect(() => {
     checkPushSubscription().then(v => hasPushEnabled = v);
   });
+
+  $effect(() => {
+    loadPasskeys();
+  });
 </script>
 
 <div class="space-y-4">
