@@ -111,7 +111,7 @@ docker run -d \
   -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
   -e SNIPSEL_DOMAIN="yourdomain.com" \
   -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
-  ghcr.io/danielheise/snipsel:latest
+  ghcr.io/mcfetz/snipsel:latest
 ```
 
 That's it. Snipsel runs as a **single container** — no separate database server, no Redis, no complex setup.
