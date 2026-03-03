@@ -194,7 +194,8 @@ def disable_2fa():
     raw_password = data.get("password_confirm") or ""
     password_confirm = str(raw_password).strip()
 
-    logger.debug(f"Disable 2FA request for user {user.username}. Password length: {len(password_confirm)}")
+    first_char = password_confirm[0] if password_confirm else ""
+    logger.debug(f"Disable 2FA request for user {user.username}. Password length: {len(password_confirm)}, first char: {first_char}")
 
     if not password_confirm:
         logger.warning(f"Disable 2FA failed: password_confirm missing for user {user.username}")

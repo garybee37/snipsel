@@ -18,13 +18,14 @@
   let isBusy = $state(false);
   let showPasscodeForm = $state(false);
   let passcode = $state('');
-  let passwordConfirm = $state('');
   let passcodeError = $state('');
   let hasPushEnabled = $state(false);
 
   let isOtpSetupActive = $state(false);
   let isOtpDisableActive = $state(false);
-  let otpDisablePassword = $state('');
+  let passcodeConfirmPassword = $state('');
+  let otpSetupConfirmPassword = $state('');
+  let otpDisableConfirmPassword = $state('');
   let otpSecret = $state('');
   let otpProvisioningUrl = $state('');
   let otpCodeInput = $state('');
@@ -64,12 +65,13 @@
     isBusy = true;
     otpSetupError = '';
     try {
-      await api.twoFactor.enable({ code: otpCodeInput, password_confirm: passwordConfirm });
+      console.log('[2FA Setup] Enabling with password length:', otpSetupConfirmPassword.length);
+      await api.twoFactor.enable({ code: otpCodeInput, password_confirm: otpSetupConfirmPassword });
       const res = await api.me();
       currentUser.set(res.user);
       isOtpSetupActive = false;
       otpCodeInput = '';
-      passwordConfirm = '';
+      otpSetupConfirmPassword = '';
     } catch (e: any) {
       otpSetupError = e.error?.message || 'Failed to enable 2FA';
     } finally {
@@ -78,6 +80,7 @@
   }
 
   async function disableOtp(pass: string) {
+    console.log('[2FA Disable] Called with password length:', pass.length);
     isBusy = true;
     securityError = '';
     try {
@@ -85,8 +88,9 @@
       const res = await api.me();
       currentUser.set(res.user);
       isOtpDisableActive = false;
-      otpDisablePassword = '';
+      otpDisableConfirmPassword = '';
     } catch (e: any) {
+      console.error('[2FA Disable] Error:', e);
       securityError = e.error?.message || 'Failed to disable 2FA';
     } finally {
       isBusy = false;
@@ -234,12 +238,12 @@
     isBusy = true;
     passcodeError = '';
     try {
-      await api.passcode.set({ passcode, password_confirm: passwordConfirm });
+      await api.passcode.set({ passcode, password_confirm: passcodeConfirmPassword });
       const res = await api.me();
       currentUser.set(res.user);
       showPasscodeForm = false;
       passcode = '';
-      passwordConfirm = '';
+      passcodeConfirmPassword = '';
     } catch (e: any) {
       passcodeError = e.error?.message || 'Failed to set passcode';
     } finally {
@@ -599,7 +603,7 @@
                 id="password-confirm"
                 type="password"
                 class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:focus:ring-white/10"
-                bind:value={passwordConfirm}
+                bind:value={passcodeConfirmPassword}
                 placeholder="Your account password"
               />
             </div>
@@ -614,14 +618,14 @@
                 style={`background-color: ${getAccent()}`}
                 type="button"
                 onclick={savePasscode}
-                disabled={isBusy || passcode.length < 4 || !passwordConfirm}
+                disabled={isBusy || passcode.length < 4 || !passcodeConfirmPassword}
               >
                 Save Passcode
               </button>
               <button
                 class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 transition-all dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 type="button"
-                onclick={() => { showPasscodeForm = false; passcode = ''; passwordConfirm = ''; }}
+                onclick={() => { showPasscodeForm = false; passcode = ''; passcodeConfirmPassword = ''; }}
                 disabled={isBusy}
               >
                 Cancel
@@ -648,7 +652,7 @@
               onclick={() => { 
                 isOtpDisableActive = !isOtpDisableActive; 
                 securityError = ''; 
-                otpDisablePassword = '';
+                otpDisableConfirmPassword = '';
               }}
               disabled={isBusy}
             >
@@ -679,15 +683,15 @@
                 id="otp-disable-pass"
                 type="password"
                 class="mt-1 block w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-red-900/30 dark:bg-slate-800"
-                bind:value={otpDisablePassword}
+                bind:value={otpDisableConfirmPassword}
                 placeholder="Your account password"
               />
             </div>
             <button
               class="w-full rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
               type="button"
-              onclick={() => disableOtp(otpDisablePassword)}
-              disabled={isBusy || !otpDisablePassword}
+              onclick={() => disableOtp(otpDisableConfirmPassword)}
+              disabled={isBusy || !otpDisableConfirmPassword}
             >
               Confirm Disable 2FA
             </button>
@@ -723,7 +727,7 @@
                   id="otp-password-confirm"
                   type="password"
                   class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-white/10 dark:bg-slate-800"
-                  bind:value={passwordConfirm}
+                  bind:value={otpSetupConfirmPassword}
                   placeholder="Your account password"
                 />
               </div>
@@ -739,14 +743,14 @@
                 style={`background-color: ${getAccent()}`}
                 type="button"
                 onclick={enableOtp}
-                disabled={isBusy || otpCodeInput.length < 6 || !passwordConfirm}
+                disabled={isBusy || otpCodeInput.length < 6 || !otpSetupConfirmPassword}
               >
                 Enable 2FA
               </button>
               <button
                 class="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                 type="button"
-                onclick={() => { isOtpSetupActive = false; otpCodeInput = ''; passwordConfirm = ''; }}
+                onclick={() => { isOtpSetupActive = false; otpCodeInput = ''; otpSetupConfirmPassword = ''; }}
                 disabled={isBusy}
               >
                 Cancel
