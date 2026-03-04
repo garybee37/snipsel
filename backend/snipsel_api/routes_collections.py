@@ -193,6 +193,9 @@ def get_today_collection():
             c.icon = tpl.icon
             c.header_image_url = tpl.header_image_url
             c.header_color = tpl.header_color
+            c.header_image_position = tpl.header_image_position
+            c.header_image_x_position = tpl.header_image_x_position
+            c.header_image_zoom = tpl.header_image_zoom
             if tpl.default_snipsel_type:
                 c.default_snipsel_type = tpl.default_snipsel_type
     db.session.add(c)
