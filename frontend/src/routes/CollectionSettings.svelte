@@ -4,6 +4,7 @@
   import { currentUser } from '../lib/session';
   import DeleteConfirmModal from '../lib/DeleteConfirmModal.svelte';
   import InfoModal from '../lib/InfoModal.svelte';
+  import ProgressModal from '../lib/ProgressModal.svelte';
 
   interface Props {
     collectionId: string;
@@ -24,6 +25,7 @@
   let saving = $state(false);
   let showDeleteModal = $state(false);
   let errorModal = $state<{ title: string; message: string } | null>(null);
+  let uploadProgress = $state<{ filename: string; percent: number } | null>(null);
 
   let users = $state<UserLite[]>([]);
   let shares = $state<CollectionShare[]>([]);
@@ -180,7 +182,10 @@
 
     saving = true;
     try {
-      const res = await api.collections.uploadHeaderImage(collection.id, file);
+      uploadProgress = { filename: file.name, percent: 0 };
+      const res = await api.collections.uploadHeaderImage(collection.id, file, (p) => {
+        if (uploadProgress) uploadProgress.percent = p;
+      });
       collection = res.collection;
       headerImageUrl = collection.header_image_url ?? '';
       headerImagePosition = collection.header_image_position ?? '50%';
@@ -201,6 +206,7 @@
         };
       }
     } finally {
+      uploadProgress = null;
       saving = false;
     }
   }
@@ -659,6 +665,13 @@
     message={`Möchtest du die Collection "${title}" wirklich dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
     onConfirm={confirmDeleteCollection}
     onCancel={cancelDeleteCollection}
+  />
+{/if}
+
+{#if uploadProgress}
+  <ProgressModal
+    filename={uploadProgress.filename}
+    percent={uploadProgress.percent}
   />
 {/if}
 

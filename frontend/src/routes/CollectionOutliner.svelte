@@ -5,6 +5,7 @@
   import CollectionSelectModal from '../lib/CollectionSelectModal.svelte';
   import DeleteConfirmModal from '../lib/DeleteConfirmModal.svelte';
   import InfoModal from '../lib/InfoModal.svelte';
+  import ProgressModal from '../lib/ProgressModal.svelte';
   import DeezerCard from '../lib/DeezerCard.svelte';
   import YouTubeCard from '../lib/YouTubeCard.svelte';
 
@@ -80,6 +81,7 @@
   let showScrollTop = $state(false);
   let showDeleteModal = $state(false);
   let errorModal = $state<{ title: string; message: string } | null>(null);
+  let uploadProgress = $state<{ filename: string; percent: number } | null>(null);
 
   // Swipe navigation state (for daily collections)
   let swipeTouchStartX = $state(0);
@@ -513,7 +515,10 @@
       const ids = Array.from(selectedIds);
       for (const snipselId of ids) {
         for (const file of fileArray) {
-          await api.attachments.upload(snipselId, file);
+          uploadProgress = { filename: file.name, percent: 0 };
+          await api.attachments.upload(snipselId, file, (p) => {
+            if (uploadProgress) uploadProgress.percent = p;
+          });
         }
         // Auto-switch type to image if any uploaded file is an image
         if (hasImage) {
@@ -536,6 +541,7 @@
         };
       }
     } finally {
+      uploadProgress = null;
       uploadingAttachments = false;
       isLoading.set(false);
       input.value = '';
@@ -2822,6 +2828,13 @@
     message={selectedIds.size === 1 ? 'Möchtest du wirklich diesen Snipsel dauerhaft löschen?' : `Möchtest du wirklich diese ${selectedIds.size} Snipsels dauerhaft löschen?`}
     onConfirm={confirmDeleteSelected}
     onCancel={cancelDeleteSelected}
+  />
+{/if}
+
+{#if uploadProgress}
+  <ProgressModal
+    filename={uploadProgress.filename}
+    percent={uploadProgress.percent}
   />
 {/if}
 

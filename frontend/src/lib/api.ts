@@ -356,36 +356,54 @@ export const api = {
         body: JSON.stringify(input),
       }),
 
-    uploadHeaderImage: async (id: string, file: File) => {
-      const form = new FormData();
-      form.append('file', file);
-      const res = await fetch(`/api/collections/${id}/header-image`, {
-        method: 'POST',
-        credentials: 'include',
-        body: form,
-      });
+    uploadHeaderImage: async (id: string, file: File, onProgress?: (percent: number) => void) => {
+      return new Promise<{ collection: Collection }>((resolve, reject) => {
+        const form = new FormData();
+        form.append('file', file);
 
-      if (res.status === 413) {
-        throw {
-          error: {
-            code: 'payload_too_large',
-            message: 'Die Datei ist zu groß für den Upload (Limit: 10MB).',
-          },
-        } as ApiError;
-      }
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/api/collections/${id}/header-image`);
+        xhr.withCredentials = true;
 
-      if (!res.ok) {
-        let errData: any;
-        try {
-          errData = await res.json();
-        } catch {
-          errData = { error: { code: 'unknown_error', message: `Ein unerwarteter Fehler ist aufgetreten (${res.status}).` } };
+        if (onProgress) {
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              onProgress((e.loaded / e.total) * 100);
+            }
+          };
         }
-        throw errData;
-      }
 
-      const data = (await res.json()) as { collection: Collection };
-      return data;
+        xhr.onload = () => {
+          if (xhr.status === 413) {
+            reject({
+              error: {
+                code: 'payload_too_large',
+                message: 'Die Datei ist zu groß für den Upload.',
+              },
+            } as ApiError);
+            return;
+          }
+
+          let data: any;
+          try {
+            data = JSON.parse(xhr.responseText);
+          } catch {
+            data = { error: { code: 'unknown_error', message: `Ein unerwarteter Fehler ist aufgetreten (${xhr.status}).` } };
+          }
+
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(data);
+          } else {
+            reject(data);
+          }
+        };
+
+        xhr.onerror = () => {
+          reject({ error: { code: 'network_error', message: 'Netzwerkfehler beim Upload.' } } as ApiError);
+        };
+
+        xhr.send(form);
+      });
     },
 
     favorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'POST' }),
@@ -505,36 +523,54 @@ export const api = {
   },
 
   attachments: {
-    upload: async (snipselId: string, file: File) => {
-      const form = new FormData();
-      form.append('file', file);
-      const res = await fetch(`/api/snipsels/${snipselId}/attachments`, {
-        method: 'POST',
-        credentials: 'include',
-        body: form,
-      });
+    upload: async (snipselId: string, file: File, onProgress?: (percent: number) => void) => {
+      return new Promise<{ attachment: Attachment }>((resolve, reject) => {
+        const form = new FormData();
+        form.append('file', file);
 
-      if (res.status === 413) {
-        throw {
-          error: {
-            code: 'payload_too_large',
-            message: 'Die Datei ist zu groß für den Upload (Limit: 10MB).',
-          },
-        } as ApiError;
-      }
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/api/snipsels/${snipselId}/attachments`);
+        xhr.withCredentials = true;
 
-      if (!res.ok) {
-        let errData: any;
-        try {
-          errData = await res.json();
-        } catch {
-          errData = { error: { code: 'unknown_error', message: `Ein unerwarteter Fehler ist aufgetreten (${res.status}).` } };
+        if (onProgress) {
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              onProgress((e.loaded / e.total) * 100);
+            }
+          };
         }
-        throw errData;
-      }
 
-      const data = (await res.json()) as { attachment: Attachment };
-      return data;
+        xhr.onload = () => {
+          if (xhr.status === 413) {
+            reject({
+              error: {
+                code: 'payload_too_large',
+                message: 'Die Datei ist zu groß für den Upload.',
+              },
+            } as ApiError);
+            return;
+          }
+
+          let data: any;
+          try {
+            data = JSON.parse(xhr.responseText);
+          } catch {
+            data = { error: { code: 'unknown_error', message: `Ein unerwarteter Fehler ist aufgetreten (${xhr.status}).` } };
+          }
+
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(data);
+          } else {
+            reject(data);
+          }
+        };
+
+        xhr.onerror = () => {
+          reject({ error: { code: 'network_error', message: 'Netzwerkfehler beim Upload.' } } as ApiError);
+        };
+
+        xhr.send(form);
+      });
     },
     delete: async (attachmentId: string) => {
       const res = await fetch(`/api/attachments/${attachmentId}`, {
