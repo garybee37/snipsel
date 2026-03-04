@@ -134,6 +134,9 @@ docker compose up -d
 
 ### Backend (Flask + SQLite)
 
+#### Dependencies
+- **FFmpeg**: Required for generating video thumbnails. Install it via your package manager (e.g., `brew install ffmpeg` on macOS or `sudo apt install ffmpeg` on Linux).
+
 ```bash
 cd backend
 python3 -m venv .venv
@@ -198,7 +201,7 @@ The frontend proxies `/api/*` to the backend in dev mode.
 - **Backend:** Python · Flask · SQLAlchemy · SQLite · Flask-Migrate
 - **Frontend:** Svelte 5 · TypeScript · Vite · PWA (Service Worker)
 - **Auth:** Session cookies · WebAuthn (Passkeys) · TOTP · bcrypt
-- **Deployment:** Docker (multi-stage build) · single container
+- **Deployment:** Docker (multi-stage build) · single container (includes FFmpeg)
 
 ---
 

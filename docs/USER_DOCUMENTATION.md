@@ -428,6 +428,7 @@ This command:
 - Thumbnails are auto-generated for images
 - EXIF rotation metadata is respected (photos from phones display correctly)
 - Supported formats: JPEG, PNG, GIF, WebP
+- **Video Thumbnails**: Requires **FFmpeg** to be installed on the server. The official Docker image includes FFmpeg automatically.
 
 ### Data Storage
 
