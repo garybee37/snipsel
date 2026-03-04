@@ -167,11 +167,12 @@
     if (!target.files?.length || !collection) return;
     const file = target.files[0];
 
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    if (file.size > MAX_FILE_SIZE) {
+    const maxBytes = $currentUser?.max_upload_bytes ?? (10 * 1024 * 1024);
+    if (file.size > maxBytes) {
+      const formatSize = (b: number) => b < 1024 * 1024 ? Math.round(b / 1024) + ' KB' : Math.round(b / (1024 * 1024)) + ' MB';
       errorModal = {
         title: 'Datei zu groß',
-        message: 'Das Header-Bild ist zu groß (Limit: 10MB).'
+        message: `Das Header-Bild ist zu groß (Limit: ${formatSize(maxBytes)}).`
       };
       target.value = '';
       return;

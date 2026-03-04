@@ -18,6 +18,7 @@ export type User = {
   passcode_set?: boolean;
   otp_enabled?: boolean;
   passkeys_count?: number;
+  max_upload_bytes?: number;
 };
 
 export type UserStats = {

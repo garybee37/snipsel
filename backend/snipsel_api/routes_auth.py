@@ -638,5 +638,6 @@ def _user_json(user: User) -> dict:
         "passcode_set": user.passcode_hash is not None,
         "otp_enabled": user.otp_enabled,
         "passkeys_count": passkeys_count,
+        "max_upload_bytes": Settings.from_env().max_upload_bytes,
         "created_at": user.created_at.isoformat() + "Z",
     }
