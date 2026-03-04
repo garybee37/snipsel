@@ -15,6 +15,7 @@
   let icon = $state('');
   let headerImageUrl = $state('');
   let headerColor = $state('');
+  let headerImagePosition = $state('50%');
   let isFavorite = $state(false);
   let defaultSnipselType = $state('');
   let saving = $state(false);
@@ -84,6 +85,7 @@
       icon = collection.icon;
       headerImageUrl = collection.header_image_url ?? '';
       headerColor = collection.header_color ?? '';
+      headerImagePosition = collection.header_image_position ?? '50%';
       isFavorite = Boolean(collection.is_favorite);
       defaultSnipselType = collection.default_snipsel_type ?? '';
 
@@ -139,6 +141,7 @@
         icon: icon.trim(),
         header_image_url: headerImageUrl.trim() || null,
         header_color: headerColor.trim() || null,
+        header_image_position: headerImagePosition || '50%',
         is_template: Boolean(collection.is_template),
         is_passcode_protected: Boolean(collection.is_passcode_protected),
         default_snipsel_type: defaultSnipselType.trim() || null,
@@ -146,6 +149,26 @@
       collection = res.collection;
       collections.update((list) => list.map((c) => (c.id === res.collection.id ? res.collection : c)));
       currentCollection.update((c) => (c?.id === res.collection.id ? res.collection : c));
+    } finally {
+      saving = false;
+    }
+  }
+
+  async function onFileSelected(e: Event) {
+    const target = e.target as HTMLInputElement;
+    if (!target.files?.length || !collection) return;
+    const file = target.files[0];
+    saving = true;
+    try {
+      const res = await api.collections.uploadHeaderImage(collection.id, file);
+      collection = res.collection;
+      headerImageUrl = collection.header_image_url ?? '';
+      headerImagePosition = collection.header_image_position ?? '50%';
+      // Update stores
+      collections.update((list) => list.map((c) => (c.id === res.collection.id ? { ...c, ...res.collection } : c)));
+      currentCollection.update((c) => (c?.id === res.collection.id ? { ...c, ...res.collection } : c));
+    } catch (err: any) {
+      alert('Upload failed: ' + (err.error?.message || 'Unknown error'));
     } finally {
       saving = false;
     }
@@ -375,8 +398,47 @@
         <div class="text-xs font-medium uppercase text-slate-500">Appearance</div>
         <div class="mt-4 space-y-4">
           <label class="block">
-            <span class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Header image URL</span>
-            <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10" bind:value={headerImageUrl} placeholder="https://..." />
+            <span class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Header image</span>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <input
+                  class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-black/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10"
+                  bind:value={headerImageUrl}
+                  placeholder="https://..."
+                />
+                <label
+                  class="cursor-pointer rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  Upload
+                  <input type="file" accept="image/*" class="hidden" onchange={onFileSelected} disabled={saving} />
+                </label>
+              </div>
+
+              {#if headerImageUrl}
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-500">Vertical position</span>
+                    <span class="text-xs font-mono text-slate-400">{headerImagePosition}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 dark:bg-slate-700"
+                    value={parseInt(headerImagePosition) || 50}
+                    oninput={(e) => (headerImagePosition = `${e.currentTarget.value}%`)}
+                    style={`--accent: ${getAccent()}`}
+                  />
+                  
+                  <!-- Preview -->
+                  <div 
+                    class="h-20 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-slate-800"
+                    style="background-image: url('{headerImageUrl}'); background-size: cover; background-position: center {headerImagePosition}"
+                  ></div>
+                </div>
+              {/if}
+            </div>
           </label>
 
           <label class="block">

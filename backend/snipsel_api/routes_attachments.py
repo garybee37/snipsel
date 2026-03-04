@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 from flask import Blueprint, current_app, request, send_file
@@ -10,9 +11,14 @@ from PIL import Image
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Attachment, Snipsel
+from snipsel_api.models import Attachment, Collection, Snipsel
 from snipsel_api.models import Mention, SnipselMention
-from snipsel_api.permissions import can_read_snipsel_via_collections, can_write_snipsel_via_collections
+from snipsel_api.permissions import (
+    can_read_collection,
+    can_write_collection,
+    can_read_snipsel_via_collections,
+    can_write_snipsel_via_collections,
+)
 from snipsel_api.routes_snipsels import _touch_collections_for_snipsel
 
 attachments_bp = Blueprint("attachments", __name__)
@@ -81,6 +87,72 @@ def upload_attachment(snipsel_id: str):
     )
 
 
+@attachments_bp.post("/collections/<collection_id>/header-image")
+@require_auth
+def upload_collection_header(collection_id: str):
+    user = current_user()
+    collection = db.session.get(Collection, collection_id)
+    if (
+        not collection
+        or collection.deleted_at is not None
+        or (collection.owner_user_id != user.id and not can_write_collection(user.id, collection_id))
+    ):
+        raise api_error(404, "not_found", "Collection not found")
+
+    if "file" not in request.files:
+        raise api_error(400, "invalid_input", "file is required")
+
+    file = request.files["file"]
+    if not file or not file.filename:
+        raise api_error(400, "invalid_input", "file is required")
+
+    upload_dir = Path(current_app.config.get("SNIPSEL_UPLOAD_DIR", "./uploads"))
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    att_id = str(uuid.uuid4())
+    safe_name = os.path.basename(file.filename)
+    storage_path = upload_dir / f"{att_id}_{safe_name}"
+
+    file.save(storage_path)
+    size = storage_path.stat().st_size
+    mime_type = file.mimetype
+
+    thumbnail_path: Path | None = None
+    if mime_type and mime_type.startswith("image/"):
+        thumbnail_path = upload_dir / f"{att_id}_header_thumb.jpg"
+        _write_thumbnail(storage_path, thumbnail_path, header=True)
+
+    att = Attachment(
+        id=att_id,
+        collection_id=collection.id,
+        filename=safe_name,
+        mime_type=mime_type,
+        size_bytes=size,
+        storage_path=str(storage_path),
+        thumbnail_path=str(thumbnail_path) if thumbnail_path else None,
+        created_by_id=user.id,
+    )
+    db.session.add(att)
+    
+    collection.header_image_url = f"/api/attachments/{att_id}"
+    collection.modified_at = datetime.utcnow()
+    collection.modified_by_id = user.id
+    
+    db.session.commit()
+
+    return json_response(
+        {
+            "collection": {
+                "id": collection.id,
+                "header_image_url": collection.header_image_url,
+                "header_image_position": collection.header_image_position,
+                "header_attachment_id": att_id,
+            }
+        },
+        status=201,
+    )
+
+
 @attachments_bp.get("/attachments/<attachment_id>")
 @require_auth
 def download_attachment(attachment_id: str):
@@ -110,6 +182,10 @@ def download_attachment(attachment_id: str):
         if not is_mentioned:
             raise api_error(404, "not_found", "Attachment not found")
 
+    if not snipsel and att.collection_id:
+        if not can_read_collection(user.id, att.collection_id):
+            raise api_error(404, "not_found", "Attachment not found")
+
     path = _resolve_attachment_path(att)
     if not path:
         raise api_error(404, "not_found", "Attachment file missing")
@@ -121,43 +197,6 @@ def download_attachment(attachment_id: str):
 
 
 @attachments_bp.get("/attachments/<attachment_id>/thumbnail")
-@require_auth
-def download_thumbnail(attachment_id: str):
-    user = current_user()
-    att = db.session.get(Attachment, attachment_id)
-    if not att:
-        raise api_error(404, "not_found", "Thumbnail not found")
-
-    snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if not snipsel or snipsel.deleted_at is not None:
-        raise api_error(404, "not_found", "Thumbnail not found")
-
-    can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
-    if not can_read:
-        uname = (getattr(user, "username", "") or "").strip().casefold()
-        if not uname:
-            raise api_error(404, "not_found", "Thumbnail not found")
-        is_mentioned = (
-            (db.session.execute(
-                db.select(db.func.count())
-                .select_from(SnipselMention)
-                .join(Mention, Mention.id == SnipselMention.mention_id)
-                .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
-            ).scalar() or 0)
-            > 0
-        )
-        if not is_mentioned:
-            raise api_error(404, "not_found", "Thumbnail not found")
-
-    # Try to resolve or regenerate thumbnail
-    path = _resolve_thumbnail_path(att)
-    if not path:
-        raise api_error(404, "not_found", "Thumbnail file missing")
-
-    try:
-        return send_file(str(path), as_attachment=False)
-    except FileNotFoundError:
-        raise api_error(404, "not_found", "Thumbnail file missing")
 @require_auth
 def download_thumbnail(attachment_id: str):
     user = current_user()
@@ -186,6 +225,11 @@ def download_thumbnail(attachment_id: str):
         if not is_mentioned:
             raise api_error(404, "not_found", "Thumbnail not found")
 
+    if not snipsel and att.collection_id:
+        if not can_read_collection(user.id, att.collection_id):
+            raise api_error(404, "not_found", "Thumbnail not found")
+
+    # Try to resolve or regenerate thumbnail
     path = _resolve_thumbnail_path(att)
     if not path:
         raise api_error(404, "not_found", "Thumbnail file missing")
@@ -211,6 +255,10 @@ def delete_attachment(attachment_id: str):
         or (snipsel.owner_user_id != user.id and not can_write_snipsel_via_collections(user.id, snipsel.id))
     ):
         raise api_error(404, "not_found", "Attachment not found")
+
+    if not snipsel and att.collection_id:
+        if not can_write_collection(user.id, att.collection_id):
+            raise api_error(404, "not_found", "Attachment not found")
 
     file_path = _resolve_attachment_path(att)
     thumb_path = _resolve_thumbnail_path(att)
@@ -324,8 +372,9 @@ def _resolve_thumbnail_path(att: Attachment) -> Path | None:
 
         original = _first_existing(original_candidates)
         if original and original.exists():
-            thumb_path = upload_dir / expected
-            _write_thumbnail(original, thumb_path)
+            thumb_name = f"{att.id}_header_thumb.jpg" if "_header_thumb.jpg" in (att.thumbnail_path or "") else f"{att.id}_thumb.jpg"
+            thumb_path = upload_dir / thumb_name
+            _write_thumbnail(original, thumb_path, header=("_header_thumb.jpg" in thumb_name))
             att.thumbnail_path = str(thumb_path)
             db.session.commit()
             found = thumb_path
@@ -346,15 +395,15 @@ def _first_existing(paths: list[Path]) -> Path | None:
     return None
 
 
-def _write_thumbnail(src: Path, dst: Path) -> None:
+def _write_thumbnail(src: Path, dst: Path, header: bool = False) -> None:
     if Image is None:
         return
     with Image.open(src) as im:
-        # Handle EXIF orientation for phone photos (iPhone, etc.)
+        # Handle EXIF orientation
         try:
             exif = im.getexif()
             if exif:
-                orientation = exif.get(0x0112)  # Orientation tag
+                orientation = exif.get(0x0112)
                 if orientation == 3:
                     im = im.rotate(180, expand=True)
                 elif orientation == 6:
@@ -362,8 +411,25 @@ def _write_thumbnail(src: Path, dst: Path) -> None:
                 elif orientation == 8:
                     im = im.rotate(90, expand=True)
         except Exception:
-            pass  # EXIF handling is best-effort
+            pass
         
-        im.thumbnail((512, 512))
+        if header:
+            # Better for wide header: center crop 3:1 aspect ratio
+            w, h = im.size
+            target_ratio = 3.0
+            if w / h > target_ratio:
+                # Too wide, crop width
+                new_w = int(h * target_ratio)
+                left = (w - new_w) // 2
+                im = im.crop((left, 0, left + new_w, h))
+            else:
+                # Too tall, crop height
+                new_h = int(w / target_ratio)
+                top = (h - new_h) // 2
+                im = im.crop((0, top, w, top + new_h))
+            im.thumbnail((1200, 400))
+        else:
+            im.thumbnail((512, 512))
+            
         im = im.convert("RGB")
         im.save(dst, format="JPEG", quality=80)

@@ -39,6 +39,7 @@ export type Collection = {
   icon: string;
   header_image_url: string | null;
   header_color?: string | null;
+  header_image_position?: string | null;
   is_favorite?: boolean;
   is_template?: boolean;
   default_snipsel_type?: string | null;
@@ -321,12 +322,26 @@ export const api = {
         is_template?: boolean;
         default_snipsel_type?: string | null;
         is_passcode_protected?: boolean;
+        header_image_position?: string | null;
       }
     ) =>
       requestJson<{ collection: Collection }>(`/api/collections/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),
+
+    uploadHeaderImage: async (id: string, file: File) => {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`/api/collections/${id}/header-image`, {
+        method: 'POST',
+        credentials: 'include',
+        body: form,
+      });
+      const data = (await res.json()) as { collection: Collection } | ApiError;
+      if (!res.ok) throw data;
+      return data as { collection: Collection };
+    },
 
     favorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'POST' }),
     unfavorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'DELETE' }),

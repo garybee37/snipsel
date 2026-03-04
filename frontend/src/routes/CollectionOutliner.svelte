@@ -1541,7 +1541,7 @@
       <div
         class="relative h-28 w-full bg-cover bg-center rounded-t-[calc(0.75rem-1px)] overflow-hidden dark:brightness-75"
         style={$currentCollection?.header_image_url
-          ? `background-image: url('${$currentCollection.header_image_url}'); background-color: ${getHeaderColor()}`
+          ? `background-image: url('${$currentCollection.header_image_url}${ $currentCollection.header_image_url.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-color: ${getHeaderColor()}; background-position: center ${$currentCollection.header_image_position || '50%'}`
           : `background-color: ${getHeaderColor()}`}
       ></div>
 

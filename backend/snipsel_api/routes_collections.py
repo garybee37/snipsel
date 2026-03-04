@@ -676,6 +676,8 @@ def update_collection(collection_id: str):
         c.header_image_url = (data.get("header_image_url") or "").strip() or None
     if "header_color" in data:
         c.header_color = (data.get("header_color") or "").strip() or None
+    if "header_image_position" in data:
+        c.header_image_position = (data.get("header_image_position") or "").strip() or "50%"
     if "archived" in data:
         archived = bool(data.get("archived"))
         c.archived_at = datetime.utcnow() if archived else None
@@ -735,6 +737,20 @@ def delete_collection(collection_id: str):
     c.deleted_by_id = user.id
     if c.list_for_day is not None:
         c.list_for_day = None
+        
+    # Clean up header attachments
+    header_atts = db.session.execute(db.select(Attachment).where(Attachment.collection_id == collection_id)).scalars().all()
+    for att in header_atts:
+        file_path = _resolve_attachment_path(att)
+        thumb_path = _resolve_thumbnail_path(att)
+        for p in [thumb_path, file_path]:
+            if p:
+                try:
+                    p.unlink(missing_ok=True)
+                except OSError:
+                    pass
+        db.session.delete(att)
+
     db.session.commit()
     return json_response({"ok": True})
 
@@ -875,7 +891,8 @@ def _collection_json(c: Collection) -> dict:
         "icon": c.icon,
         "header_image_url": c.header_image_url,
         "header_color": c.header_color,
-        "is_template": getattr(c, "is_template", False),
+        "header_image_position": c.header_image_position,
+        "is_template": bool(c.is_template),
         "default_snipsel_type": c.default_snipsel_type,
         "archived": c.archived_at is not None,
         "is_passcode_protected": bool(c.is_passcode_protected),

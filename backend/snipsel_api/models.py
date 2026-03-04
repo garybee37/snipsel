@@ -68,6 +68,7 @@ class Collection(db.Model):
     icon: Mapped[str] = mapped_column(String(8), nullable=False, default="🗒")
     header_image_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     header_color: Mapped[Optional[str]] = mapped_column(String(7), nullable=True)
+    header_image_position: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, default="50%")
 
     is_template: Mapped[bool] = mapped_column(default=False, nullable=False)
 
@@ -303,7 +304,8 @@ class Attachment(db.Model):
     __tablename__ = "attachments"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    snipsel_id: Mapped[str] = mapped_column(ForeignKey("snipsels.id"), nullable=False, index=True)
+    snipsel_id: Mapped[Optional[str]] = mapped_column(ForeignKey("snipsels.id"), nullable=True, index=True)
+    collection_id: Mapped[Optional[str]] = mapped_column(ForeignKey("collections.id"), nullable=True, index=True)
 
     filename: Mapped[str] = mapped_column(String(512), nullable=False)
     mime_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -315,7 +317,8 @@ class Attachment(db.Model):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
     created_by_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-    snipsel: Mapped[Snipsel] = relationship("Snipsel", back_populates="attachments")
+    snipsel: Mapped[Optional[Snipsel]] = relationship("Snipsel", back_populates="attachments")
+    collection: Mapped[Optional[Collection]] = relationship("Collection")
 
 
 class PasswordResetToken(db.Model):
