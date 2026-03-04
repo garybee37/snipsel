@@ -161,30 +161,33 @@ def download_attachment(attachment_id: str):
     if not att:
         raise api_error(404, "not_found", "Attachment not found")
 
-    snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if not snipsel or snipsel.deleted_at is not None:
-        raise api_error(404, "not_found", "Attachment not found")
-
-    can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
-    if not can_read:
-        uname = (getattr(user, "username", "") or "").strip().casefold()
-        if not uname:
-            raise api_error(404, "not_found", "Attachment not found")
-        is_mentioned = (
-            (db.session.execute(
-                db.select(db.func.count())
-                .select_from(SnipselMention)
-                .join(Mention, Mention.id == SnipselMention.mention_id)
-                .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
-            ).scalar() or 0)
-            > 0
-        )
-        if not is_mentioned:
+    if att.snipsel_id:
+        snipsel = db.session.get(Snipsel, att.snipsel_id)
+        if not snipsel or snipsel.deleted_at is not None:
             raise api_error(404, "not_found", "Attachment not found")
 
-    if not snipsel and att.collection_id:
+        can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
+        if not can_read:
+            uname = (getattr(user, "username", "") or "").strip().casefold()
+            if not uname:
+                raise api_error(404, "not_found", "Attachment not found")
+            is_mentioned = (
+                (db.session.execute(
+                    db.select(db.func.count())
+                    .select_from(SnipselMention)
+                    .join(Mention, Mention.id == SnipselMention.mention_id)
+                    .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
+                ).scalar() or 0)
+                > 0
+            )
+            if not is_mentioned:
+                raise api_error(404, "not_found", "Attachment not found")
+    elif att.collection_id:
         if not can_read_collection(user.id, att.collection_id):
             raise api_error(404, "not_found", "Attachment not found")
+    else:
+        # Orphan attachment?
+        raise api_error(404, "not_found", "Attachment not found")
 
     path = _resolve_attachment_path(att)
     if not path:
@@ -204,30 +207,32 @@ def download_thumbnail(attachment_id: str):
     if not att or not att.thumbnail_path:
         raise api_error(404, "not_found", "Thumbnail not found")
 
-    snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if not snipsel or snipsel.deleted_at is not None:
-        raise api_error(404, "not_found", "Thumbnail not found")
-
-    can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
-    if not can_read:
-        uname = (getattr(user, "username", "") or "").strip().casefold()
-        if not uname:
-            raise api_error(404, "not_found", "Thumbnail not found")
-        is_mentioned = (
-            (db.session.execute(
-                db.select(db.func.count())
-                .select_from(SnipselMention)
-                .join(Mention, Mention.id == SnipselMention.mention_id)
-                .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
-            ).scalar() or 0)
-            > 0
-        )
-        if not is_mentioned:
+    if att.snipsel_id:
+        snipsel = db.session.get(Snipsel, att.snipsel_id)
+        if not snipsel or snipsel.deleted_at is not None:
             raise api_error(404, "not_found", "Thumbnail not found")
 
-    if not snipsel and att.collection_id:
+        can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
+        if not can_read:
+            uname = (getattr(user, "username", "") or "").strip().casefold()
+            if not uname:
+                raise api_error(404, "not_found", "Thumbnail not found")
+            is_mentioned = (
+                (db.session.execute(
+                    db.select(db.func.count())
+                    .select_from(SnipselMention)
+                    .join(Mention, Mention.id == SnipselMention.mention_id)
+                    .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
+                ).scalar() or 0)
+                > 0
+            )
+            if not is_mentioned:
+                raise api_error(404, "not_found", "Thumbnail not found")
+    elif att.collection_id:
         if not can_read_collection(user.id, att.collection_id):
             raise api_error(404, "not_found", "Thumbnail not found")
+    else:
+        raise api_error(404, "not_found", "Thumbnail not found")
 
     # Try to resolve or regenerate thumbnail
     path = _resolve_thumbnail_path(att)
@@ -248,17 +253,19 @@ def delete_attachment(attachment_id: str):
     if not att:
         raise api_error(404, "not_found", "Attachment not found")
 
-    snipsel = db.session.get(Snipsel, att.snipsel_id)
-    if (
-        not snipsel
-        or snipsel.deleted_at is not None
-        or (snipsel.owner_user_id != user.id and not can_write_snipsel_via_collections(user.id, snipsel.id))
-    ):
-        raise api_error(404, "not_found", "Attachment not found")
-
-    if not snipsel and att.collection_id:
+    if att.snipsel_id:
+        snipsel = db.session.get(Snipsel, att.snipsel_id)
+        if (
+            not snipsel
+            or snipsel.deleted_at is not None
+            or (snipsel.owner_user_id != user.id and not can_write_snipsel_via_collections(user.id, snipsel.id))
+        ):
+            raise api_error(404, "not_found", "Attachment not found")
+    elif att.collection_id:
         if not can_write_collection(user.id, att.collection_id):
             raise api_error(404, "not_found", "Attachment not found")
+    else:
+        raise api_error(404, "not_found", "Attachment not found")
 
     file_path = _resolve_attachment_path(att)
     thumb_path = _resolve_thumbnail_path(att)
@@ -272,7 +279,13 @@ def delete_attachment(attachment_id: str):
             pass
 
     db.session.delete(att)
-    _touch_collections_for_snipsel(snipsel_id=snipsel.id, modified_by_id=user.id)
+    if att.snipsel_id:
+        _touch_collections_for_snipsel(snipsel_id=att.snipsel_id, modified_by_id=user.id)
+    elif att.collection_id:
+        coll = db.session.get(Collection, att.collection_id)
+        if coll:
+            coll.modified_at = datetime.utcnow()
+            coll.modified_by_id = user.id
     db.session.commit()
     return json_response({"ok": True})
 
