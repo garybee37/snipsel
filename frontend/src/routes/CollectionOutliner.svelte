@@ -1545,7 +1545,7 @@
         {#if $currentCollection?.header_image_url}
           <div 
             class="absolute inset-0 bg-cover"
-            style="background-image: url('{$currentCollection.header_image_url}{ $currentCollection.header_image_url.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-position: {$currentCollection.header_image_x_position || '50%'} {$currentCollection.header_image_position || '50%'}; transform: scale({$currentCollection.header_image_zoom || 1.0})"
+            style="background-image: url('{$currentCollection.header_image_url}{ $currentCollection.header_image_url.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-position: {$currentCollection.header_image_x_position || '50%'} {$currentCollection.header_image_position || '50%'}; transform: scale({$currentCollection.header_image_zoom || 1.0}) translate({(50 - (parseFloat($currentCollection.header_image_x_position) || 50)) * (1 - 1 / ($currentCollection.header_image_zoom || 1.0))}%, {(50 - (parseFloat($currentCollection.header_image_position) || 50)) * (1 - 1 / ($currentCollection.header_image_zoom || 1.0))}%)"
           ></div>
         {/if}
       </div>

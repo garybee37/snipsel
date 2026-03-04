@@ -470,8 +470,8 @@
                   <!-- Preview -->
                   <div class="h-28 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-slate-800 relative">
                     <div 
-                      class="absolute inset-0 bg-cover transition-transform duration-75"
-                      style="background-image: url('{headerImageUrl}{ headerImageUrl.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-position: {headerImageXPosition} {headerImagePosition}; transform: scale({headerImageZoom})"
+                      class="absolute inset-0 bg-cover"
+                      style="background-image: url('{headerImageUrl}{ headerImageUrl.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-position: {headerImageXPosition} {headerImagePosition}; transform: scale({headerImageZoom}) translate({(50 - (parseFloat(headerImageXPosition) || 50)) * (1 - 1 / headerImageZoom)}%, {(50 - (parseFloat(headerImagePosition) || 50)) * (1 - 1 / headerImageZoom)}%)"
                     ></div>
                   </div>
                 </div>
