@@ -205,11 +205,34 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
 
-  const data = (await res.json()) as T | ApiError;
-  if (!res.ok) {
-    throw data;
+  if (res.status === 413) {
+    throw {
+      error: {
+        code: 'payload_too_large',
+        message: 'Die Datei ist zu groß für den Upload (Limit: 10MB).',
+      },
+    } as ApiError;
   }
-  return data as T;
+
+  const contentType = res.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    const data = (await res.json()) as T | ApiError;
+    if (!res.ok) {
+      throw data;
+    }
+    return data as T;
+  }
+
+  if (!res.ok) {
+    throw {
+      error: {
+        code: 'unknown_error',
+        message: `Ein unerwarteter Fehler ist aufgetreten (${res.status}).`,
+      },
+    } as ApiError;
+  }
+
+  return {} as T;
 }
 
 export const api = {

@@ -4,6 +4,7 @@
   import ImageModal from '../lib/ImageModal.svelte';
   import CollectionSelectModal from '../lib/CollectionSelectModal.svelte';
   import DeleteConfirmModal from '../lib/DeleteConfirmModal.svelte';
+  import InfoModal from '../lib/InfoModal.svelte';
   import DeezerCard from '../lib/DeezerCard.svelte';
   import YouTubeCard from '../lib/YouTubeCard.svelte';
 
@@ -78,6 +79,7 @@
   let showTypeMenu = $state(false);
   let showScrollTop = $state(false);
   let showDeleteModal = $state(false);
+  let errorModal = $state<{ title: string; message: string } | null>(null);
 
   // Swipe navigation state (for daily collections)
   let swipeTouchStartX = $state(0);
@@ -503,6 +505,19 @@
       }
       await loadItems();
       clearSelection();
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+      if (err.error?.code === 'payload_too_large') {
+        errorModal = {
+          title: 'Datei zu groß',
+          message: err.error.message || 'Die Datei überschreitet das Upload-Limit von 10 MB.'
+        };
+      } else {
+        errorModal = {
+          title: 'Upload fehlgeschlagen',
+          message: err.error?.message || 'Ein unerwarteter Fehler ist aufgetreten.'
+        };
+      }
     } finally {
       uploadingAttachments = false;
       isLoading.set(false);

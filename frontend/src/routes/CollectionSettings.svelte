@@ -3,6 +3,7 @@
   import { collectionAnchor, collections, currentCollection, currentView, isLoading } from '../lib/stores';
   import { currentUser } from '../lib/session';
   import DeleteConfirmModal from '../lib/DeleteConfirmModal.svelte';
+  import InfoModal from '../lib/InfoModal.svelte';
 
   interface Props {
     collectionId: string;
@@ -22,6 +23,7 @@
   let defaultSnipselType = $state('');
   let saving = $state(false);
   let showDeleteModal = $state(false);
+  let errorModal = $state<{ title: string; message: string } | null>(null);
 
   let users = $state<UserLite[]>([]);
   let shares = $state<CollectionShare[]>([]);
@@ -174,7 +176,18 @@
       collections.update((list) => list.map((c) => (c.id === res.collection.id ? { ...c, ...res.collection } : c)));
       currentCollection.update((c) => (c?.id === res.collection.id ? { ...c, ...res.collection } : c));
     } catch (err: any) {
-      alert('Upload failed: ' + (err.error?.message || 'Unknown error'));
+      console.error('Upload failed:', err);
+      if (err.error?.code === 'payload_too_large') {
+        errorModal = {
+          title: 'Datei zu groß',
+          message: err.error.message || 'Die Datei überschreitet das Upload-Limit von 10 MB.'
+        };
+      } else {
+        errorModal = {
+          title: 'Upload fehlgeschlagen',
+          message: err.error?.message || 'Ein unerwarteter Fehler ist aufgetreten.'
+        };
+      }
     } finally {
       saving = false;
     }
@@ -634,5 +647,13 @@
     message={`Möchtest du die Collection "${title}" wirklich dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
     onConfirm={confirmDeleteCollection}
     onCancel={cancelDeleteCollection}
+  />
+{/if}
+
+{#if errorModal}
+  <InfoModal
+    title={errorModal.title}
+    message={errorModal.message}
+    onClose={() => (errorModal = null)}
   />
 {/if}
