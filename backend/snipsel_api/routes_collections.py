@@ -684,6 +684,13 @@ def update_collection(collection_id: str):
         c.header_color = (data.get("header_color") or "").strip() or None
     if "header_image_position" in data:
         c.header_image_position = (data.get("header_image_position") or "").strip() or "50%"
+    if "header_image_x_position" in data:
+        c.header_image_x_position = (data.get("header_image_x_position") or "").strip() or "50%"
+    if "header_image_zoom" in data:
+        try:
+            c.header_image_zoom = float(data.get("header_image_zoom") or 1.0)
+        except (ValueError, TypeError):
+            c.header_image_zoom = 1.0
     if "archived" in data:
         archived = bool(data.get("archived"))
         c.archived_at = datetime.utcnow() if archived else None
@@ -889,6 +896,8 @@ def _collection_json(c: Collection) -> dict:
         "header_image_url": c.header_image_url,
         "header_color": c.header_color,
         "header_image_position": c.header_image_position,
+        "header_image_x_position": c.header_image_x_position,
+        "header_image_zoom": c.header_image_zoom,
         "is_template": bool(c.is_template),
         "default_snipsel_type": c.default_snipsel_type,
         "archived": c.archived_at is not None,

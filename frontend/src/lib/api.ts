@@ -40,6 +40,8 @@ export type Collection = {
   header_image_url: string | null;
   header_color?: string | null;
   header_image_position?: string | null;
+  header_image_x_position?: string | null;
+  header_image_zoom?: number | null;
   is_favorite?: boolean;
   is_template?: boolean;
   default_snipsel_type?: string | null;

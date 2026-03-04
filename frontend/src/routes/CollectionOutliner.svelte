@@ -1539,11 +1539,16 @@
   <div class="relative">
     <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
       <div
-        class="relative h-28 w-full bg-cover bg-center rounded-t-[calc(0.75rem-1px)] overflow-hidden dark:brightness-75"
-        style={$currentCollection?.header_image_url
-          ? `background-image: url('${$currentCollection.header_image_url}${ $currentCollection.header_image_url.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-color: ${getHeaderColor()}; background-position: center ${$currentCollection.header_image_position || '50%'}`
-          : `background-color: ${getHeaderColor()}`}
-      ></div>
+        class="relative h-28 w-full rounded-t-[calc(0.75rem-1px)] overflow-hidden dark:brightness-75"
+        style="background-color: {getHeaderColor()}"
+      >
+        {#if $currentCollection?.header_image_url}
+          <div 
+            class="absolute inset-0 bg-cover"
+            style="background-image: url('{$currentCollection.header_image_url}{ $currentCollection.header_image_url.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-position: {$currentCollection.header_image_x_position || '50%'} {$currentCollection.header_image_position || '50%'}; transform: scale({$currentCollection.header_image_zoom || 1.0})"
+          ></div>
+        {/if}
+      </div>
 
       <div class="relative px-4 py-3">
         <div class="absolute left-4 top-0 -translate-y-1/2 z-10">

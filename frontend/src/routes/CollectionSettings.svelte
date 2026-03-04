@@ -16,6 +16,8 @@
   let headerImageUrl = $state('');
   let headerColor = $state('');
   let headerImagePosition = $state('50%');
+  let headerImageXPosition = $state('50%');
+  let headerImageZoom = $state(1.0);
   let isFavorite = $state(false);
   let defaultSnipselType = $state('');
   let saving = $state(false);
@@ -86,6 +88,8 @@
       headerImageUrl = collection.header_image_url ?? '';
       headerColor = collection.header_color ?? '';
       headerImagePosition = collection.header_image_position ?? '50%';
+      headerImageXPosition = collection.header_image_x_position ?? '50%';
+      headerImageZoom = collection.header_image_zoom ?? 1.0;
       isFavorite = Boolean(collection.is_favorite);
       defaultSnipselType = collection.default_snipsel_type ?? '';
 
@@ -141,7 +145,9 @@
         icon: icon.trim(),
         header_image_url: headerImageUrl.trim() || null,
         header_color: headerColor.trim() || null,
-        header_image_position: headerImagePosition || '50%',
+        header_image_position: headerImagePosition,
+        header_image_x_position: headerImageXPosition,
+        header_image_zoom: headerImageZoom,
         is_template: Boolean(collection.is_template),
         is_passcode_protected: Boolean(collection.is_passcode_protected),
         default_snipsel_type: defaultSnipselType.trim() || null,
@@ -431,11 +437,43 @@
                     style={`--accent: ${getAccent()}`}
                   />
                   
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-500">Horizontal position</span>
+                    <span class="text-xs font-mono text-slate-400">{headerImageXPosition}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 dark:bg-slate-700"
+                    value={parseInt(headerImageXPosition) || 50}
+                    oninput={(e) => (headerImageXPosition = `${e.currentTarget.value}%`)}
+                    style={`--accent: ${getAccent()}`}
+                  />
+                  
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-500">Zoom</span>
+                    <span class="text-xs font-mono text-slate-400">{headerImageZoom.toFixed(2)}x</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.05"
+                    class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 dark:bg-slate-700"
+                    value={headerImageZoom}
+                    oninput={(e) => (headerImageZoom = parseFloat(e.currentTarget.value))}
+                    style={`--accent: ${getAccent()}`}
+                  />
+                  
                   <!-- Preview -->
-                  <div 
-                    class="h-28 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-slate-800"
-                    style="background-image: url('{headerImageUrl}{ headerImageUrl.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-size: cover; background-position: center {headerImagePosition}"
-                  ></div>
+                  <div class="h-28 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-slate-800 relative">
+                    <div 
+                      class="absolute inset-0 bg-cover transition-transform duration-75"
+                      style="background-image: url('{headerImageUrl}{ headerImageUrl.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-position: {headerImageXPosition} {headerImagePosition}; transform: scale({headerImageZoom})"
+                    ></div>
+                  </div>
                 </div>
               {/if}
             </div>

@@ -4,7 +4,7 @@ from typing import Optional
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, Enum, ForeignKey, Index, String, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, Date, DateTime, Enum, Float, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from snipsel_api.extensions import db
@@ -69,6 +69,8 @@ class Collection(db.Model):
     header_image_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     header_color: Mapped[Optional[str]] = mapped_column(String(7), nullable=True)
     header_image_position: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, default="50%")
+    header_image_x_position: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, default="50%")
+    header_image_zoom: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=1.0)
 
     is_template: Mapped[bool] = mapped_column(default=False, nullable=False)
 
