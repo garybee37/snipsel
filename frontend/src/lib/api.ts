@@ -363,9 +363,28 @@ export const api = {
         credentials: 'include',
         body: form,
       });
-      const data = (await res.json()) as { collection: Collection } | ApiError;
-      if (!res.ok) throw data;
-      return data as { collection: Collection };
+
+      if (res.status === 413) {
+        throw {
+          error: {
+            code: 'payload_too_large',
+            message: 'Die Datei ist zu groß für den Upload (Limit: 10MB).',
+          },
+        } as ApiError;
+      }
+
+      if (!res.ok) {
+        let errData: any;
+        try {
+          errData = await res.json();
+        } catch {
+          errData = { error: { code: 'unknown_error', message: `Ein unerwarteter Fehler ist aufgetreten (${res.status}).` } };
+        }
+        throw errData;
+      }
+
+      const data = (await res.json()) as { collection: Collection };
+      return data;
     },
 
     favorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'POST' }),
@@ -493,9 +512,28 @@ export const api = {
         credentials: 'include',
         body: form,
       });
-      const data = (await res.json()) as { attachment: Attachment } | ApiError;
-      if (!res.ok) throw data;
-      return data as { attachment: Attachment };
+
+      if (res.status === 413) {
+        throw {
+          error: {
+            code: 'payload_too_large',
+            message: 'Die Datei ist zu groß für den Upload (Limit: 10MB).',
+          },
+        } as ApiError;
+      }
+
+      if (!res.ok) {
+        let errData: any;
+        try {
+          errData = await res.json();
+        } catch {
+          errData = { error: { code: 'unknown_error', message: `Ein unerwarteter Fehler ist aufgetreten (${res.status}).` } };
+        }
+        throw errData;
+      }
+
+      const data = (await res.json()) as { attachment: Attachment };
+      return data;
     },
     delete: async (attachmentId: string) => {
       const res = await fetch(`/api/attachments/${attachmentId}`, {

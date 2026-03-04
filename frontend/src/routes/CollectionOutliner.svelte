@@ -472,6 +472,8 @@
   }
 
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
   function openDetailSelected() {
     if (selectedIds.size === 0) return;
     const id = Array.from(selectedIds)[0];
@@ -488,6 +490,18 @@
     }
 
     const fileArray = Array.from(files);
+    
+    // Client-side check
+    const oversizedFiles = fileArray.filter(f => f.size > MAX_FILE_SIZE);
+    if (oversizedFiles.length > 0) {
+      errorModal = {
+        title: 'Datei zu groß',
+        message: `Die folgende(n) Datei(en) überschreiten das Limit von 10 MB:\n${oversizedFiles.map(f => f.name).join(', ')}`
+      };
+      input.value = '';
+      return;
+    }
+
     const hasImage = fileArray.some((f) => f.type.startsWith('image/'));
 
     uploadingAttachments = true;

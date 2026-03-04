@@ -166,6 +166,17 @@
     const target = e.target as HTMLInputElement;
     if (!target.files?.length || !collection) return;
     const file = target.files[0];
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      errorModal = {
+        title: 'Datei zu groß',
+        message: 'Das Header-Bild ist zu groß (Limit: 10MB).'
+      };
+      target.value = '';
+      return;
+    }
+
     saving = true;
     try {
       const res = await api.collections.uploadHeaderImage(collection.id, file);
