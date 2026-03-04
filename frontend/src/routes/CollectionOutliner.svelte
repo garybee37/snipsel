@@ -2807,3 +2807,11 @@
     onCancel={cancelDeleteSelected}
   />
 {/if}
+
+{#if errorModal}
+  <InfoModal
+    title={errorModal.title}
+    message={errorModal.message}
+    onClose={() => (errorModal = null)}
+  />
+{/if}
