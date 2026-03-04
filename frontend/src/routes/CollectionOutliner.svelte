@@ -8,6 +8,7 @@
   import ProgressModal from '../lib/ProgressModal.svelte';
   import DeezerCard from '../lib/DeezerCard.svelte';
   import YouTubeCard from '../lib/YouTubeCard.svelte';
+  import VideoModal from '../lib/VideoModal.svelte';
 
   import {
     collectionItems,
@@ -76,6 +77,7 @@
   let shareCount = $state(0);
 
   let modalImage = $state<{ id: string; filename: string } | null>(null);
+  let modalVideo = $state<{ id: string; filename: string } | null>(null);
 
   let showTypeMenu = $state(false);
   let showScrollTop = $state(false);
@@ -413,6 +415,14 @@
 
   function closeImageModal() {
     modalImage = null;
+  }
+
+  function openVideoModal(id: string, filename: string) {
+    modalVideo = { id, filename };
+  }
+
+  function closeVideoModal() {
+    modalVideo = null;
   }
 
   function closeTypeMenu() {
@@ -2311,20 +2321,27 @@
 
 
 
-              {#if item.snipsel.attachments.length > 0 && item.snipsel.type === 'image'}
-                {@const images = item.snipsel.attachments.filter(isImageAttachment)}
-                {@const others = item.snipsel.attachments.filter((a) => !isImageAttachment(a))}
+              {#if item.snipsel.attachments.length > 0 && (item.snipsel.type === 'image' || item.snipsel.type === 'attachment')}
+                {@const isImageAttachment = (a: Attachment) => Boolean(a.mime_type?.startsWith('image/') || (a.has_thumbnail && !a.mime_type?.startsWith('video/')))}
+                {@const isVideoAttachment = (a: Attachment) => Boolean(a.mime_type?.startsWith('video/') || (a.has_thumbnail && a.filename.toLowerCase().match(/\.(mp4|mov|webm|avi|mkv)$/)))}
+                {@const isMediaAttachment = (a: Attachment) => isImageAttachment(a) || isVideoAttachment(a)}
+                {@const media = item.snipsel.attachments.filter(isMediaAttachment)}
+                {@const others = item.snipsel.attachments.filter((a) => !isMediaAttachment(a))}
 
-                {#if images.length > 0}
+                {#if media.length > 0}
                   <div class="mt-3 grid grid-cols-3 gap-3">
-                    {#each images.slice(0, 9) as a}
+                    {#each media.slice(0, 9) as a}
                       <button
                         type="button"
                         class="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/30 bg-white/20 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition-all hover:scale-[1.03] hover:shadow-lg active:scale-95 dark:border-white/10 dark:bg-white/5"
-                        aria-label={`View ${a.filename}`}
+                        aria-label={isVideoAttachment(a) ? `Play ${a.filename}` : `View ${a.filename}`}
                         onclick={(e) => {
                           e.stopPropagation();
-                          openImageModal(a.id, a.filename);
+                          if (isVideoAttachment(a)) {
+                            openVideoModal(a.id, a.filename);
+                          } else {
+                            openImageModal(a.id, a.filename);
+                          }
                         }}
                       >
                         <img
@@ -2333,12 +2350,20 @@
                           alt={a.filename}
                           loading="lazy"
                         />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
+                        {#if isVideoAttachment(a)}
+                          <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white drop-shadow-md" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
+                          </div>
+                        {:else}
+                          <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
+                        {/if}
                       </button>
                     {/each}
                   </div>
-                  {#if images.length > 9}
-                    <div class="mt-2 text-sm text-slate-400">+{images.length - 9} more</div>
+                  {#if media.length > 9}
+                    <div class="mt-2 text-sm text-slate-400">+{media.length - 9} more</div>
                   {/if}
                 {/if}
 
@@ -2843,5 +2868,12 @@
     title={errorModal.title}
     message={errorModal.message}
     onClose={() => (errorModal = null)}
+  />
+{/if}
+{#if modalVideo}
+  <VideoModal
+    attachmentId={modalVideo.id}
+    filename={modalVideo.filename}
+    onClose={closeVideoModal}
   />
 {/if}

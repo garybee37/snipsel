@@ -55,9 +55,16 @@ def upload_attachment(snipsel_id: str):
     mime_type = file.mimetype
 
     thumbnail_path: Path | None = None
-    if mime_type and mime_type.startswith("image/"):
-        thumbnail_path = upload_dir / f"{att_id}_thumb.jpg"
-        _write_thumbnail(storage_path, thumbnail_path)
+    if mime_type:
+        if mime_type.startswith("image/"):
+            thumbnail_path = upload_dir / f"{att_id}_thumb.jpg"
+            _write_thumbnail(storage_path, thumbnail_path)
+        elif mime_type.startswith("video/"):
+            thumbnail_path = upload_dir / f"{att_id}_video_thumb.jpg"
+            if _write_video_thumbnail(storage_path, thumbnail_path):
+                pass
+            else:
+                thumbnail_path = None
 
     att = Attachment(
         id=att_id,
@@ -409,11 +416,24 @@ def _resolve_thumbnail_path(att: Attachment, regenerate: bool = True) -> Path | 
                     ]
                 )
 
-        original = _first_existing(original_candidates)
-        if original and original.exists():
-            thumb_name = f"{att.id}_header_thumb.jpg" if "_header_thumb.jpg" in (att.thumbnail_path or "") else f"{att.id}_thumb.jpg"
-            thumb_path = upload_dir / thumb_name
+    original = _first_existing(original_candidates)
+    if original and original.exists():
+        thumb_name = f"{att.id}_thumb.jpg"
+        if "_header_thumb.jpg" in (att.thumbnail_path or ""):
+            thumb_name = f"{att.id}_header_thumb.jpg"
+        elif "_video_thumb.jpg" in (att.thumbnail_path or "") or (att.mime_type and att.mime_type.startswith("video/")):
+            thumb_name = f"{att.id}_video_thumb.jpg"
+        
+        thumb_path = upload_dir / thumb_name
+        
+        success = False
+        if "_video_thumb.jpg" in thumb_name:
+            success = _write_video_thumbnail(original, thumb_path)
+        else:
             _write_thumbnail(original, thumb_path, header=("_header_thumb.jpg" in thumb_name))
+            success = True
+        
+        if success:
             att.thumbnail_path = str(thumb_path)
             db.session.commit()
             found = thumb_path
@@ -467,4 +487,38 @@ def _write_thumbnail(src: Path, dst: Path, header: bool = False) -> None:
             im.thumbnail((512, 512))
             im = im.convert("RGB")
             im.save(dst, format="JPEG", quality=80)
+
+
+def _write_video_thumbnail(src: Path, dst: Path) -> bool:
+    """Generates a thumbnail for a video file using ffmpeg."""
+    import subprocess
+    try:
+        # Extract 1 frame from 1 second into the video
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i", str(src),
+            "-ss", "00:00:01",
+            "-vframes", "1",
+            "-f", "image2",
+            "-vcodec", "mjpeg",
+            str(dst)
+        ]
+        result = subprocess.run(cmd, capture_output=True, check=False)
+        if result.returncode == 0:
+            # Resize the generated thumbnail if needed
+            if dst.exists():
+                _write_thumbnail(dst, dst)
+            return True
+        else:
+            # Try at 0 seconds if 1 second fails (e.g. very short video)
+            cmd[cmd.index("-ss") + 1] = "00:00:00"
+            result = subprocess.run(cmd, capture_output=True, check=False)
+            if result.returncode == 0:
+                if dst.exists():
+                    _write_thumbnail(dst, dst)
+                return True
+    except Exception as e:
+        print(f"Error generating video thumbnail: {e}")
+    return False
 

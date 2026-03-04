@@ -6,6 +6,7 @@
   import { getCurrentUrl } from '../lib/router';
   import DeezerCard from '../lib/DeezerCard.svelte';
   import YouTubeCard from '../lib/YouTubeCard.svelte';
+  import VideoModal from '../lib/VideoModal.svelte';
 
   interface Props {
     snipselId: string;
@@ -94,6 +95,7 @@
   }
 
   let modalImage = $state<{ id: string; filename: string } | null>(null);
+  let modalVideo = $state<{ id: string; filename: string } | null>(null);
 
   function openImageModal(id: string, filename: string) {
     modalImage = { id, filename };
@@ -101,6 +103,14 @@
 
   function closeImageModal() {
     modalImage = null;
+  }
+
+  function openVideoModal(id: string, filename: string) {
+    modalVideo = { id, filename };
+  }
+
+  function closeVideoModal() {
+    modalVideo = null;
   }
 
 	let hasWriteAccess = $state(true);
@@ -199,7 +209,15 @@
 
 
   function isImageAttachment(a: Attachment): boolean {
-    return Boolean(a.mime_type?.startsWith('image/') || a.has_thumbnail);
+    return Boolean(a.mime_type?.startsWith('image/') || (a.has_thumbnail && !a.mime_type?.startsWith('video/')));
+  }
+
+  function isVideoAttachment(a: Attachment): boolean {
+    return Boolean(a.mime_type?.startsWith('video/') || (a.has_thumbnail && a.filename.toLowerCase().match(/\.(mp4|mov|webm|avi|mkv)$/)));
+  }
+
+  function isMediaAttachment(a: Attachment): boolean {
+    return isImageAttachment(a) || isVideoAttachment(a);
   }
 
   function formatWhen(iso: string | null): string {
@@ -722,7 +740,21 @@
 					<div class="mt-3 space-y-2">
 						{#each snipsel.attachments as a}
 							<div class="flex items-center gap-3 px-1 py-1">
-								{#if isImageAttachment(a) && a.has_thumbnail}
+								{#if isVideoAttachment(a) && a.has_thumbnail}
+									<button
+										type="button"
+										class="relative h-10 w-10 overflow-hidden rounded group"
+										aria-label={`Play ${a.filename}`}
+										onclick={() => openVideoModal(a.id, a.filename)}
+									>
+										<img class="h-10 w-10 object-cover" src={api.attachments.thumbnailUrl(a.id)} alt={a.filename} loading="lazy" />
+										<div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+											<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+											</svg>
+										</div>
+									</button>
+								{:else if isImageAttachment(a) && a.has_thumbnail}
 									<button
 										type="button"
 										class="h-10 w-10 overflow-hidden rounded"
@@ -734,7 +766,9 @@
 								{:else if a.has_thumbnail}
 									<img class="h-10 w-10 rounded object-cover" src={api.attachments.thumbnailUrl(a.id)} alt={a.filename} loading="lazy" />
 								{:else}
-									<div class="h-10 w-10 rounded bg-slate-100"></div>
+									<div class="h-10 w-10 rounded bg-slate-100 flex items-center justify-center text-xs dark:bg-slate-800">
+                    {a.filename.split('.').pop()?.toUpperCase() || 'FILE'}
+                  </div>
 								{/if}
 								<div class="min-w-0 flex-1">
 									<div class="truncate text-sm font-medium dark:text-slate-200">{a.filename}</div>
@@ -859,3 +893,11 @@
   filename={modalImage?.filename ?? ''}
   onClose={closeImageModal}
 />
+
+{#if modalVideo}
+  <VideoModal
+    attachmentId={modalVideo.id}
+    filename={modalVideo.filename}
+    onClose={closeVideoModal}
+  />
+{/if}
