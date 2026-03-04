@@ -271,7 +271,7 @@ def delete_attachment(attachment_id: str):
         raise api_error(404, "not_found", "Attachment not found")
 
     file_path = _resolve_attachment_path(att)
-    thumb_path = _resolve_thumbnail_path(att)
+    thumb_path = _resolve_thumbnail_path(att, regenerate=False)
 
     for p in [thumb_path, file_path]:
         if not p:
@@ -355,7 +355,7 @@ def _resolve_attachment_path(att: Attachment) -> Path | None:
     return found
 
 
-def _resolve_thumbnail_path(att: Attachment) -> Path | None:
+def _resolve_thumbnail_path(att: Attachment, regenerate: bool = True) -> Path | None:
     upload_dir = Path(current_app.config.get("SNIPSEL_UPLOAD_DIR", "./uploads"))
     expected = f"{att.id}_thumb.jpg"
 
@@ -390,7 +390,7 @@ def _resolve_thumbnail_path(att: Attachment) -> Path | None:
     found = _first_existing(candidates)
 
     # If thumbnail file is missing but original exists, regenerate it
-    if not found:
+    if not found and regenerate:
         # Find original image
         original_candidates = []
         if att.storage_path:
