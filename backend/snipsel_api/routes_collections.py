@@ -673,7 +673,13 @@ def update_collection(collection_id: str):
             raise api_error(400, "invalid_input", "icon cannot be empty")
         c.icon = icon
     if "header_image_url" in data:
-        c.header_image_url = (data.get("header_image_url") or "").strip() or None
+        new_url = (data.get("header_image_url") or "").strip() or None
+        if new_url != c.header_image_url:
+            # If old one was an internal attachment, clean it up
+            if c.header_image_url and c.header_image_url.startswith("/api/attachments/"):
+                from snipsel_api.routes_attachments import delete_collection_header_attachments
+                delete_collection_header_attachments(collection_id)
+            c.header_image_url = new_url
     if "header_color" in data:
         c.header_color = (data.get("header_color") or "").strip() or None
     if "header_image_position" in data:
@@ -739,17 +745,8 @@ def delete_collection(collection_id: str):
         c.list_for_day = None
         
     # Clean up header attachments
-    header_atts = db.session.execute(db.select(Attachment).where(Attachment.collection_id == collection_id)).scalars().all()
-    for att in header_atts:
-        file_path = _resolve_attachment_path(att)
-        thumb_path = _resolve_thumbnail_path(att)
-        for p in [thumb_path, file_path]:
-            if p:
-                try:
-                    p.unlink(missing_ok=True)
-                except OSError:
-                    pass
-        db.session.delete(att)
+    from snipsel_api.routes_attachments import delete_collection_header_attachments
+    delete_collection_header_attachments(collection_id)
 
     db.session.commit()
     return json_response({"ok": True})

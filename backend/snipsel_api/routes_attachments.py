@@ -122,6 +122,9 @@ def upload_collection_header(collection_id: str):
         thumbnail_path = upload_dir / f"{att_id}_header_thumb.jpg"
         _write_thumbnail(storage_path, thumbnail_path, header=True)
 
+    # Clean up old header attachments if they exist
+    delete_collection_header_attachments(collection.id)
+
     att = Attachment(
         id=att_id,
         collection_id=collection.id,
@@ -288,6 +291,29 @@ def delete_attachment(attachment_id: str):
             coll.modified_by_id = user.id
     db.session.commit()
     return json_response({"ok": True})
+
+
+def delete_collection_header_attachments(collection_id: str):
+    """Deletes all attachments associated with a collection's header."""
+    header_atts = db.session.execute(
+        db.select(Attachment).where(Attachment.collection_id == collection_id)
+    ).scalars().all()
+    for att in header_atts:
+        # Resolve paths without triggering regeneration
+        paths_to_delete = []
+        if att.storage_path:
+            paths_to_delete.append(Path(att.storage_path))
+        if att.thumbnail_path:
+            paths_to_delete.append(Path(att.thumbnail_path))
+            
+        for p in paths_to_delete:
+            if p and p.exists():
+                try:
+                    p.unlink(missing_ok=True)
+                except OSError:
+                    pass
+        db.session.delete(att)
+    db.session.flush()
 
 
 def _resolve_attachment_path(att: Attachment) -> Path | None:
