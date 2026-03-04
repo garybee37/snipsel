@@ -434,7 +434,7 @@
                   <!-- Preview -->
                   <div 
                     class="h-28 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-slate-800"
-                    style="background-image: url('{headerImageUrl}'); background-size: cover; background-position: center {headerImagePosition}"
+                    style="background-image: url('{headerImageUrl}{ headerImageUrl.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-size: cover; background-position: center {headerImagePosition}"
                   ></div>
                 </div>
               {/if}

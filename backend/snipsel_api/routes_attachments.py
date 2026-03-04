@@ -427,22 +427,18 @@ def _write_thumbnail(src: Path, dst: Path, header: bool = False) -> None:
             pass
         
         if header:
-            # Better for wide header: center crop 3:1 aspect ratio
-            w, h = im.size
-            target_ratio = 3.0
-            if w / h > target_ratio:
-                # Too wide, crop width
-                new_w = int(h * target_ratio)
-                left = (w - new_w) // 2
-                im = im.crop((left, 0, left + new_w, h))
-            else:
-                # Too tall, crop height
-                new_h = int(w / target_ratio)
-                top = (h - new_h) // 2
-                im = im.crop((0, top, w, top + new_h))
-            im.thumbnail((1200, 400))
+            # For headers, we want a reasonably wide thumbnail to support "move" functionality
+            # without pre-cropping. We resize to 1200px width and maintain aspect ratio.
+            max_w = 1200
+            if im.width > max_w:
+                w_percent = (max_w / float(im.width))
+                h_size = int((float(im.height) * float(w_percent)))
+                im = im.resize((max_w, h_size), Image.Resampling.LANCZOS)
+            
+            # Save as optimized JPEG
+            im.convert("RGB").save(str(dst), "JPEG", quality=85, optimize=True)
         else:
             im.thumbnail((512, 512))
-            
-        im = im.convert("RGB")
-        im.save(dst, format="JPEG", quality=80)
+            im = im.convert("RGB")
+            im.save(dst, format="JPEG", quality=80)
+
