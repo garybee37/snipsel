@@ -433,7 +433,7 @@
                   
                   <!-- Preview -->
                   <div 
-                    class="h-20 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-slate-800"
+                    class="h-auto aspect-[3/1] w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-slate-800"
                     style="background-image: url('{headerImageUrl}'); background-size: cover; background-position: center {headerImagePosition}"
                   ></div>
                 </div>

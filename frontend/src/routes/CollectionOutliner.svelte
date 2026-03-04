@@ -1539,7 +1539,7 @@
   <div class="relative">
     <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
       <div
-        class="relative h-28 w-full bg-cover bg-center rounded-t-[calc(0.75rem-1px)] overflow-hidden dark:brightness-75"
+        class="relative h-auto aspect-[3/1] w-full bg-cover bg-center rounded-t-[calc(0.75rem-1px)] overflow-hidden dark:brightness-75"
         style={$currentCollection?.header_image_url
           ? `background-image: url('${$currentCollection.header_image_url}${ $currentCollection.header_image_url.startsWith('/api/attachments/') ? '/thumbnail' : '' }'); background-color: ${getHeaderColor()}; background-position: center ${$currentCollection.header_image_position || '50%'}`
           : `background-color: ${getHeaderColor()}`}
