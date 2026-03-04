@@ -416,27 +416,27 @@ def _resolve_thumbnail_path(att: Attachment, regenerate: bool = True) -> Path | 
                     ]
                 )
 
-    original = _first_existing(original_candidates)
-    if original and original.exists():
-        thumb_name = f"{att.id}_thumb.jpg"
-        if "_header_thumb.jpg" in (att.thumbnail_path or ""):
-            thumb_name = f"{att.id}_header_thumb.jpg"
-        elif "_video_thumb.jpg" in (att.thumbnail_path or "") or (att.mime_type and att.mime_type.startswith("video/")):
-            thumb_name = f"{att.id}_video_thumb.jpg"
-        
-        thumb_path = upload_dir / thumb_name
-        
-        success = False
-        if "_video_thumb.jpg" in thumb_name:
-            success = _write_video_thumbnail(original, thumb_path)
-        else:
-            _write_thumbnail(original, thumb_path, header=("_header_thumb.jpg" in thumb_name))
-            success = True
-        
-        if success:
-            att.thumbnail_path = str(thumb_path)
-            db.session.commit()
-            found = thumb_path
+        original = _first_existing(original_candidates)
+        if original and original.exists():
+            thumb_name = f"{att.id}_thumb.jpg"
+            if "_header_thumb.jpg" in (att.thumbnail_path or ""):
+                thumb_name = f"{att.id}_header_thumb.jpg"
+            elif "_video_thumb.jpg" in (att.thumbnail_path or "") or (att.mime_type and att.mime_type.startswith("video/")):
+                thumb_name = f"{att.id}_video_thumb.jpg"
+            
+            thumb_path = upload_dir / thumb_name
+            
+            success = False
+            if "_video_thumb.jpg" in thumb_name:
+                success = _write_video_thumbnail(original, thumb_path)
+            else:
+                _write_thumbnail(original, thumb_path, header=("_header_thumb.jpg" in thumb_name))
+                success = True
+            
+            if success:
+                att.thumbnail_path = str(thumb_path)
+                db.session.commit()
+                found = thumb_path
 
     if found and att.thumbnail_path != str(found):
         att.thumbnail_path = str(found)
