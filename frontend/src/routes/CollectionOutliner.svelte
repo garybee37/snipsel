@@ -517,7 +517,7 @@
       return;
     }
 
-    const hasImage = fileArray.some((f) => f.type.startsWith('image/'));
+    const hasMedia = fileArray.some((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
 
     uploadingAttachments = true;
     isLoading.set(true);
@@ -531,7 +531,7 @@
           });
         }
         // Auto-switch type to image if any uploaded file is an image
-        if (hasImage) {
+        if (hasMedia) {
           await api.snipsels.update(snipselId, { type: 'image' });
         }
       }
@@ -854,33 +854,35 @@
     const items = e.clipboardData?.items;
     if (!items) return;
 
-    let imageFile: File | null = null;
+    let mediaFile: File | null = null;
     for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
+      if (items[i].type.startsWith('image/') || items[i].type.startsWith('video/')) {
         const blob = items[i].getAsFile();
         if (blob) {
-          const extension = items[i].type.split('/')[1] || 'png';
-          const filename = `pasted-image-${Date.now()}.${extension}`;
-          imageFile = new File([blob], filename, { type: items[i].type });
+          const isImage = items[i].type.startsWith('image/');
+          const extension = items[i].type.split('/')[1] || (isImage ? 'png' : 'mp4');
+          const prefix = isImage ? 'pasted-image' : 'pasted-video';
+          const filename = `${prefix}-${Date.now()}.${extension}`;
+          mediaFile = new File([blob], filename, { type: items[i].type });
           break;
         }
       }
     }
 
-    if (imageFile) {
+    if (mediaFile) {
       const snipselId = $editingSnipselId;
       if (!snipselId) return;
       
-      e.preventDefault(); // Prevent pasting the image as text/binary if the browser tries
+      e.preventDefault();
       
       uploadingAttachments = true;
       try {
-        await api.attachments.upload(snipselId, imageFile);
-        // Auto-switch type to image
+        await api.attachments.upload(snipselId, mediaFile);
+        // Auto-switch type to image (which now also means media in our UI)
         await api.snipsels.update(snipselId, { type: 'image' });
         await loadItems();
       } catch (err) {
-        console.error('Failed to upload pasted image:', err);
+        console.error('Failed to upload pasted media:', err);
       } finally {
         uploadingAttachments = false;
       }
