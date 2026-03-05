@@ -55,38 +55,49 @@
   }
 
   onMount(loadData);
+
+  function getHeaderColor(): string {
+    return collection?.header_color || '#4f46e5';
+  }
 </script>
 
-<div class="public-view" class:is-dark={false}>
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
   {#if loading}
-    <div class="status-center">
-      <div class="spinner"></div>
-      <p>Lade öffentliche Kollektion...</p>
+    <div class="flex flex-col items-center justify-center min-h-screen p-8 text-center">
+      <div class="w-10 h-10 border-4 border-slate-200 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+      <p class="text-slate-500 dark:text-slate-400 font-medium">Lade öffentliche Kollektion...</p>
     </div>
   {:else if error}
-    <div class="status-center error">
-      <h1>Oops!</h1>
-      <p>{error}</p>
+    <div class="flex flex-col items-center justify-center min-h-screen p-8 text-center space-y-4">
+      <div class="text-6xl">😕</div>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Oops!</h1>
+      <p class="text-slate-600 dark:text-slate-400 max-w-md">{error}</p>
     </div>
   {:else if collection && collection.is_passcode_protected && !collection.is_unlocked}
-    <div class="status-center passcode-prompt">
-      <div class="icon">{collection.icon}</div>
-      <h1>{collection.title}</h1>
-      <p>Diese Kollektion ist passwortgeschützt.</p>
+    <div class="flex flex-col items-center justify-center min-h-screen p-8 text-center">
+      <div class="text-7xl mb-6 transform hover:scale-110 transition-transform duration-300">{collection.icon}</div>
+      <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">{collection.title}</h1>
+      <p class="text-slate-600 dark:text-slate-400 mb-8">Diese Kollektion ist passwortgeschützt.</p>
       
-      <div class="input-group">
+      <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
         <input 
           type="password" 
           placeholder="Passcode eingeben" 
+          class="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-2 focus:ring-indigo-500/20 outline-none dark:border-white/10 dark:bg-slate-900 dark:text-white"
           bind:value={passcode}
           onkeydown={(e) => e.key === 'Enter' && handleVerifyPasscode()}
         />
-        <button onclick={handleVerifyPasscode} disabled={verifyingPasscode || !passcode}>
+        <button 
+          class="px-6 py-3 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
+          style="background-color: {getHeaderColor()}"
+          onclick={handleVerifyPasscode} 
+          disabled={verifyingPasscode || !passcode}
+        >
           {verifyingPasscode ? 'Prüfe...' : 'Entsperren'}
         </button>
       </div>
       {#if passcodeError}
-        <p class="error-msg">{passcodeError}</p>
+        <p class="mt-4 text-sm font-medium text-red-500">{passcodeError}</p>
       {/if}
     </div>
   {:else if collection}
@@ -99,72 +110,3 @@
     />
   {/if}
 </div>
-
-<style>
-  .public-view {
-    min-height: 100vh;
-    background: #fff;
-    color: #333;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-
-  .status-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem;
-    text-align: center;
-  }
-
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  .error h1 { color: #ef4444; }
-  
-  .passcode-prompt .icon { font-size: 4rem; margin-bottom: 1rem; }
-  .passcode-prompt h1 { margin-bottom: 0.5rem; }
-  
-  .input-group {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 2rem;
-    max-width: 400px;
-    width: 100%;
-  }
-
-  input {
-    flex: 1;
-    padding: 0.8rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-  }
-
-  button {
-    padding: 0.8rem 1.5rem;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  button:disabled { background: #93c5fd; cursor: not-allowed; }
-
-  .error-msg { color: #ef4444; margin-top: 1rem; font-size: 0.9rem; }
-</style>

@@ -1,8 +1,9 @@
-<script lang="ts">
   import MarkdownIt from 'markdown-it';
   import { api, type Attachment, type CollectionItem } from './api';
   import ImageModal from './ImageModal.svelte';
   import VideoModal from './VideoModal.svelte';
+  import DeezerCard from './DeezerCard.svelte';
+  import YouTubeCard from './YouTubeCard.svelte';
 
   let { token, collection, items, canWrite = false, onReload } = $props<{
     token: string;
@@ -15,6 +16,7 @@
       header_image_position: string | null;
       header_image_x_position: string | null;
       header_image_zoom: number | null;
+      default_snipsel_type: string | null;
     };
     items: CollectionItem[];
     canWrite?: boolean;
@@ -90,117 +92,258 @@
     expandedSnipsels = next;
   }
 
-  function renderMarkdown(content: string | null) {
-    if (!content) return '';
-    return md.render(content);
+  function getHeaderColor(): string {
+    return collection.header_color || '#4f46e5';
+  }
+
+  function getToolboxBg(): string {
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    return isDark ? 'rgba(30, 41, 59, 0.96)' : 'rgba(255, 255, 255, 0.96)';
+  }
+
+  function renderMarkdown(text: string | null): string {
+    if (!text) return '';
+    const html = md.render(text.trim()).trim();
+    const tokenBg = getToolboxBg();
+    const tokenFg = getHeaderColor();
+    return html
+      .replace(
+        /(^|[^\p{L}\p{N}_])(#[A-Za-z\p{L}][\p{L}\p{N}_-]*|@[A-Za-z\p{L}][\p{L}\p{N}_-]*)/gu,
+        (m, p1, token) =>
+          `${p1}<mark class="snip-token" style="background-color:${tokenBg}; color:${tokenFg}; border-radius: 9999px; padding: 0.125rem 0.5rem; font-size: 10px; font-weight: 500; text-transform: uppercase;">${token}</mark>`
+      )
+      .replace(/==([^=]+)==/g, `<mark style="background-color:${tokenBg}; border-radius: 0.25rem; padding: 0 0.125rem">$1</mark>`)
+      .replace(/<a /g, `<a style="color:${tokenFg}; text-decoration:underline" target="_blank" rel="noopener noreferrer" `)
+      .replace(/<blockquote>/g, `<blockquote style="border-left: 3px solid ${tokenFg}; background-color:${tokenBg}; margin: 0.25rem 0; padding: 0.25rem 0.75rem; border-radius: 0 0.25rem 0.25rem 0; opacity: 0.9;">`)
+      .replace(/>\s+</g, '><');
   }
 
   function isImageAttachment(a: any) {
-    return a.mime_type?.startsWith('image/');
+    return a.mime_type?.startsWith('image/') || a.has_thumbnail;
   }
 
   function isVideoAttachment(a: any) {
     return a.mime_type?.startsWith('video/');
   }
 
-  function getThumbnailUrl(a: any) {
-    return `/api/attachments/${a.id}/thumbnail`;
+  function taskProgress() {
+    const tasks = sortedItems.filter((i) => i.snipsel.type === 'task');
+    const total = tasks.length;
+    const done = tasks.filter((i) => Boolean(i.snipsel.task_done)).length;
+    return { total, done, ratio: total > 0 ? done / total : 0 };
+  }
+
+  function visibleItems(items: CollectionItem[]): CollectionItem[] {
+    const result: CollectionItem[] = [];
+    let skipUntilIndent: number | null = null;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (skipUntilIndent !== null) {
+        if (item.indent > skipUntilIndent) continue;
+        else skipUntilIndent = null;
+      }
+      result.push(item);
+      const nextItem = items[i + 1];
+      const itemsHasChildren = nextItem && nextItem.indent > item.indent;
+      if (itemsHasChildren && !expandedSnipsels.has(item.snipsel_id)) {
+        skipUntilIndent = item.indent;
+      }
+    }
+    return result;
+  }
+
+  function getDeezerLink(text: string | null) {
+    if (!text) return null;
+    const stdMatch = text.match(/https?:\/\/(?:www\.)?deezer\.com\/(track|album|artist)\/(\d+)/);
+    if (stdMatch) return { type: stdMatch[1] as 'track' | 'album' | 'artist', id: stdMatch[2], url: stdMatch[0] };
+    const shortMatch = text.match(/https?:\/\/link\.deezer\.com\/s\/[A-Za-z0-9]+/);
+    if (shortMatch) return { type: null, id: null, url: shortMatch[0] };
+    return null;
+  }
+
+  function getYouTubeLink(text: string | null) {
+    if (!text) return null;
+    const match = text.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[^\s\)]*)/);
+    if (match) return { id: match[1], url: match[0] };
+    return null;
+  }
+
+  function stripMediaLinks(text: string | null): string {
+    if (!text) return '';
+    let result = text;
+    const dz = getDeezerLink(text);
+    if (dz) result = result.replace(dz.url, '');
+    const yt = getYouTubeLink(text);
+    if (yt) result = result.replace(yt.url, '');
+    return result.trim();
   }
 </script>
 
-<div class="public-outliner" style="--header-color: {collection.header_color || '#3b82f6'}">
-  {#if collection.header_image_url}
-    <div class="header-image-container">
-      <img
-        src={collection.header_image_url}
-        alt=""
-        class="header-image"
-        style="object-position: {collection.header_image_x_position || '50%'} {collection.header_image_position || '50%'}; transform: scale({collection.header_image_zoom || 1});"
-      />
+<div class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+  <div class="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
+    <div
+      class="relative h-28 w-full overflow-hidden"
+      style="background-color: {getHeaderColor()}"
+    >
+      {#if collection.header_image_url}
+        <div 
+          class="absolute inset-0 bg-cover bg-center"
+          style="background-image: url('{collection.header_image_url}'); background-position: {collection.header_image_x_position || '50%'} {collection.header_image_position || '50%'}; transform: scale({collection.header_image_zoom || 1.0})"
+        ></div>
+      {/if}
     </div>
-  {/if}
 
-  <header class="collection-header">
-    <div class="title-row">
-      <span class="icon">{collection.icon}</span>
-      <h1>{collection.title}</h1>
+    <div class="relative px-4 py-3">
+      <div class="absolute left-4 top-0 -translate-y-1/2 z-10">
+        <div class="grid h-16 w-16 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
+          <span class="text-4xl leading-none">{collection.icon}</span>
+        </div>
+      </div>
+
+      {#if taskProgress().total > 0}
+        <div class="absolute left-[5.5rem] right-4 top-0 -translate-y-1/2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80">
+          <div class="h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              style="width: {Math.round(taskProgress().ratio * 100)}%; background-color: {getHeaderColor()}"
+            ></div>
+          </div>
+        </div>
+      {/if}
+
+      <div class="pl-20 text-xl font-bold dark:text-slate-100">
+        {collection.title}
+      </div>
     </div>
-  </header>
+  </div>
 
-  <div class="items-list">
-    {#each sortedItems as item (item.snipsel_id)}
+  <div class="space-y-1">
+    {#each visibleItems(sortedItems) as item (item.snipsel_id)}
       {@const isExpanded = expandedSnipsels.has(item.snipsel_id)}
       {@const isCollapsible = collapsibleParentIds.has(item.snipsel_id)}
       
       <div 
-        class="item-row indent-{item.indent}"
-        class:is-task={item.snipsel.type === 'task'}
-        class:is-done={item.snipsel.task_done}
+        class="group relative py-1 pr-8 transition-colors hover:bg-slate-50/50 dark:hover:bg-white/[0.02] rounded-lg"
+        style="padding-left: calc(3.25rem + {item.indent * 1.25}rem)"
       >
-        <div class="item-content-wrapper">
-          {#if isCollapsible}
-            <button class="expand-toggle" onclick={() => toggleExpand(item.snipsel_id)}>
-              {isExpanded ? '▼' : '▶'}
-            </button>
-          {:else}
-            <div class="expand-spacer"></div>
-          {/if}
+        {#if isCollapsible}
+          <button
+            type="button"
+            class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-transform {isExpanded ? '' : '-rotate-90'}"
+            style="left: calc(1.625rem + {item.indent * 1.25}rem)"
+            onclick={() => toggleExpand(item.snipsel_id)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        {:else if item.snipsel.type !== 'task'}
+          <div 
+            class="absolute top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" 
+            style="left: calc(2.25rem + {item.indent * 1.25}rem)"
+          ></div>
+        {/if}
 
-          {#if item.snipsel.type === 'task'}
-            <input
-              type="checkbox"
-              class="task-checkbox"
-              checked={item.snipsel.task_done}
-              disabled={!canWrite}
-              onchange={() => handleToggleTask(item)}
-            />
-          {/if}
-
-          <div class="snipsel-body">
-            <div class="markdown-content">
-              {@html renderMarkdown(item.snipsel.content_markdown)}
-            </div>
-
-            {#if item.snipsel.attachments?.length}
-              <div class="attachments-grid">
-                {#each item.snipsel.attachments as a}
-                  {#if isImageAttachment(a)}
-                    <button class="attachment-preview" onclick={() => modalImage = a}>
-                      <img src={getThumbnailUrl(a)} alt={a.filename} />
-                    </button>
-                  {:else if isVideoAttachment(a)}
-                    <button class="attachment-preview video-preview" onclick={() => modalVideo = a}>
-                      <img src={getThumbnailUrl(a)} alt={a.filename} />
-                      <div class="play-overlay">▶</div>
-                    </button>
-                  {:else}
-                    <a href="/api/attachments/{a.id}" class="attachment-file" target="_blank">
-                      <span class="file-icon">📎</span>
-                      <span class="filename">{a.filename}</span>
-                    </a>
-                  {/if}
-                {/each}
-              </div>
+        {#if item.snipsel.type === 'task'}
+          <button
+            type="button"
+            class="absolute top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white dark:border-white/20 dark:bg-slate-800 transition-colors"
+            style="left: calc(1.75rem + {item.indent * 1.25}rem); {item.snipsel.task_done ? `border-color: ${getHeaderColor()}; background-color: ${getHeaderColor()}; color: white;` : ''}"
+            onclick={() => handleToggleTask(item)}
+            disabled={!canWrite}
+          >
+            {#if item.snipsel.task_done}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
             {/if}
+          </button>
+        {/if}
+
+        <div class="flex-1 min-w-0 px-2 py-1">
+          {#if getDeezerLink(item.snipsel.content_markdown)}
+            {@const dz = getDeezerLink(item.snipsel.content_markdown)!}
+            <DeezerCard type={dz.type} id={dz.id} url={dz.url} />
+          {/if}
+          {#if getYouTubeLink(item.snipsel.content_markdown)}
+            {@const yt = getYouTubeLink(item.snipsel.content_markdown)!}
+            <YouTubeCard url={yt.url} />
+          {/if}
+
+          <div 
+            class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert {item.snipsel.task_done ? 'line-through opacity-50' : ''}"
+          >
+            {@html renderMarkdown(stripMediaLinks(item.snipsel.content_markdown))}
           </div>
 
-          {#if canWrite}
-            <button class="delete-button" onclick={() => handleDelete(item.snipsel_id)} title="Löschen">
-              ✕
-            </button>
+          {#if item.snipsel.attachments?.length}
+            <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {#each item.snipsel.attachments as a}
+                {#if isImageAttachment(a)}
+                  <button
+                    class="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
+                    onclick={() => modalImage = a}
+                  >
+                    <img 
+                      src={`/api/attachments/${a.id}/thumbnail`} 
+                      alt={a.filename} 
+                      class="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                  </button>
+                {:else if isVideoAttachment(a)}
+                  <button
+                    class="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
+                    onclick={() => modalVideo = a}
+                  >
+                    <img 
+                      src={`/api/attachments/${a.id}/thumbnail`} 
+                      alt={a.filename} 
+                      class="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white drop-shadow-md" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                  </button>
+                {:else}
+                  <a 
+                    href="/api/attachments/{a.id}" 
+                    class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                    target="_blank"
+                  >
+                    <span class="text-base">📎</span>
+                    <span class="truncate">{a.filename}</span>
+                  </a>
+                {/if}
+              {/each}
+            </div>
           {/if}
         </div>
+
+        {#if canWrite}
+          <button 
+            class="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+            onclick={() => handleDelete(item.snipsel_id)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        {/if}
       </div>
     {/each}
   </div>
 
   {#if canWrite}
-    <div class="create-snipsel-section">
-      <div class="create-input-wrapper">
+    <div class="mt-8 pt-6 border-t border-slate-100 dark:border-white/5">
+      <div class="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl dark:bg-slate-800/50 dark:border-white/10">
         <textarea
           bind:value={newContent}
           placeholder="Add something anonymously..."
-          class="create-textarea"
+          class="w-full bg-transparent border-none focus:ring-0 text-lg resize-none placeholder:text-slate-400 dark:text-slate-100"
           rows="2"
           onkeydown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -208,16 +351,17 @@
             }
           }}
         ></textarea>
-        <button
-          class="create-button"
-          onclick={handleCreate}
-          disabled={creating || !newContent.trim()}
-        >
-          {creating ? 'Adding...' : 'Add'}
-        </button>
-      </div>
-      <div class="create-hint">
-        Cmd+Enter to add
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Cmd+Enter to add</span>
+          <button
+            class="px-4 py-1.5 rounded-full font-bold text-sm text-white transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
+            style="background-color: {getHeaderColor()}"
+            onclick={handleCreate}
+            disabled={creating || !newContent.trim()}
+          >
+            {creating ? 'Adding...' : 'Add Snipsel'}
+          </button>
+        </div>
       </div>
     </div>
   {/if}
@@ -225,7 +369,7 @@
 
 {#if modalImage}
   <ImageModal
-    id={modalImage.id}
+    attachmentId={modalImage.id}
     filename={modalImage.filename}
     onClose={() => modalImage = null}
   />
@@ -233,233 +377,8 @@
 
 {#if modalVideo}
   <VideoModal
-    id={modalVideo.id}
+    attachmentId={modalVideo.id}
     filename={modalVideo.filename}
     onClose={() => modalVideo = null}
   />
 {/if}
-
-<style>
-  .public-outliner {
-    max-width: 800px;
-    margin: 0 auto;
-    padding-bottom: 100px;
-    background: var(--bg-color, #fff);
-    min-height: 100vh;
-  }
-
-  .header-image-container {
-    height: 200px;
-    overflow: hidden;
-    position: relative;
-    background: #eee;
-  }
-
-  .header-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .collection-header {
-    padding: 2rem 1rem;
-    border-bottom: 2px solid var(--header-color);
-  }
-
-  .title-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .icon {
-    font-size: 2.5rem;
-  }
-
-  h1 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 700;
-  }
-
-  .items-list {
-    padding: 1rem 0;
-  }
-
-  .item-row {
-    padding: 0.5rem 1rem;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .item-content-wrapper {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-  }
-
-  .expand-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px;
-    color: #666;
-    width: 20px;
-    text-align: center;
-  }
-
-  .expand-spacer {
-    width: 20px;
-  }
-  
-  .task-checkbox {
-    margin-top: 5px;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-  }
-
-  .snipsel-body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .markdown-content :global(p) { margin: 0; }
-
-  .indent-1 { padding-left: 2rem; }
-  .indent-2 { padding-left: 3.5rem; }
-  .indent-3 { padding-left: 5rem; }
-
-  .attachments-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .attachment-preview {
-    width: 120px;
-    height: 120px;
-    padding: 0;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-    background: #f9f9f9;
-  }
-
-  .attachment-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .video-preview { position: relative; }
-  .play-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.5);
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-  }
-
-  .attachment-file {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0.8rem;
-    background: #f1f1f1;
-    border-radius: 20px;
-    text-decoration: none;
-    color: #333;
-    font-size: 0.9rem;
-  }
-
-  .is-done .markdown-content {
-    text-decoration: line-through;
-    color: #888;
-  }
-
-  .delete-button {
-    background: none;
-    border: none;
-    color: #ccc;
-    cursor: pointer;
-    padding: 4px;
-    font-size: 0.8rem;
-    opacity: 0;
-    transition: all 0.2s;
-  }
-
-  .item-row:hover .delete-button {
-    opacity: 1;
-    color: #ef4444;
-  }
-
-  .create-snipsel-section {
-    margin-top: 2rem;
-    padding: 1rem;
-    border-top: 1px solid #eee;
-  }
-
-  .create-input-wrapper {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-    padding: 1rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-  }
-
-  .create-textarea {
-    flex: 1;
-    resize: none;
-    border: none;
-    background: transparent;
-    padding: 0;
-    font-size: 0.9rem;
-    outline: none;
-  }
-
-  .create-button {
-    background: var(--header-color);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    font-weight: 600;
-    font-size: 0.8rem;
-    cursor: pointer;
-  }
-
-  .create-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .create-hint {
-    margin-top: 0.3rem;
-    font-size: 0.7rem;
-    color: #94a3b8;
-    text-align: right;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .create-snipsel-section { border-top-color: #334155; }
-    .create-input-wrapper {
-      background: #1e293b;
-      border-color: #334155;
-    }
-    .create-textarea { color: #f1f5f9; }
-    .create-hint { color: #64748b; }
-  }
-</style>
