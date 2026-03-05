@@ -124,11 +124,10 @@ import Importer from './routes/Importer.svelte';
     try {
       const res = await api.me();
       currentUser.set(res.user);
-      applyInitialRoute();
     } catch {
       currentUser.set(null);
-      currentView.set({ type: 'loading' });
     } finally {
+      applyInitialRoute();
       initialized = true;
     }
   }
@@ -674,7 +673,7 @@ import Importer from './routes/Importer.svelte';
   <main class="mx-auto max-w-3xl px-4 pt-12 pb-24">
     {#if !initialized}
       <div class="py-8 text-center text-sm text-slate-500">Loading...</div>
-    {:else if !$currentUser}
+    {:else if !$currentUser && $currentView.type !== 'public'}
       <Login />
     {:else if $currentView.type === 'loading'}
       <div class="py-8 text-center text-sm text-slate-500">Loading...</div>
