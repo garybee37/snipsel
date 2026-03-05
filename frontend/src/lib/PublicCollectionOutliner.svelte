@@ -1,3 +1,4 @@
+<script lang="ts">
   import MarkdownIt from 'markdown-it';
   import { api, type Attachment, type CollectionItem } from './api';
   import ImageModal from './ImageModal.svelte';
