@@ -32,8 +32,59 @@
 
   let newContent = $state('');
   let creating = $state(false);
+  let saving = $state(false);
+  let editingSnipselId = $state<string | null>(null);
+  let editContent = $state('');
+  let textareaRef: HTMLTextAreaElement | null = $state(null);
 
   let sortedItems = $derived([...items].sort((a, b) => a.position - b.position));
+
+  function autosizeTextarea() {
+    if (!textareaRef) return;
+    textareaRef.style.height = 'auto';
+    textareaRef.style.height = textareaRef.scrollHeight + 'px';
+  }
+
+  function startEdit(item: CollectionItem) {
+    if (!canWrite) return;
+    editingSnipselId = item.snipsel_id;
+    editContent = item.snipsel.content_markdown || '';
+    setTimeout(() => {
+      textareaRef?.focus();
+      autosizeTextarea();
+    }, 0);
+  }
+
+  async function saveEdit() {
+    if (!editingSnipselId || saving) return;
+    saving = true;
+    try {
+      await api.public.patchSnipsel(token, editingSnipselId, {
+        content_markdown: editContent.trim()
+      });
+      editingSnipselId = null;
+      if (onReload) onReload();
+    } catch (err) {
+      console.error('Failed to save snipsel:', err);
+      alert('Fehler beim Speichern.');
+    } finally {
+      saving = false;
+    }
+  }
+
+  function cancelEdit() {
+    editingSnipselId = null;
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      saveEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  }
 
   async function handleCreate() {
     if (!newContent.trim() || creating) return;
@@ -179,6 +230,7 @@
     if (yt) result = result.replace(yt.url, '');
     return result.trim();
   }
+
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-8 space-y-6">
@@ -228,101 +280,128 @@
         class="group relative py-1 pr-8 transition-colors hover:bg-slate-50/50 dark:hover:bg-white/[0.02] rounded-lg"
         style="padding-left: calc(3.25rem + {item.indent * 1.25}rem)"
       >
-        {#if isCollapsible}
-          <button
-            type="button"
-            class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-transform {isExpanded ? '' : '-rotate-90'}"
-            style="left: calc(1.625rem + {item.indent * 1.25}rem)"
-            onclick={() => toggleExpand(item.snipsel_id)}
+        {#if item.snipsel_id === editingSnipselId}
+          <div
+            class="relative rounded-lg bg-slate-50 px-4 py-3 ring-1 ring-indigo-200 shadow-sm dark:bg-slate-800 dark:ring-indigo-500/50"
+            onfocusout={(e) => {
+              const related = e.relatedTarget as Node | null;
+              if (related instanceof HTMLElement && e.currentTarget.contains(related)) return;
+              saveEdit();
+            }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        {:else if item.snipsel.type !== 'task'}
-          <div 
-            class="absolute top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" 
-            style="left: calc(2.25rem + {item.indent * 1.25}rem)"
-          ></div>
-        {/if}
-
-        {#if item.snipsel.type === 'task'}
-          <button
-            type="button"
-            class="absolute top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white dark:border-white/20 dark:bg-slate-800 transition-colors"
-            style="left: calc(1.75rem + {item.indent * 1.25}rem); {item.snipsel.task_done ? `border-color: ${getHeaderColor()}; background-color: ${getHeaderColor()}; color: white;` : ''}"
-            onclick={() => handleToggleTask(item)}
-            disabled={!canWrite}
-          >
-            {#if item.snipsel.task_done}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-              </svg>
-            {/if}
-          </button>
-        {/if}
-
-        <div class="flex-1 min-w-0 px-2 py-1">
-          {#if getDeezerLink(item.snipsel.content_markdown)}
-            {@const dz = getDeezerLink(item.snipsel.content_markdown)!}
-            <DeezerCard type={dz.type} id={dz.id} url={dz.url} />
-          {/if}
-          {#if getYouTubeLink(item.snipsel.content_markdown)}
-            {@const yt = getYouTubeLink(item.snipsel.content_markdown)!}
-            <YouTubeCard url={yt.url} />
-          {/if}
-
-          <div 
-            class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert {item.snipsel.task_done ? 'line-through opacity-50' : ''}"
-          >
-            {@html renderMarkdown(stripMediaLinks(item.snipsel.content_markdown))}
+            <textarea
+              bind:this={textareaRef}
+              class="w-full resize-none bg-transparent text-lg outline-none dark:text-slate-100"
+              rows="1"
+              bind:value={editContent}
+              oninput={autosizeTextarea}
+              onkeydown={handleKeydown}
+            ></textarea>
           </div>
-
-          {#if item.snipsel.attachments?.length}
-            <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {#each item.snipsel.attachments as a}
-                {#if isImageAttachment(a)}
-                  <button
-                    class="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
-                    onclick={() => modalImage = a}
-                  >
-                    <img 
-                      src={`/api/attachments/${a.id}/thumbnail`} 
-                      alt={a.filename} 
-                      class="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
-                  </button>
-                {:else if isVideoAttachment(a)}
-                  <button
-                    class="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
-                    onclick={() => modalVideo = a}
-                  >
-                    <img 
-                      src={`/api/attachments/${a.id}/thumbnail`} 
-                      alt={a.filename} 
-                      class="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                    <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white drop-shadow-md" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
-                      </svg>
-                    </div>
-                  </button>
-                {:else}
-                  <a 
-                    href="/api/attachments/{a.id}" 
-                    class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                    target="_blank"
-                  >
-                    <span class="text-base">📎</span>
-                    <span class="truncate">{a.filename}</span>
-                  </a>
-                {/if}
-              {/each}
-            </div>
+        {:else}
+          {#if isCollapsible}
+            <button
+              type="button"
+              class="absolute top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-transform {isExpanded ? '' : '-rotate-90'}"
+              style="left: calc(1.625rem + {item.indent * 1.25}rem)"
+              onclick={() => toggleExpand(item.snipsel_id)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          {:else if item.snipsel.type !== 'task'}
+            <div 
+              class="absolute top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-slate-400" 
+              style="left: calc(2.25rem + {item.indent * 1.25}rem)"
+            ></div>
           {/if}
-        </div>
+
+          {#if item.snipsel.type === 'task'}
+            <button
+              type="button"
+              class="absolute top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full border border-slate-300 bg-white dark:border-white/20 dark:bg-slate-800 transition-colors"
+              style="left: calc(1.75rem + {item.indent * 1.25}rem); {item.snipsel.task_done ? `border-color: ${getHeaderColor()}; background-color: ${getHeaderColor()}; color: white;` : ''}"
+              onclick={() => handleToggleTask(item)}
+              disabled={!canWrite}
+            >
+              {#if item.snipsel.task_done}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              {/if}
+            </button>
+          {/if}
+
+          <div 
+            class="flex-1 min-w-0 px-2 py-1 cursor-pointer"
+            role="button"
+            tabindex="0"
+            onclick={() => startEdit(item)}
+            onkeydown={(e) => e.key === 'Enter' && startEdit(item)}
+          >
+            {#if getDeezerLink(item.snipsel.content_markdown)}
+              {@const dz = getDeezerLink(item.snipsel.content_markdown)!}
+              <DeezerCard type={dz.type} id={dz.id} url={dz.url} />
+            {/if}
+            {#if getYouTubeLink(item.snipsel.content_markdown)}
+              {@const yt = getYouTubeLink(item.snipsel.content_markdown)!}
+              <YouTubeCard url={yt.url} />
+            {/if}
+
+            <div 
+              class="prose prose-sm max-w-none text-lg prose-p:my-0 prose-headings:my-2 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg whitespace-pre-wrap dark:prose-invert {item.snipsel.task_done ? 'line-through opacity-50' : ''}"
+            >
+              {@html renderMarkdown(stripMediaLinks(item.snipsel.content_markdown))}
+            </div>
+
+            {#if item.snipsel.attachments?.length}
+              <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {#each item.snipsel.attachments as a}
+                  {#if isImageAttachment(a)}
+                    <button
+                      class="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
+                      onclick={(e) => { e.stopPropagation(); modalImage = a; }}
+                    >
+                      <img 
+                        src={`/api/attachments/${a.id}/thumbnail`} 
+                        alt={a.filename} 
+                        class="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                    </button>
+                  {:else if isVideoAttachment(a)}
+                    <button
+                      class="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
+                      onclick={(e) => { e.stopPropagation(); modalVideo = a; }}
+                    >
+                      <img 
+                        src={`/api/attachments/${a.id}/thumbnail`} 
+                        alt={a.filename} 
+                        class="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white drop-shadow-md" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                        </svg>
+                      </div>
+                    </button>
+                  {:else}
+                    <a 
+                      href="/api/attachments/{a.id}" 
+                      class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                      target="_blank"
+                      onclick={(e) => e.stopPropagation()}
+                    >
+                      <span class="text-base">📎</span>
+                      <span class="truncate">{a.filename}</span>
+                    </a>
+                  {/if}
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
 
         {#if canWrite}
           <button 
