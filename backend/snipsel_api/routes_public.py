@@ -29,6 +29,14 @@ def _check_passcode(collection: Collection):
         return
         
     raise api_error(403, "passcode_required", "Passcode required")
+    
+def _log_public_access(collection_id: str):
+    allowed = session.get("public_authorized_collections")
+    if not isinstance(allowed, list):
+        allowed = []
+    if collection_id not in allowed:
+        allowed.append(collection_id)
+        session["public_authorized_collections"] = allowed
 
 @public_bp.get("/collections/<token>")
 def get_public_collection(token: str):
@@ -39,6 +47,9 @@ def get_public_collection(token: str):
     
     # Check if currently unlocked in session
     is_unlocked = not c.is_passcode_protected or session.get("public_passcode_verified_collection_id") == c.id
+
+    if not c.is_passcode_protected:
+        _log_public_access(c.id)
 
     return json_response({
         "collection": {
@@ -72,6 +83,7 @@ def verify_public_passcode(token: str):
         raise api_error(401, "invalid_passcode", "Invalid passcode")
         
     session["public_passcode_verified_collection_id"] = c.id
+    _log_public_access(c.id)
     return json_response({"ok": True})
 
 @public_bp.get("/collections/<token>/snipsels")

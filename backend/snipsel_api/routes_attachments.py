@@ -5,13 +5,13 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from flask import Blueprint, current_app, request, send_file
+from flask import Blueprint, current_app, request, send_file, session
 from PIL import Image
 
 from snipsel_api.auth_session import current_user, json_response, require_auth
 from snipsel_api.errors import api_error
 from snipsel_api.extensions import db
-from snipsel_api.models import Attachment, Collection, Snipsel
+from snipsel_api.models import Attachment, Collection, Snipsel, CollectionSnipsel, User
 from snipsel_api.models import Mention, SnipselMention
 from snipsel_api.permissions import (
     can_read_collection,
@@ -164,40 +164,62 @@ def upload_collection_header(collection_id: str):
 
 
 @attachments_bp.get("/attachments/<attachment_id>")
-@require_auth
 def download_attachment(attachment_id: str):
-    user = current_user()
+    user_id = session.get("user_id")
+    public_authorized = session.get("public_authorized_collections") or []
+    
     att = db.session.get(Attachment, attachment_id)
     if not att:
         raise api_error(404, "not_found", "Attachment not found")
 
-    if att.snipsel_id:
-        snipsel = db.session.get(Snipsel, att.snipsel_id)
-        if not snipsel or snipsel.deleted_at is not None:
-            raise api_error(404, "not_found", "Attachment not found")
+    is_authorized = False
+    
+    if user_id:
+        # Standard user check
+        if att.snipsel_id:
+            snipsel = db.session.get(Snipsel, att.snipsel_id)
+            if snipsel and snipsel.deleted_at is None:
+                if snipsel.owner_user_id == user_id or can_read_snipsel_via_collections(user_id, snipsel.id):
+                    is_authorized = True
+                else:
+                    user = db.session.get(User, user_id)
+                    uname = (getattr(user, "username", "") or "").strip().casefold()
+                    if uname:
+                        is_mentioned = (
+                            (db.session.execute(
+                                db.select(db.func.count())
+                                .select_from(SnipselMention)
+                                .join(Mention, Mention.id == SnipselMention.mention_id)
+                                .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
+                            ).scalar() or 0)
+                            > 0
+                        )
+                        if is_mentioned:
+                            is_authorized = True
+        elif att.collection_id:
+            if can_read_collection(user_id, att.collection_id):
+                is_authorized = True
+    
+    if not is_authorized and public_authorized:
+        # Check public access
+        if att.collection_id:
+            if att.collection_id in public_authorized:
+                is_authorized = True
+        elif att.snipsel_id:
+            # Check if snipsel is in any of the authorized public collections
+            in_public = (db.session.execute(
+                db.select(db.func.count())
+                .select_from(CollectionSnipsel)
+                .where(
+                    CollectionSnipsel.snipsel_id == att.snipsel_id,
+                    CollectionSnipsel.collection_id.in_(public_authorized)
+                )
+            ).scalar() or 0) > 0
+            if in_public:
+                is_authorized = True
 
-        can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
-        if not can_read:
-            uname = (getattr(user, "username", "") or "").strip().casefold()
-            if not uname:
-                raise api_error(404, "not_found", "Attachment not found")
-            is_mentioned = (
-                (db.session.execute(
-                    db.select(db.func.count())
-                    .select_from(SnipselMention)
-                    .join(Mention, Mention.id == SnipselMention.mention_id)
-                    .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
-                ).scalar() or 0)
-                > 0
-            )
-            if not is_mentioned:
-                raise api_error(404, "not_found", "Attachment not found")
-    elif att.collection_id:
-        if not can_read_collection(user.id, att.collection_id):
-            raise api_error(404, "not_found", "Attachment not found")
-    else:
-        # Orphan attachment?
-        raise api_error(404, "not_found", "Attachment not found")
+    if not is_authorized:
+        raise api_error(401 if not user_id else 403, "unauthorized", "Access denied")
 
     path = _resolve_attachment_path(att)
     if not path:
@@ -210,39 +232,62 @@ def download_attachment(attachment_id: str):
 
 
 @attachments_bp.get("/attachments/<attachment_id>/thumbnail")
-@require_auth
 def download_thumbnail(attachment_id: str):
-    user = current_user()
+    user_id = session.get("user_id")
+    public_authorized = session.get("public_authorized_collections") or []
+    
     att = db.session.get(Attachment, attachment_id)
     if not att or not att.thumbnail_path:
         raise api_error(404, "not_found", "Thumbnail not found")
 
-    if att.snipsel_id:
-        snipsel = db.session.get(Snipsel, att.snipsel_id)
-        if not snipsel or snipsel.deleted_at is not None:
-            raise api_error(404, "not_found", "Thumbnail not found")
+    is_authorized = False
+    
+    if user_id:
+        # Standard user check
+        if att.snipsel_id:
+            snipsel = db.session.get(Snipsel, att.snipsel_id)
+            if snipsel and snipsel.deleted_at is None:
+                if snipsel.owner_user_id == user_id or can_read_snipsel_via_collections(user_id, snipsel.id):
+                    is_authorized = True
+                else:
+                    user = db.session.get(User, user_id)
+                    uname = (getattr(user, "username", "") or "").strip().casefold()
+                    if uname:
+                        is_mentioned = (
+                            (db.session.execute(
+                                db.select(db.func.count())
+                                .select_from(SnipselMention)
+                                .join(Mention, Mention.id == SnipselMention.mention_id)
+                                .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
+                            ).scalar() or 0)
+                            > 0
+                        )
+                        if is_mentioned:
+                            is_authorized = True
+        elif att.collection_id:
+            if can_read_collection(user_id, att.collection_id):
+                is_authorized = True
+    
+    if not is_authorized and public_authorized:
+        # Check public access
+        if att.collection_id:
+            if att.collection_id in public_authorized:
+                is_authorized = True
+        elif att.snipsel_id:
+            # Check if snipsel is in any of the authorized public collections
+            in_public = (db.session.execute(
+                db.select(db.func.count())
+                .select_from(CollectionSnipsel)
+                .where(
+                    CollectionSnipsel.snipsel_id == att.snipsel_id,
+                    CollectionSnipsel.collection_id.in_(public_authorized)
+                )
+            ).scalar() or 0) > 0
+            if in_public:
+                is_authorized = True
 
-        can_read = snipsel.owner_user_id == user.id or can_read_snipsel_via_collections(user.id, snipsel.id)
-        if not can_read:
-            uname = (getattr(user, "username", "") or "").strip().casefold()
-            if not uname:
-                raise api_error(404, "not_found", "Thumbnail not found")
-            is_mentioned = (
-                (db.session.execute(
-                    db.select(db.func.count())
-                    .select_from(SnipselMention)
-                    .join(Mention, Mention.id == SnipselMention.mention_id)
-                    .where(SnipselMention.snipsel_id == snipsel.id, Mention.name == uname)
-                ).scalar() or 0)
-                > 0
-            )
-            if not is_mentioned:
-                raise api_error(404, "not_found", "Thumbnail not found")
-    elif att.collection_id:
-        if not can_read_collection(user.id, att.collection_id):
-            raise api_error(404, "not_found", "Thumbnail not found")
-    else:
-        raise api_error(404, "not_found", "Thumbnail not found")
+    if not is_authorized:
+        raise api_error(401 if not user_id else 403, "unauthorized", "Access denied")
 
     # Try to resolve or regenerate thumbnail
     path = _resolve_thumbnail_path(att)
