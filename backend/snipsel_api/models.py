@@ -90,6 +90,7 @@ class Collection(db.Model):
     deleted_by_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     twos_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    public_token: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, unique=True, index=True)
 
     owner = relationship("User", foreign_keys=[owner_user_id])
     created_by = relationship("User", foreign_keys=[created_by_id])

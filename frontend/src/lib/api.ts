@@ -56,6 +56,7 @@ export type Collection = {
   is_passcode_protected?: boolean;
   modified_by_id?: string;
   modified_by_username?: string | null;
+  public_token?: string | null;
 };
 export type UserLite = { id: string; username: string };
 
@@ -670,5 +671,30 @@ export const api = {
         }
       );
     },
+  },
+  public: {
+    getCollection: (token: string) =>
+      requestJson<{
+        collection: {
+          id: string;
+          title: string;
+          icon: string;
+          header_color: string | null;
+          header_image_url: string | null;
+          header_image_position: string | null;
+          header_image_x_position: string | null;
+          header_image_zoom: number | null;
+          is_passcode_protected: boolean;
+          is_unlocked: boolean;
+          default_snipsel_type: string | null;
+        }
+      }>(`/api/public/collections/${token}`),
+    verifyPasscode: (token: string, passcode: string) =>
+      requestJson<{ ok: true }>(`/api/public/collections/${token}/passcode/verify`, {
+        method: 'POST',
+        body: JSON.stringify({ passcode }),
+      }),
+    listSnipsels: (token: string) =>
+      requestJson<{ items: CollectionItem[], can_write: boolean }>(`/api/public/collections/${token}/snipsels`),
   },
 };

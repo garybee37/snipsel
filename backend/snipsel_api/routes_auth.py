@@ -48,7 +48,7 @@ def register():
     if existing:
         raise api_error(409, "already_exists", "username or email already exists")
 
-    user = User(username=username, email=email, password_hash=generate_password_hash(password))
+    user = User(username=username, email=email, password_hash=generate_password_hash(password, method="pbkdf2:sha256"))
     db.session.add(user)
     db.session.commit()
 
@@ -509,7 +509,7 @@ def update_me():
             new_password = data.get("password") or ""
             if not new_password or len(new_password) < 4:  # Allowing 4+ for now, but user requested 8+ usually. I'll stick to 8 if I want to be safe, but let's see what register uses.
                 raise api_error(400, "invalid_input", "Password must be at least 4 characters long")
-            user.password_hash = generate_password_hash(new_password)
+            user.password_hash = generate_password_hash(new_password, method="pbkdf2:sha256")
 
     user.modified_at = datetime.utcnow()
     db.session.commit()
@@ -561,7 +561,7 @@ def password_reset_confirm():
     if not user or user.deleted_at is not None or not user.is_active:
         raise api_error(400, "invalid_token", "Token is invalid")
 
-    user.password_hash = generate_password_hash(new_password)
+    user.password_hash = generate_password_hash(new_password, method="pbkdf2:sha256")
     user.modified_at = datetime.utcnow()
     prt.used_at = datetime.utcnow()
     db.session.commit()
@@ -587,7 +587,7 @@ def set_passcode():
     if not check_password_hash(user.password_hash, password_confirm):
         raise api_error(401, "invalid_credentials", "Invalid password confirmation")
 
-    user.passcode_hash = generate_password_hash(passcode)
+    user.passcode_hash = generate_password_hash(passcode, method="pbkdf2:sha256")
     user.passcode_failed_attempts = 0
     db.session.commit()
     return json_response({"ok": True})

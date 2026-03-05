@@ -11,6 +11,7 @@ export type Route =
   | { v: 'calendar' }
   | { v: 'settings' }
   | { v: 'notifications' }
+  | { v: 'public'; token: string }
   | { v: 'loading' };
 
 const KNOWN_VIEWS = new Set<Route['v']>([
@@ -24,6 +25,7 @@ const KNOWN_VIEWS = new Set<Route['v']>([
   'calendar',
   'settings',
   'notifications',
+  'public',
   'loading',
 ]);
 
@@ -67,6 +69,12 @@ export function parseRouteFromLocation(loc: Location): Route | null {
     return { v, q: q || undefined };
   }
 
+  if (v === 'public') {
+    const token = sp.get('token') ?? '';
+    if (!token) return null;
+    return { v, token };
+  }
+
   return { v };
 }
 
@@ -81,6 +89,7 @@ export function routeToView(route: Route): View {
   if (route.v === 'calendar') return { type: 'calendar' };
   if (route.v === 'settings') return { type: 'settings' };
   if (route.v === 'notifications') return { type: 'notifications' };
+  if (route.v === 'public') return { type: 'public', token: route.token };
   return { type: 'loading' };
 }
 export function viewToRoute(view: View): Route {
@@ -94,6 +103,7 @@ export function viewToRoute(view: View): Route {
   if (view.type === 'calendar') return { v: 'calendar' };
   if (view.type === 'settings') return { v: 'settings' };
   if (view.type === 'notifications') return { v: 'notifications' };
+  if (view.type === 'public') return { v: 'public', token: view.token };
   return { v: 'loading' };
 }
 export function routeToUrl(route: Route, pathname = location.pathname): string {
@@ -109,6 +119,8 @@ export function routeToUrl(route: Route, pathname = location.pathname): string {
     if (route.v === 'snipsel' && route.returnTo) sp.set('returnTo', route.returnTo);
   } else if (route.v === 'search') {
     if (route.q) sp.set('q', route.q);
+  } else if (route.v === 'public') {
+    sp.set('token', route.token);
   }
 
   const qs = sp.toString();

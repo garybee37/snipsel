@@ -14,6 +14,7 @@ export type View =
   | { type: 'settings' }
   | { type: 'notifications' }
   | { type: 'importer' }
+  | { type: 'public'; token: string }
   | { type: 'snipsel'; id: string; returnTo?: string };
 
 export const currentView = writable<View>({ type: 'loading' });

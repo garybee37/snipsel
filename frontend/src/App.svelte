@@ -40,6 +40,7 @@
   import Notifications from './routes/Notifications.svelte';
 import Importer from './routes/Importer.svelte';
   import PasscodeModal from './lib/PasscodeModal.svelte';
+  import PublicView from './routes/PublicView.svelte';
 
   let initialized = $state(false);
 
@@ -159,6 +160,9 @@ import Importer from './routes/Importer.svelte';
       }
       if (route.v === 'search') {
         searchQuery.set(route.q ?? '');
+      }
+      if (route.v === 'public') {
+        // Public route doesn't require authentication, but initSession handles it
       }
     } finally {
       isApplyingRoute = false;
@@ -482,6 +486,9 @@ import Importer from './routes/Importer.svelte';
         if (route.v === 'search') {
           searchQuery.set(route.q ?? '');
         }
+        if (route.v === 'public') {
+          // Handled by view update
+        }
       } finally {
         isApplyingRoute = false;
       }
@@ -693,6 +700,8 @@ import Importer from './routes/Importer.svelte';
       <SnipselDetail snipselId={$currentView.id} />
     {:else if $currentView.type === 'collection_settings'}
       <CollectionSettings collectionId={$currentView.id} />
+    {:else if $currentView.type === 'public'}
+      <PublicView token={$currentView.token} />
     {/if}
   </main>
 

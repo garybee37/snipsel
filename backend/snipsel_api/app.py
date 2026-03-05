@@ -21,6 +21,7 @@ from snipsel_api.routes_notifications import notifications_bp
 from snipsel_api.routes_importer import importer_bp
 from snipsel_api.routes_proxy import proxy_bp
 from snipsel_api.routes_reactions import bp as reactions_bp
+from snipsel_api.routes_public import public_bp
 
 
 def create_app() -> Flask:
@@ -73,6 +74,7 @@ def create_app() -> Flask:
     app.register_blueprint(importer_bp, url_prefix="/api/importer")
     app.register_blueprint(proxy_bp, url_prefix="/api/proxy")
     app.register_blueprint(reactions_bp, url_prefix="/api")
+    app.register_blueprint(public_bp, url_prefix="/api/public")
     app.register_blueprint(errors_bp)
 
     from snipsel_api import models
@@ -85,6 +87,20 @@ def create_app() -> Flask:
     app.cli.add_command(cleanup)
     app.cli.add_command(db_init)
     app.cli.add_command(process_reminders)
+
+    # Ensure public user exists
+    with app.app_context():
+        from snipsel_api.models import User
+        if not db.session.get(User, "public"):
+            public_user = User(
+                id="public",
+                username="public",
+                email="public@snipsel.local",
+                password_hash="disabled",
+                is_active=True
+            )
+            db.session.add(public_user)
+            db.session.commit()
 
     _ = models
 

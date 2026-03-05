@@ -910,6 +910,7 @@ def _collection_json(c: Collection) -> dict:
         "modified_at": c.modified_at.isoformat() + "Z",
         "modified_by_id": c.modified_by_id,
         "modified_by_username": c.modified_by.username if c.modified_by else None,
+        "public_token": c.public_token,
     }
 
 
@@ -1024,6 +1025,11 @@ def create_share(collection_id: str):
         db.session.commit()
         return json_response({"share": {"id": existing.id}})
 
+    if shared_with_user_id == "public":
+        if not c.public_token:
+            c.public_token = str(uuid.uuid4())
+            db.session.add(c)
+
     s = CollectionShare(
         collection_id=collection_id,
         shared_with_user_id=shared_with_user_id,
@@ -1032,12 +1038,13 @@ def create_share(collection_id: str):
     )
     db.session.add(s)
 
-    n = Notification(
-        user_id=shared_with_user_id,
-        message=f"{user.username} shared collection '{c.title}' with you.",
-        collection_id=collection_id,
-    )
-    db.session.add(n)
+    if shared_with_user_id != "public":
+        n = Notification(
+            user_id=shared_with_user_id,
+            message=f"{user.username} shared collection '{c.title}' with you.",
+            collection_id=collection_id,
+        )
+        db.session.add(n)
 
     db.session.commit()
     return json_response({"share": {"id": s.id}}, status=201)
@@ -1051,6 +1058,12 @@ def delete_share(collection_id: str, share_id: str):
     s = db.session.get(CollectionShare, share_id)
     if not s or s.collection_id != collection_id:
         raise api_error(404, "not_found", "Share not found")
+    if s.shared_with_user_id == "public":
+        c = db.session.get(Collection, collection_id)
+        if c:
+            c.public_token = None
+            db.session.add(c)
+            
     db.session.delete(s)
     db.session.commit()
     return json_response({"ok": True})

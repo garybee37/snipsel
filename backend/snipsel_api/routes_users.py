@@ -25,7 +25,7 @@ def list_users():
             "users": [
                 {"id": u.id, "username": u.username}
                 for u in rows
-                if u.id != user.id
+                if u.id != user.id or u.id == "public"
             ]
         }
     )

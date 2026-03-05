@@ -581,7 +581,19 @@
               {#each shares as s (s.id)}
                 <div class="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-white/50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
                   <div class="min-w-0">
-                    <div class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{s.shared_with_username ?? s.shared_with_user_id}</div>
+                    <div class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {#if s.shared_with_user_id === 'public'}
+                        <span class="inline-flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.101 1.101" />
+                          </svg>
+                          Public Link
+                        </span>
+                      {:else}
+                        {s.shared_with_username ?? s.shared_with_user_id}
+                      {/if}
+                    </div>
                     <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold dark:text-slate-400">{s.permission}</div>
                   </div>
                   <button
@@ -597,6 +609,29 @@
                     </svg>
                   </button>
                 </div>
+                {#if s.shared_with_user_id === 'public' && collection.public_token}
+                  <div class="mt-2 rounded-lg bg-indigo-50 p-3 dark:bg-indigo-950/30">
+                    <div class="text-xs font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider mb-1">Secret Link</div>
+                    <div class="flex items-center gap-2">
+                      <input 
+                        readonly 
+                        class="flex-1 bg-transparent text-xs font-mono text-indigo-900 dark:text-indigo-100 border-none p-0 focus:ring-0" 
+                        value={`${window.location.origin}/?v=public&token=${collection.public_token}`}
+                      />
+                      <button 
+                        class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        onclick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/?v=public&token=${collection!.public_token}`);
+                        }}
+                        title="Copy link"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                {/if}
               {/each}
             </div>
           {/if}
