@@ -696,5 +696,19 @@ export const api = {
       }),
     listSnipsels: (token: string) =>
       requestJson<{ items: CollectionItem[], can_write: boolean }>(`/api/public/collections/${token}/snipsels`),
+    createSnipsel: (token: string, input: { content_markdown: string; type: string; indent?: number }) =>
+      requestJson<{ item: CollectionItem }>(`/api/public/collections/${token}/snipsels`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    patchSnipsel: (token: string, snipselId: string, input: { content_markdown?: string; type?: string; task_done?: boolean }) =>
+      requestJson<{ item: CollectionItem }>(`/api/public/collections/${token}/snipsels/${snipselId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
+    deleteSnipsel: (token: string, snipselId: string) =>
+      requestJson<{ ok: true }>(`/api/public/collections/${token}/snipsels/${snipselId}`, {
+        method: 'DELETE',
+      }),
   },
 };

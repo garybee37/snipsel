@@ -50,6 +50,29 @@
     }
   }
 
+  async function handleToggleTask(item: CollectionItem) {
+    if (!canWrite) return;
+    try {
+      await api.public.patchSnipsel(token, item.snipsel_id, {
+        task_done: !item.snipsel.task_done
+      });
+      if (onReload) onReload();
+    } catch (err) {
+      console.error('Failed to toggle task:', err);
+    }
+  }
+
+  async function handleDelete(snipselId: string) {
+    if (!canWrite) return;
+    if (!confirm('Snipsel wirklich löschen?')) return;
+    try {
+      await api.public.deleteSnipsel(token, snipselId);
+      if (onReload) onReload();
+    } catch (err) {
+      console.error('Failed to delete snipsel:', err);
+    }
+  }
+
   let collapsibleParentIds = $derived.by(() => {
     const ids = new Set<string>();
     for (let i = 0; i < sortedItems.length - 1; i++) {
@@ -123,6 +146,16 @@
             <div class="expand-spacer"></div>
           {/if}
 
+          {#if item.snipsel.type === 'task'}
+            <input
+              type="checkbox"
+              class="task-checkbox"
+              checked={item.snipsel.task_done}
+              disabled={!canWrite}
+              onchange={() => handleToggleTask(item)}
+            />
+          {/if}
+
           <div class="snipsel-body">
             <div class="markdown-content">
               {@html renderMarkdown(item.snipsel.content_markdown)}
@@ -150,6 +183,12 @@
               </div>
             {/if}
           </div>
+
+          {#if canWrite}
+            <button class="delete-button" onclick={() => handleDelete(item.snipsel_id)} title="Löschen">
+              ✕
+            </button>
+          {/if}
         </div>
       </div>
     {/each}
@@ -272,6 +311,13 @@
   .expand-spacer {
     width: 20px;
   }
+  
+  .task-checkbox {
+    margin-top: 5px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
 
   .snipsel-body {
     flex: 1;
@@ -340,6 +386,22 @@
   .is-done .markdown-content {
     text-decoration: line-through;
     color: #888;
+  }
+
+  .delete-button {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: all 0.2s;
+  }
+
+  .item-row:hover .delete-button {
+    opacity: 1;
+    color: #ef4444;
   }
 
   .create-snipsel-section {
