@@ -1148,6 +1148,59 @@
     }
   }
 
+  async function createCollectionFromSnipsel() {
+    if (!$currentCollection || !canWrite() || selectedIds.size !== 1) return;
+    
+    const baseId = Array.from(selectedIds)[0];
+    const items = $sortedItems;
+    const baseIdx = items.findIndex(i => i.snipsel_id === baseId);
+    if (baseIdx === -1) return;
+    
+    const baseItem = items[baseIdx];
+    const baseIndent = baseItem.indent;
+    
+    // Find children
+    const children: CollectionItem[] = [];
+    for (let i = baseIdx + 1; i < items.length; i++) {
+      if (items[i].indent > baseIndent) {
+        children.push(items[i]);
+      } else {
+        break;
+      }
+    }
+    
+    isLoading.set(true);
+    try {
+      // 1. Create new collection
+      const title = baseItem.snipsel.content_markdown?.split('\n')[0].trim() || 'New Collection';
+      const createRes = await api.collections.create({ title });
+      const newCol = createRes.collection;
+      
+      // 2. Move children and normalize indent
+      // Calculate min indent of children to bring it to 0
+      const minChildIndent = children.length > 0 ? Math.min(...children.map(c => c.indent)) : 0;
+      const indentOffset = minChildIndent;
+      
+      for (const child of children) {
+        await api.snipsels.reference(newCol.id, child.snipsel_id, Math.max(0, child.indent - indentOffset));
+        await api.snipsels.delete($currentCollection.id, child.snipsel_id);
+      }
+      
+      // 3. Update original snipsel with wiki link
+      await api.snipsels.update(baseId, { 
+        content_markdown: `[[${newCol.title}]]` 
+      });
+      
+      // 4. Refresh
+      clearSelection();
+      await loadItems();
+    } catch (err) {
+      console.error('Failed to create collection from snipsel:', err);
+    } finally {
+      isLoading.set(false);
+    }
+  }
+
   async function adjustIndentSelected(delta: number) {
     if (!$currentCollection) return;
     if (!canWrite()) return;
@@ -2772,6 +2825,16 @@
         disabled={!canWrite()}
       >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4M2 12h20M6 8l-4 4 4 4"/></svg>
+      </button>
+      <button
+        class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 disabled:opacity-50"
+        type="button"
+        aria-label="Create collection"
+        title="Create collection from snipsel"
+        onclick={createCollectionFromSnipsel}
+        disabled={selectedIds.size !== 1 || !canWrite()}
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v6"/><path d="M15 18h6"/><path d="M18 15v6"/></svg>
       </button>
       <button
         class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"

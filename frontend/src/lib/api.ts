@@ -492,10 +492,10 @@ export const api = {
         `/api/collections/${collectionId}/snipsels/${snipselId}/copy`,
         { method: 'POST' }
       ),
-    reference: (collectionId: string, snipselId: string) =>
+    reference: (collectionId: string, snipselId: string, indent?: number) =>
       requestJson<{ item: CollectionItem }>(
         `/api/collections/${collectionId}/snipsels/${snipselId}/reference`,
-        { method: 'POST' }
+        { method: 'POST', body: JSON.stringify({ indent }) }
       ),
     reorder: (
       collectionId: string,
