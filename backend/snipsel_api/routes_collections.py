@@ -729,14 +729,17 @@ def delete_collection(collection_id: str):
     c = _get_owned_collection(user.id, collection_id)
     from sqlalchemy import and_
 
-    # Check for backlinks
+    # Check for backlinks from snipsels that are in at least one active collection
     has_backlinks = (
         db.session.execute(
-            db.select(db.func.count(SnipselCollectionRef.snipsel_id))
+            db.select(db.func.count(SnipselCollectionRef.snipsel_id.distinct()))
             .join(Snipsel, Snipsel.id == SnipselCollectionRef.snipsel_id)
+            .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
+            .join(Collection, Collection.id == CollectionSnipsel.collection_id)
             .where(
                 SnipselCollectionRef.collection_id == collection_id,
                 Snipsel.deleted_at.is_(None),
+                Collection.deleted_at.is_(None),
             )
         ).scalar()
         or 0

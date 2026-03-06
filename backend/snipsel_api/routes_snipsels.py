@@ -736,7 +736,12 @@ def _snipsel_json(s: Snipsel, user_id: str | None = None) -> dict:
 
 def _collection_item_json(cs: CollectionSnipsel, user_id: str | None = None) -> dict:
     refs = db.session.execute(
-        db.select(SnipselCollectionRef).where(SnipselCollectionRef.snipsel_id == cs.snipsel_id)
+        db.select(SnipselCollectionRef)
+        .join(Collection, Collection.id == SnipselCollectionRef.collection_id)
+        .where(
+            SnipselCollectionRef.snipsel_id == cs.snipsel_id,
+            Collection.deleted_at.is_(None)
+        )
     ).scalars().all()
     return {
         "collection_id": cs.collection_id,
