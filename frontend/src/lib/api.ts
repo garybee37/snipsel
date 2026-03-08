@@ -44,8 +44,10 @@ export type Collection = {
   header_image_x_position?: string | null;
   header_image_zoom?: number | null;
   is_favorite?: boolean;
-  is_template?: boolean;
-  default_snipsel_type?: string | null;
+  is_template: boolean;
+  is_passcode_protected: boolean;
+  show_completed_tasks: boolean;
+  default_snipsel_type: string | null;
   archived: boolean;
   list_for_day: string | null;
   created_at: string;
@@ -53,7 +55,6 @@ export type Collection = {
   access_level?: 'owner' | 'write' | 'read';
   shared_by_username?: string | null;
   shared_out?: boolean;
-  is_passcode_protected?: boolean;
   modified_by_id?: string;
   modified_by_username?: string | null;
   public_token?: string | null;
@@ -333,6 +334,7 @@ export const api = {
       header_image_url?: string | null;
       header_color?: string | null;
       default_snipsel_type?: string | null;
+      show_completed_tasks?: boolean;
     }) =>
       requestJson<{ collection: Collection }>('/api/collections', {
         method: 'POST',
@@ -349,6 +351,7 @@ export const api = {
         is_template?: boolean;
         default_snipsel_type?: string | null;
         is_passcode_protected?: boolean;
+        show_completed_tasks?: boolean;
         header_image_position?: string | null;
       }
     ) =>

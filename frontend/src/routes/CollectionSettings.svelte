@@ -22,6 +22,7 @@
   let headerImageZoom = $state(1.0);
   let isFavorite = $state(false);
   let defaultSnipselType = $state('');
+  let showCompletedTasks = $state(true);
   let saving = $state(false);
   let showDeleteModal = $state(false);
   let errorModal = $state<{ title: string; message: string } | null>(null);
@@ -96,6 +97,7 @@
       headerImageZoom = collection.header_image_zoom ?? 1.0;
       isFavorite = Boolean(collection.is_favorite);
       defaultSnipselType = collection.default_snipsel_type ?? '';
+      showCompletedTasks = collection.show_completed_tasks ?? true;
 
       const [uRes, sRes, blRes] = await Promise.all([
         api.users.list(),
@@ -155,6 +157,7 @@
         is_template: Boolean(collection.is_template),
         is_passcode_protected: Boolean(collection.is_passcode_protected),
         default_snipsel_type: defaultSnipselType.trim() || null,
+        show_completed_tasks: showCompletedTasks,
       });
       collection = res.collection;
       collections.update((list) => list.map((c) => (c.id === res.collection.id ? res.collection : c)));
@@ -426,6 +429,18 @@
                 </button>
               </div>
             </div>
+          </div>
+          
+          <div class="block">
+            <span class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Tasks</span>
+            <label class="flex items-center gap-3 cursor-pointer group">
+              <div class="relative inline-flex h-6 w-11 items-center">
+                <input type="checkbox" class="peer sr-only" bind:checked={showCompletedTasks} />
+                <div class="h-6 w-11 rounded-full bg-slate-200 transition-colors peer-checked:bg-indigo-600 dark:bg-slate-700"></div>
+                <div class="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></div>
+              </div>
+              <span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">Erledigte Tasks standardmäßig anzeigen</span>
+            </label>
           </div>
         </div>
       </div>

@@ -605,6 +605,11 @@
       if (loadSeq !== itemsLoadSeq) return;
       if (mutationAtStart !== itemsMutationSeq) return;
       collectionItems.set(res.items);
+
+      // Initialize hideDoneTasks based on collection setting if it's the first load for this collection
+      if (lastCollectionId !== $currentCollection.id) {
+        hideDoneTasks = !$currentCollection.show_completed_tasks;
+      }
     } finally {
       isLoading.set(false);
     }

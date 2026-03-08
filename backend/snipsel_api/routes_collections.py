@@ -196,6 +196,7 @@ def get_today_collection():
             c.header_image_position = tpl.header_image_position
             c.header_image_x_position = tpl.header_image_x_position
             c.header_image_zoom = tpl.header_image_zoom
+            c.show_completed_tasks = tpl.show_completed_tasks
             if tpl.default_snipsel_type:
                 c.default_snipsel_type = tpl.default_snipsel_type
     db.session.add(c)
@@ -593,6 +594,7 @@ def create_collection():
     header_image_url = (data.get("header_image_url") or "").strip() or None
     header_color = (data.get("header_color") or "").strip() or user.default_collection_header_color or None
     default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
+    show_completed_tasks = data.get("show_completed_tasks") if "show_completed_tasks" in data else True
 
     if not title:
         raise api_error(400, "invalid_input", "title is required")
@@ -604,6 +606,7 @@ def create_collection():
         header_image_url=header_image_url,
         header_color=header_color,
         default_snipsel_type=default_snipsel_type,
+        show_completed_tasks=show_completed_tasks,
         created_by_id=user.id,
         modified_by_id=user.id,
     )
@@ -703,6 +706,8 @@ def update_collection(collection_id: str):
         c.is_passcode_protected = bool(data.get("is_passcode_protected"))
     if "default_snipsel_type" in data:
         c.default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
+    if "show_completed_tasks" in data:
+        c.show_completed_tasks = bool(data.get("show_completed_tasks"))
 
     c.modified_by_id = user.id
     db.session.commit()
@@ -908,6 +913,7 @@ def _collection_json(c: Collection) -> dict:
         "default_snipsel_type": c.default_snipsel_type,
         "archived": c.archived_at is not None,
         "is_passcode_protected": bool(c.is_passcode_protected),
+        "show_completed_tasks": bool(c.show_completed_tasks),
         "list_for_day": c.list_for_day.isoformat() if c.list_for_day else None,
         "created_at": c.created_at.isoformat() + "Z",
         "modified_at": c.modified_at.isoformat() + "Z",
