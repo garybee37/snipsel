@@ -82,6 +82,7 @@ Tag your snipsels with `#hashtags` and `@mention` people. Browse everything by t
 - **TOTP 2FA** — standard authenticator app support
 - **Passcode lock** — protect individual collections with a PIN
 - **Password reset via email**
+- **Registration toggle** — disable new user registration via environment variable
 
 ### 🎨 Beautiful & Adaptive UI
 - Light, dark, or system-adaptive theme
@@ -111,6 +112,7 @@ docker run -d \
   -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
   -e SNIPSEL_DOMAIN="yourdomain.com" \
   -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
+  -e SNIPSEL_REGISTRATION_ENABLED=1 \
   ghcr.io/mcfetz/snipsel:latest
 ```
 
