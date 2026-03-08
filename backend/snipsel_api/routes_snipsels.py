@@ -579,6 +579,103 @@ def reorder_collection(collection_id: str):
     return json_response({"ok": True})
 
 
+@snipsels_bp.delete("/collections/<collection_id>/snipsels/completed")
+@require_auth
+def delete_completed_tasks(collection_id: str):
+    user = current_user()
+    if not can_write_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
+
+    # Find all CollectionSnipsel entries for completed tasks in this collection
+    stmt = (
+        db.select(CollectionSnipsel)
+        .join(Snipsel, Snipsel.id == CollectionSnipsel.snipsel_id)
+        .where(
+            CollectionSnipsel.collection_id == collection_id,
+            Snipsel.task_done.is_(True),
+            Snipsel.deleted_at.is_(None)
+        )
+    )
+    items = db.session.execute(stmt).scalars().all()
+    
+    deleted_count = 0
+    now = datetime.utcnow()
+    
+    for cs in items:
+        snipsel_id = cs.snipsel_id
+        s = cs.snipsel
+        
+        # Remove from this collection
+        db.session.delete(cs)
+        
+        # Check if it should be fully deleted (last reference and owned by user)
+        remaining = (
+            db.session.execute(
+                db.select(db.func.count())
+                .select_from(CollectionSnipsel)
+                .where(CollectionSnipsel.snipsel_id == snipsel_id, CollectionSnipsel.collection_id != collection_id)
+            ).scalar()
+            or 0
+        )
+        
+        if remaining == 0 and s.owner_user_id == user.id:
+            s.deleted_at = now
+            s.deleted_by_id = user.id
+            
+        deleted_count += 1
+
+    if deleted_count > 0:
+        db.session.execute(
+            db.update(Collection)
+            .where(Collection.id == collection_id)
+            .values(modified_at=now, modified_by_id=user.id)
+        )
+        db.session.commit()
+
+    return json_response({"ok": True, "count": deleted_count})
+
+
+@snipsels_bp.post("/collections/<collection_id>/snipsels/completed/reset")
+@require_auth
+def reset_completed_tasks(collection_id: str):
+    user = current_user()
+    if not can_write_collection(user.id, collection_id):
+        raise api_error(404, "not_found", "Collection not found")
+
+    # Find all Snipsel IDs in this collection that are marked as done
+    stmt = (
+        db.select(Snipsel)
+        .join(CollectionSnipsel, CollectionSnipsel.snipsel_id == Snipsel.id)
+        .where(
+            CollectionSnipsel.collection_id == collection_id,
+            Snipsel.task_done.is_(True),
+            Snipsel.deleted_at.is_(None)
+        )
+    )
+    snipsels = db.session.execute(stmt).scalars().all()
+    
+    reset_count = 0
+    now = datetime.utcnow()
+    
+    for s in snipsels:
+        s.task_done = False
+        s.done_at = None
+        s.done_by_id = None
+        s.modified_at = now
+        s.modified_by_id = user.id
+        reset_count += 1
+
+    if reset_count > 0:
+        db.session.execute(
+            db.update(Collection)
+            .where(Collection.id == collection_id)
+            .values(modified_at=now, modified_by_id=user.id)
+        )
+        db.session.commit()
+
+    return json_response({"ok": True, "count": reset_count})
+
+
 def _get_owned_snipsel(user_id: str, snipsel_id: str) -> Snipsel:
     s = db.session.get(Snipsel, snipsel_id)
     if not s or s.deleted_at is not None or s.owner_user_id != user_id:

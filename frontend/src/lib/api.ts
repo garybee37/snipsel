@@ -437,6 +437,8 @@ export const api = {
     listBacklinks: (id: string) => requestJson<{ backlinks: CollectionBacklink[] }>(`/api/collections/${id}/backlinks`),
     listRecent: () => requestJson<{ collections: Array<{ id: string; title: string; icon: string }> }>('/api/collections/recent'),
     clearRecent: () => requestJson<{ ok: true }>('/api/collections/recent', { method: 'DELETE' }),
+    deleteCompletedTasks: (id: string) => requestJson<{ ok: true; count: number }>(`/api/collections/${id}/snipsels/completed`, { method: 'DELETE' }),
+    resetCompletedTasks: (id: string) => requestJson<{ ok: true; count: number }>(`/api/collections/${id}/snipsels/completed/reset`, { method: 'POST' }),
   },
 
   users: {

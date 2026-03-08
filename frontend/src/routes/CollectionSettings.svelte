@@ -283,6 +283,32 @@
     }
   }
 
+  async function deleteCompletedTasks() {
+    if (!collection) return;
+    if (!confirm('Are you sure you want to delete all completed tasks from this collection? This cannot be undone.')) return;
+    saving = true;
+    try {
+      await api.collections.deleteCompletedTasks(collection.id);
+    } catch (err: any) {
+      alert('Failed to delete completed tasks: ' + (err.error?.message || 'Unknown error'));
+    } finally {
+      saving = false;
+    }
+  }
+
+  async function resetCompletedTasks() {
+    if (!collection) return;
+    if (!confirm('Are you sure you want to reset all completed tasks in this collection to incomplete?')) return;
+    saving = true;
+    try {
+      await api.collections.resetCompletedTasks(collection.id);
+    } catch (err: any) {
+      alert('Failed to reset completed tasks: ' + (err.error?.message || 'Unknown error'));
+    } finally {
+      saving = false;
+    }
+  }
+
   function goBack() {
     currentView.set({ type: 'collection', id: collectionId });
   }
@@ -439,8 +465,27 @@
                 <div class="h-6 w-11 rounded-full bg-slate-200 transition-colors peer-checked:bg-indigo-600 dark:bg-slate-700"></div>
                 <div class="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></div>
               </div>
-              <span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">Erledigte Tasks standardmäßig anzeigen</span>
+              <span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">Show completed tasks by default</span>
             </label>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button
+                class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 shadow-sm hover:bg-red-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-red-900/20"
+                type="button"
+                onclick={deleteCompletedTasks}
+                disabled={saving}
+              >
+                Delete completed tasks
+              </button>
+              <button
+                class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-white/5"
+                type="button"
+                onclick={resetCompletedTasks}
+                disabled={saving}
+              >
+                Reset completed tasks
+              </button>
+            </div>
           </div>
         </div>
       </div>
