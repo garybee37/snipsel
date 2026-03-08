@@ -474,7 +474,10 @@
             <label class="flex items-center gap-3 cursor-pointer group">
               <div class="relative inline-flex h-6 w-11 items-center">
                 <input type="checkbox" class="peer sr-only" bind:checked={showCompletedTasks} />
-                <div class="h-6 w-11 rounded-full bg-slate-200 transition-colors peer-checked:bg-indigo-600 dark:bg-slate-700"></div>
+                <div 
+                  class="h-6 w-11 rounded-full bg-slate-200 transition-colors dark:bg-slate-700"
+                  style={showCompletedTasks ? `background-color: ${getAccent()}` : undefined}
+                ></div>
                 <div class="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></div>
               </div>
               <span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">Show completed tasks by default</span>
