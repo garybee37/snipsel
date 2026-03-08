@@ -239,6 +239,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getConfig: () => requestJson<{ registration_enabled: boolean }>('/api/auth/config'),
   register: (input: { username: string; email: string; password: string }) =>
     requestJson<{ user: User }>('/api/auth/register', {
       method: 'POST',

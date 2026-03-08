@@ -31,6 +31,15 @@ from snipsel_api.models import Attachment, Collection, CollectionSnipsel, Passwo
 auth_bp = Blueprint("auth", __name__)
 
 
+
+@auth_bp.get("/config")
+def auth_config():
+    settings = Settings.from_env()
+    return json_response({
+        "registration_enabled": settings.registration_enabled
+    })
+
+
 @auth_bp.post("/register")
 @enforce_json
 def register():
@@ -38,6 +47,10 @@ def register():
     username = (data.get("username") or "").strip()
     email = (data.get("email") or "").strip()
     password = data.get("password") or ""
+
+    settings = Settings.from_env()
+    if not settings.registration_enabled:
+        raise api_error(403, "registration_disabled", "Registration is currently disabled")
 
     if not username or not email or not password:
         raise api_error(400, "invalid_input", "username, email and password are required")

@@ -25,6 +25,7 @@ class Settings:
     vapid_subject: str | None
     snipsel_domain: str | None
     snipsel_frontend_url: str | None
+    registration_enabled: bool
 
     @staticmethod
     def from_env() -> "Settings":
@@ -55,6 +56,7 @@ class Settings:
         vapid_subject = os.environ.get("VAPID_SUBJECT")
         snipsel_domain = os.environ.get("SNIPSEL_DOMAIN")
         snipsel_frontend_url = os.environ.get("SNIPSEL_FRONTEND_URL")
+        registration_enabled = os.environ.get("SNIPSEL_REGISTRATION_ENABLED", "1") != "0"
 
         return Settings(
             secret_key=secret_key,
@@ -76,4 +78,5 @@ class Settings:
             vapid_subject=vapid_subject,
             snipsel_domain=snipsel_domain,
             snipsel_frontend_url=snipsel_frontend_url,
+            registration_enabled=registration_enabled,
         )

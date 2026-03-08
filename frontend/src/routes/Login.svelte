@@ -2,6 +2,7 @@
   import { api } from '../lib/api';
   import { currentUser } from '../lib/session';
   import { startAuthentication } from '@simplewebauthn/browser';
+  import { onMount } from 'svelte';
 
   let mode = $state<'login' | 'register'>('login');
   let username = $state('');
@@ -11,6 +12,19 @@
   let isOtpStep = $state(false);
   let errorMessage = $state<string | null>(null);
   let busy = $state(false);
+  let registrationEnabled = $state(true);
+
+  onMount(async () => {
+    try {
+      const config = await api.getConfig();
+      registrationEnabled = config.registration_enabled;
+      if (!registrationEnabled && mode === 'register') {
+        mode = 'login';
+      }
+    } catch (e) {
+      console.error('Failed to fetch auth config:', e);
+    }
+  });
 
   async function submit() {
     errorMessage = null;
@@ -179,11 +193,13 @@
     </div>
   </form>
 
-  <button 
-    class="mt-6 w-full rounded-full bg-[#4f46e5]/10 px-4 py-3.5 text-base font-semibold text-[#4f46e5] transition-all hover:bg-[#4f46e5]/20 dark:bg-indigo-500/20 dark:text-indigo-400 dark:hover:bg-indigo-500/30" 
-    type="button" 
-    onclick={toggleMode}
-  >
-    {mode === 'login' ? 'Need an account? Register' : 'Already have an account? Login'}
-  </button>
+  {#if registrationEnabled}
+    <button 
+      class="mt-6 w-full rounded-full bg-[#4f46e5]/10 px-4 py-3.5 text-base font-semibold text-[#4f46e5] transition-all hover:bg-[#4f46e5]/20 dark:bg-indigo-500/20 dark:text-indigo-400 dark:hover:bg-indigo-500/30" 
+      type="button" 
+      onclick={toggleMode}
+    >
+      {mode === 'login' ? 'Need an account? Register' : 'Already have an account? Login'}
+    </button>
+  {/if}
 </div>

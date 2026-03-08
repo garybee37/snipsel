@@ -173,6 +173,7 @@ The frontend proxies `/api/*` to the backend in dev mode.
 | `SNIPSEL_MAX_UPLOAD_BYTES` | `10485760` | Max upload size (10 MB) |
 | `SNIPSEL_DOMAIN` | `localhost` | Domain for Passkey auth |
 | `SNIPSEL_FRONTEND_URL` | `http://localhost:5173` | Frontend URL for CORS & Passkeys |
+| `SNIPSEL_REGISTRATION_ENABLED` | `1` | Set to `0` to disable new user registration |
 
 **Optional SMTP (password reset):**
 
