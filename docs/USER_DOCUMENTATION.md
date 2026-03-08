@@ -56,6 +56,7 @@ Daily collections are automatically created for each day. They provide a quick w
 3. Optionally select an icon and header color
 4. Choose a default snipsel type (optional)
 5. Click **Create**
+6. **Create from Snipsel**: You can also create a collection by selecting a snipsel and clicking the **Create Collection** icon in the toolbox. This will move the snipsel (and its children) into a new collection and replace the original with a link.
 
 ### Collection Settings
 
@@ -64,6 +65,7 @@ Access collection settings by clicking the collection menu (three dots) and sele
 - Change icon and color
 - Set default snipsel type
 - Enable/disable passcode protection
+- **Show Completed Tasks**: Toggle whether completed tasks are shown by default in this collection.
 - Archive collection
 - Delete collection
 
@@ -106,6 +108,7 @@ For **task** type snipsels:
 - Done tasks show a strikethrough.
 - **Recurring Tasks**: When you mark a task with a recurring reminder as done, a new open task is automatically created for the next occurrence and placed directly below the completed one. This ensures you never "lose" a task that hasn't been finished yet.
 - Tasks assigned to you via @mention will appear in your notifications.
+- **Cleanup**: In the collection menu, you can select **Delete completed tasks** to permanently remove finished tasks from the current collection, or **Reset completed tasks** to re-open them all at once.
 
 ### Reminders
 

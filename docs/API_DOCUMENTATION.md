@@ -74,8 +74,8 @@ Collections organize snipsels. They can be daily lists (`type: day`) or custom l
 ### Managed Endpoints
 - **POST /collections**: Create a collection.
 - **GET /collections/<id>**: Get details.
-- **PATCH /collections/<id>**: Update (title, icon, header_image_url, header_color, archived, is_template, is_passcode_protected, default_snipsel_type).
-- **DELETE /collections/<id>**: Delete (fails if it has backlinks).
+- **PATCH /collections/<id>**: Update (title, icon, header_image_url, header_color, archived, is_template, is_passcode_protected, default_snipsel_type, show_completed_tasks).
+- **DELETE /collections/<id>**: Delete (fails if it has backlinks from other active collections).
 
 ### Locking & Favorites
 - **POST /auth/me/passcode**: Set/update personal passcode.
@@ -92,12 +92,14 @@ Collections organize snipsels. They can be daily lists (`type: day`) or custom l
 - **POST /collections/<id>/snipsels**: Create new snipsel in this collection.
 - **PATCH /collections/<id>/snipsels/reorder**: Reorder items. `{"items": [{"snipsel_id": "...", "position": 1, "indent": 0}, ...]}`
 - **DELETE /collections/<id>/snipsels/<snipsel_id>`: Remove snipsel from collection.
+- **DELETE /collections/<id>/snipsels/completed`: Batch delete all completed tasks in this collection.
+- **POST /collections/<id>/snipsels/completed/reset`: Re-open all completed tasks in this collection.
 
 ### Snipsel Operations
 - **GET /snipsels/<id>**: Get full snipsel details including backlinks, tags, and placements.
 - **PATCH /snipsels/<id>**: Update snipsel content, type, task status, or reminders.
 - **POST /snipsels/<id>/reactions**: Toggle emoji reaction. `{"emoji": "🚀"}`.
-- **POST /collections/<id>/snipsels/<snipsel_id>/reference**: Create a reference to an existing snipsel.
+- **POST /collections/<id>/snipsels/<snipsel_id>/reference**: Create a reference to an existing snipsel. Body: `{"indent": 0}` (optional).
 - **POST /collections/<id>/snipsels/<snipsel_id>/copy**: Create a full copy of a snipsel.
 
 ---
