@@ -468,40 +468,6 @@
               </div>
             </div>
           </div>
-          
-          <div class="block">
-            <span class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Tasks</span>
-            <label class="flex items-center gap-3 cursor-pointer group">
-              <div class="relative inline-flex h-6 w-11 items-center">
-                <input type="checkbox" class="peer sr-only" bind:checked={showCompletedTasks} />
-                <div 
-                  class="h-6 w-11 rounded-full bg-slate-200 transition-colors dark:bg-slate-700"
-                  style={showCompletedTasks ? `background-color: ${getAccent()}` : undefined}
-                ></div>
-                <div class="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></div>
-              </div>
-              <span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">Show completed tasks by default</span>
-            </label>
-
-            <div class="mt-4 flex flex-wrap gap-2">
-              <button
-                class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 shadow-sm hover:bg-red-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-red-900/20"
-                type="button"
-                onclick={deleteCompletedTasks}
-                disabled={saving}
-              >
-                Delete completed tasks
-              </button>
-              <button
-                class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-white/5"
-                type="button"
-                onclick={resetCompletedTasks}
-                disabled={saving}
-              >
-                Reset completed tasks
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -603,6 +569,43 @@
               {/if}
             </div>
           </label>
+        </div>
+      </div>
+
+      <!-- Tasks -->
+      <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
+        <div class="text-xs font-medium uppercase text-slate-500">Tasks</div>
+        <div class="mt-4 space-y-4">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <div class="relative inline-flex h-6 w-11 items-center">
+              <input type="checkbox" class="peer sr-only" bind:checked={showCompletedTasks} />
+              <div 
+                class="h-6 w-11 rounded-full bg-slate-200 transition-colors dark:bg-slate-700"
+                style={showCompletedTasks ? `background-color: ${getAccent()}` : undefined}
+              ></div>
+              <div class="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></div>
+            </div>
+            <span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">Show completed tasks by default</span>
+          </label>
+
+          <div class="flex flex-wrap gap-2">
+            <button
+              class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 shadow-sm hover:bg-red-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-red-900/20"
+              type="button"
+              onclick={deleteCompletedTasks}
+              disabled={saving}
+            >
+              Delete completed tasks
+            </button>
+            <button
+              class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-white/5"
+              type="button"
+              onclick={resetCompletedTasks}
+              disabled={saving}
+            >
+              Reset completed tasks
+            </button>
+          </div>
         </div>
       </div>
 
