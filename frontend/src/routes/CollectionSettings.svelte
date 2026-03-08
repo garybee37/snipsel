@@ -178,8 +178,8 @@
     if (file.size > maxBytes) {
       const formatSize = (b: number) => b < 1024 * 1024 ? Math.round(b / 1024) + ' KB' : Math.round(b / (1024 * 1024)) + ' MB';
       errorModal = {
-        title: 'Datei zu groß',
-        message: `Das Header-Bild ist zu groß (Limit: ${formatSize(maxBytes)}).`
+        title: 'File too large',
+        message: `The header image is too large (limit: ${formatSize(maxBytes)}).`
       };
       target.value = '';
       return;
@@ -201,13 +201,13 @@
       console.error('Upload failed:', err);
       if (err.error?.code === 'payload_too_large') {
         errorModal = {
-          title: 'Datei zu groß',
-          message: err.error.message || 'Die Datei überschreitet das Upload-Limit von 10 MB.'
+          title: 'File too large',
+          message: err.error.message || 'The file exceeds the upload limit of 10 MB.'
         };
       } else {
         errorModal = {
-          title: 'Upload fehlgeschlagen',
-          message: err.error?.message || 'Ein unerwarteter Fehler ist aufgetreten.'
+          title: 'Upload failed',
+          message: err.error?.message || 'An unexpected error occurred.'
         };
       }
     } finally {
@@ -768,8 +768,8 @@
 
 {#if showDeleteModal}
   <DeleteConfirmModal
-    title="Collection löschen?"
-    message={`Möchtest du die Collection "${title}" wirklich dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+    title="Delete collection?"
+    message={`Are you sure you want to permanently delete the collection "${title}"? This cannot be undone.`}
     onConfirm={confirmDeleteCollection}
     onCancel={cancelDeleteCollection}
   />
@@ -777,8 +777,8 @@
 
 {#if showBulkDeleteModal}
   <DeleteConfirmModal
-    title="Erledigte Tasks löschen?"
-    message="Möchtest du wirklich alle erledigten Tasks aus dieser Kollektion löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    title="Delete completed tasks?"
+    message="Are you sure you want to delete all completed tasks from this collection? This cannot be undone."
     onConfirm={confirmBulkDelete}
     onCancel={() => (showBulkDeleteModal = false)}
   />
@@ -786,9 +786,9 @@
 
 {#if showBulkResetModal}
   <DeleteConfirmModal
-    title="Tasks zurücksetzen?"
-    message="Möchtest du alle erledigten Tasks in dieser Kollektion wieder auf 'offen' setzen?"
-    confirmLabel="Zurücksetzen"
+    title="Reset completed tasks?"
+    message="Are you sure you want to reset all completed tasks in this collection to incomplete?"
+    confirmLabel="Reset"
     onConfirm={confirmBulkReset}
     onCancel={() => (showBulkResetModal = false)}
   />
