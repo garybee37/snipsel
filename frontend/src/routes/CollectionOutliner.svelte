@@ -1950,7 +1950,7 @@
                         </button>
 
                         {#if activeReactionPickerId === snip.id}
-                          <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
+                          <div class="absolute bottom-full right-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
                             {#if showCustomEmojiInputId === snip.id}
                               <input
                                 type="text"
@@ -2518,7 +2518,7 @@
                         </button>
 
                         {#if activeReactionPickerId === snip.id}
-                          <div class="absolute bottom-full left-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
+                          <div class="absolute bottom-full right-0 z-50 mb-2 flex items-center gap-1 overflow-hidden rounded-full border border-slate-200 bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95">
                             {#if showCustomEmojiInputId === snip.id}
                               <input
                                 type="text"
