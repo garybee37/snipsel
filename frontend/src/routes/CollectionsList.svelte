@@ -169,6 +169,7 @@
       showCreate = false;
       newTitle = '';
       newIcon = '🗒';
+      await openCollection(res.collection);
     } finally {
       busy = false;
     }
