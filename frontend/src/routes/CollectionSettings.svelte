@@ -25,6 +25,8 @@
   let showCompletedTasks = $state(true);
   let saving = $state(false);
   let showDeleteModal = $state(false);
+  let showBulkDeleteModal = $state(false);
+  let showBulkResetModal = $state(false);
   let errorModal = $state<{ title: string; message: string } | null>(null);
   let uploadProgress = $state<{ filename: string; percent: number } | null>(null);
 
@@ -285,7 +287,12 @@
 
   async function deleteCompletedTasks() {
     if (!collection) return;
-    if (!confirm('Are you sure you want to delete all completed tasks from this collection? This cannot be undone.')) return;
+    showBulkDeleteModal = true;
+  }
+
+  async function confirmBulkDelete() {
+    if (!collection) return;
+    showBulkDeleteModal = false;
     saving = true;
     try {
       await api.collections.deleteCompletedTasks(collection.id);
@@ -298,7 +305,12 @@
 
   async function resetCompletedTasks() {
     if (!collection) return;
-    if (!confirm('Are you sure you want to reset all completed tasks in this collection to incomplete?')) return;
+    showBulkResetModal = true;
+  }
+
+  async function confirmBulkReset() {
+    if (!collection) return;
+    showBulkResetModal = false;
     saving = true;
     try {
       await api.collections.resetCompletedTasks(collection.id);
@@ -760,6 +772,25 @@
     message={`Möchtest du die Collection "${title}" wirklich dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
     onConfirm={confirmDeleteCollection}
     onCancel={cancelDeleteCollection}
+  />
+{/if}
+
+{#if showBulkDeleteModal}
+  <DeleteConfirmModal
+    title="Erledigte Tasks löschen?"
+    message="Möchtest du wirklich alle erledigten Tasks aus dieser Kollektion löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    onConfirm={confirmBulkDelete}
+    onCancel={() => (showBulkDeleteModal = false)}
+  />
+{/if}
+
+{#if showBulkResetModal}
+  <DeleteConfirmModal
+    title="Tasks zurücksetzen?"
+    message="Möchtest du alle erledigten Tasks in dieser Kollektion wieder auf 'offen' setzen?"
+    confirmLabel="Zurücksetzen"
+    onConfirm={confirmBulkReset}
+    onCancel={() => (showBulkResetModal = false)}
   />
 {/if}
 
