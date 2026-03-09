@@ -667,7 +667,8 @@ export const api = {
           snipsel
         };
         await idbSaveCollectionItem(item);
-        await idbEnqueueSync('POST', `/api/collections/${collectionId}/snipsels`, input);
+        const syncPayload = { ...input, _tempId: tempId };
+        await idbEnqueueSync('POST', `/api/collections/${collectionId}/snipsels`, syncPayload);
         // Note: Real ID will be different, UI will reload when online
         return { item };
       }

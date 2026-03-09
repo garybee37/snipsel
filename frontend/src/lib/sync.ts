@@ -10,14 +10,37 @@ export async function processSyncQueue() {
     syncInProgress = true;
     try {
         const queue = await idbGetSyncQueue();
+        const idMap: Record<string, string> = {}; // Maps temp IDs to real server IDs
+
         for (const op of queue) {
             if (!navigator.onLine) break; // Network went down during sync
 
             try {
-                await requestJson(op.endpoint, {
+                // Apply ID translations to endpoint and body
+                let endpoint = op.endpoint;
+                let bodyStr = op.body ? JSON.stringify(op.body) : undefined;
+
+                for (const [tempId, realId] of Object.entries(idMap)) {
+                    endpoint = endpoint.replace(tempId, realId);
+                    if (bodyStr) {
+                        bodyStr = bodyStr.replace(new RegExp(tempId, 'g'), realId);
+                    }
+                }
+
+                const res = await requestJson<any>(endpoint, {
                     method: op.method,
-                    body: op.body ? JSON.stringify(op.body) : undefined,
+                    body: bodyStr,
                 });
+
+                // If this was a creation endpoint that returns an item, map its ID
+                if (op.method === 'POST' && res?.item?.snipsel_id && op.endpoint.endsWith('/snipsels')) {
+                    // We need to extract the temp ID that was originally generated.
+                    // Unfortunately op doesn't store the tempId directly. 
+                    // However, we modified api.ts so we can append the tempId to the queue op.
+                    if (op.body && (op.body as any)._tempId) {
+                        idMap[(op.body as any)._tempId] = res.item.snipsel_id;
+                    }
+                }
 
                 // Success -> remove from queue
                 await idbRemoveSync(op.id);
