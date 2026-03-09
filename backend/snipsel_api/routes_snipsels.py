@@ -50,7 +50,7 @@ def _touch_collections_for_snipsel(*, snipsel_id: str, modified_by_id: str) -> N
         .values(modified_at=now, modified_by_id=modified_by_id)
     )
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from snipsel_api.utils_text import extract_collection_refs, extract_mentions, extract_tags
 
 snipsels_bp = Blueprint("snipsels", __name__)
@@ -78,7 +78,8 @@ def list_collection_snipsels(collection_id: str):
                 joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.created_by),
                 joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.modified_by),
                 joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.done_by),
-                joinedload(CollectionSnipsel.snipsel).joinedload(Snipsel.reactions),
+                joinedload(CollectionSnipsel.snipsel).selectinload(Snipsel.reactions),
+                joinedload(CollectionSnipsel.snipsel).selectinload(Snipsel.attachments)
             )
             .where(
                 CollectionSnipsel.collection_id == collection_id,
@@ -90,7 +91,23 @@ def list_collection_snipsels(collection_id: str):
         .unique()
         .all()
     )
-    return json_response({"items": [_collection_item_json(cs, user.id) for cs in items]})
+
+    snipsel_ids = [cs.snipsel_id for cs in items]
+    refs_by_snipsel_id = {sid: [] for sid in snipsel_ids}
+    if snipsel_ids:
+        all_refs = db.session.execute(
+            db.select(SnipselCollectionRef)
+            .join(Collection, Collection.id == SnipselCollectionRef.collection_id)
+            .options(joinedload(SnipselCollectionRef.collection))
+            .where(
+                SnipselCollectionRef.snipsel_id.in_(snipsel_ids),
+                Collection.deleted_at.is_(None),
+            )
+        ).scalars().all()
+        for r in all_refs:
+            refs_by_snipsel_id[r.snipsel_id].append(r)
+
+    return json_response({"items": [_collection_item_json(cs, user.id, refs_by_snipsel_id[cs.snipsel_id]) for cs in items]})
 
 
 @snipsels_bp.post("/collections/<collection_id>/snipsels")
@@ -831,15 +848,17 @@ def _snipsel_json(s: Snipsel, user_id: str | None = None) -> dict:
     }
 
 
-def _collection_item_json(cs: CollectionSnipsel, user_id: str | None = None) -> dict:
-    refs = db.session.execute(
-        db.select(SnipselCollectionRef)
-        .join(Collection, Collection.id == SnipselCollectionRef.collection_id)
-        .where(
-            SnipselCollectionRef.snipsel_id == cs.snipsel_id,
-            Collection.deleted_at.is_(None)
-        )
-    ).scalars().all()
+def _collection_item_json(cs: CollectionSnipsel, user_id: str | None = None, refs: list[SnipselCollectionRef] | None = None) -> dict:
+    if refs is None:
+        refs = db.session.execute(
+            db.select(SnipselCollectionRef)
+            .join(Collection, Collection.id == SnipselCollectionRef.collection_id)
+            .options(joinedload(SnipselCollectionRef.collection))
+            .where(
+                SnipselCollectionRef.snipsel_id == cs.snipsel_id,
+                Collection.deleted_at.is_(None)
+            )
+        ).scalars().all()
     return {
         "collection_id": cs.collection_id,
         "snipsel_id": cs.snipsel_id,

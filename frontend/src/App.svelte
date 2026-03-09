@@ -93,12 +93,14 @@ import Importer from './routes/Importer.svelte';
         .filter((i) => (i.snipsel.content_markdown ?? '').trim().length === 0 && i.snipsel.attachments.length === 0)
         .map((i) => i.snipsel_id);
 
-      if (emptyIds.length === 0) return;
+      if (emptyIds.length === 0) return { items: res.items, deletedCount: 0 };
       for (const id of emptyIds) {
         await api.snipsels.delete(collectionId, id);
       }
+      return { items: res.items, deletedCount: emptyIds.length };
     } catch {
       // best-effort
+      return { items: [], deletedCount: 0 };
     }
   }
 
@@ -108,9 +110,9 @@ import Importer from './routes/Importer.svelte';
     if (!c.list_for_day) return;
 
     try {
-      await pruneEmptySnipsels(collectionId);
-      const res = await api.snipsels.list(collectionId);
-      if (res.items.length > 0) return;
+      const pruneRes = await pruneEmptySnipsels(collectionId);
+      if (!pruneRes) return;
+      if (pruneRes.items.length > pruneRes.deletedCount) return;
 
       await api.collections.delete(collectionId);
       if (untrack(() => $currentCollection?.id) === collectionId) currentCollection.set(null);
