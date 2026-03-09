@@ -181,7 +181,6 @@ import Importer from './routes/Importer.svelte';
     try {
       const today = getTodayDate();
       const res = await api.collections.today(today);
-      await pruneEmptySnipsels(res.collection.id);
       currentCollection.set(res.collection);
       currentView.set({ type: 'collection', id: res.collection.id });
     } finally {
@@ -212,7 +211,6 @@ import Importer from './routes/Importer.svelte';
     isSwitchingCollection = true;
     try {
       const res = await api.collections.get(id);
-      await pruneEmptySnipsels(res.collection.id);
       currentCollection.set(res.collection);
     } catch (err: any) {
       if (err?.error?.code === 'passcode_required') {

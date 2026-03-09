@@ -1492,9 +1492,7 @@
       anchorHighlightId = null;
       selectedIds = new Set();
       editingSnipselId.set(null);
-    }
 
-    if ($currentCollection) {
       loadItems();
       loadIncomingMentions();
     }
