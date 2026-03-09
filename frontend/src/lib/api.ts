@@ -562,6 +562,7 @@ export const api = {
     list: (() => {
       const listCache: Record<string, Promise<{ items: CollectionItem[] }> | undefined> = {};
       return async (collectionId: string) => {
+        console.trace('[DEBUG] api.snipsels.list called for', collectionId, 'cached:', !!listCache[collectionId]);
         if (listCache[collectionId]) return listCache[collectionId];
         const promise = (async () => {
           try {
