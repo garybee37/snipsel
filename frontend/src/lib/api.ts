@@ -360,22 +360,35 @@ export const api = {
         throw err;
       }
     },
-    today: async (day?: string) => {
-      try {
-        if (!navigator.onLine) throw new Error('offline');
-        const res = await requestJson<{ collection: Collection }>(
-          `/api/collections/today${day ? `?day=${day}` : ''}`
-        );
-        await idbSaveCollection(res.collection);
-        return res;
-      } catch (err: any) {
-        if (err?.error?.code === 'passcode_required' || (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error')) throw err;
-        const all = await idbGetAllCollections();
-        const match = all.find(c => c.list_for_day === (day || new Date().toISOString().slice(0, 10)));
-        if (match) return { collection: match };
-        throw err;
-      }
-    },
+    today: (() => {
+      let todayCache: Promise<{ collection: Collection }> | undefined;
+      let lastDay: string | undefined;
+      return async (day?: string) => {
+        if (todayCache && lastDay === day) return todayCache;
+        let promise: Promise<{ collection: Collection }> | undefined;
+        promise = (async () => {
+          try {
+            if (!navigator.onLine) throw new Error('offline');
+            const res = await requestJson<{ collection: Collection }>(
+              `/api/collections/today${day ? `?day=${day}` : ''}`
+            );
+            await idbSaveCollection(res.collection);
+            return res;
+          } catch (err: any) {
+            if (err?.error?.code === 'passcode_required' || (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error')) throw err;
+            const all = await idbGetAllCollections();
+            const match = all.find(c => c.list_for_day === (day || new Date().toISOString().slice(0, 10)));
+            if (match) return { collection: match };
+            throw err;
+          } finally {
+            if (todayCache === promise) todayCache = undefined;
+          }
+        })();
+        todayCache = promise;
+        lastDay = day;
+        return promise;
+      };
+    })(),
     create: (input: {
       title: string;
       icon?: string;
@@ -532,8 +545,21 @@ export const api = {
         `/api/collections/autocomplete?q=${encodeURIComponent(q)}`
       ),
 
-    listShares: (id: string) =>
-      requestJson<{ shares: CollectionShare[] }>(`/api/collections/${id}/shares`),
+    listShares: (() => {
+      const shareCache: Record<string, Promise<{ shares: CollectionShare[] }> | undefined> = {};
+      return async (id: string) => {
+        if (shareCache[id]) return shareCache[id];
+        const promise = (async () => {
+          try {
+            return await requestJson<{ shares: CollectionShare[] }>(`/api/collections/${id}/shares`);
+          } finally {
+            delete shareCache[id];
+          }
+        })();
+        shareCache[id] = promise;
+        return promise;
+      };
+    })(),
     createShare: (id: string, input: { shared_with_user_id: string; permission: 'read' | 'write' }) =>
       requestJson<{ share: { id: string } }>(`/api/collections/${id}/shares`, {
         method: 'POST',
@@ -562,7 +588,6 @@ export const api = {
     list: (() => {
       const listCache: Record<string, Promise<{ items: CollectionItem[] }> | undefined> = {};
       return async (collectionId: string) => {
-        console.trace('[DEBUG] api.snipsels.list called for', collectionId, 'cached:', !!listCache[collectionId]);
         if (listCache[collectionId]) return listCache[collectionId];
         const promise = (async () => {
           try {
@@ -751,7 +776,22 @@ export const api = {
   },
 
   notifications: {
-    list: () => requestJson<{ notifications: Notification[] }>('/api/notifications'),
+    list: (() => {
+      let notifCache: Promise<{ notifications: Notification[] }> | undefined;
+      return async () => {
+        if (notifCache) return notifCache;
+        let promise: Promise<{ notifications: Notification[] }> | undefined;
+        promise = (async () => {
+          try {
+            return await requestJson<{ notifications: Notification[] }>('/api/notifications');
+          } finally {
+            if (notifCache === promise) notifCache = undefined;
+          }
+        })();
+        notifCache = promise;
+        return promise;
+      };
+    })(),
     markRead: (id: string) => requestJson<{ success: boolean }>(`/api/notifications/${id}/mark-read`, { method: 'POST' }),
     markAllRead: () => requestJson<{ success: boolean }>('/api/notifications/mark-all-read', { method: 'POST' }),
     deleteRead: () => requestJson<{ success: boolean }>('/api/notifications/read', { method: 'DELETE' }),

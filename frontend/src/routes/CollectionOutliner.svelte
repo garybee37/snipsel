@@ -596,7 +596,6 @@
   }
 
   async function loadItems() {
-    console.trace('[DEBUG] loadItems called for', $currentCollection?.id);
     if (!$currentCollection) return;
     const loadSeq = ++itemsLoadSeq;
     const mutationAtStart = itemsMutationSeq;
