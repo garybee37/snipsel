@@ -68,7 +68,7 @@
     busy = true;
     try {
       // 1. Get options
-      const options = await api.passkeys.loginBegin(username || undefined);
+      const options = await api.passkeys.loginBegin(username || '');
       
       // 2. Start authentication
       const authResp = await startAuthentication(options);

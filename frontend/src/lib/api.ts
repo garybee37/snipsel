@@ -401,6 +401,8 @@ export const api = {
         is_passcode_protected?: boolean;
         show_completed_tasks?: boolean;
         header_image_position?: string | null;
+        header_image_x_position?: string | null;
+        header_image_zoom?: number | null;
       }
     ) => {
       if (!navigator.onLine) {

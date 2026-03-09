@@ -223,7 +223,7 @@
     {/each}
   </div>
 
-  <div class="cal-stack overflow-hidden" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
+  <div class="cal-stack overflow-hidden" role="none" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
     {#key cursor}
       <div
         class="grid grid-cols-7 gap-1"
