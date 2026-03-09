@@ -399,18 +399,43 @@ export const api = {
         return promise;
       };
     })(),
-    create: (input: {
+    create: async (input: {
       title: string;
       icon?: string;
       header_image_url?: string | null;
       header_color?: string | null;
       default_snipsel_type?: string | null;
       show_completed_tasks?: boolean;
-    }) =>
-      requestJson<{ collection: Collection }>('/api/collections', {
+    }) => {
+      if (!navigator.onLine) {
+        const tempId = crypto.randomUUID();
+        const collection: Collection = {
+          id: tempId,
+          title: input.title,
+          icon: input.icon || '📝',
+          header_image_url: input.header_image_url || null,
+          header_color: input.header_color || null,
+          is_template: false,
+          is_passcode_protected: false,
+          show_completed_tasks: input.show_completed_tasks ?? true,
+          default_snipsel_type: input.default_snipsel_type || null,
+          archived: false,
+          list_for_day: null,
+          created_at: new Date().toISOString(),
+          modified_at: new Date().toISOString(),
+          access_level: 'owner',
+        };
+        await idbSaveCollection(collection);
+        await idbEnqueueSync('POST', '/api/collections', { ...input, _tempId: tempId });
+        return { collection };
+      }
+      const res = await requestJson<{ collection: Collection }>('/api/collections', {
         method: 'POST',
         body: JSON.stringify(input),
-      }).then(res => { idbSaveCollection(res.collection); return res; }),
+      });
+      await idbSaveCollection(res.collection);
+      return res;
+    },
     update: async (
       id: string,
       input: {

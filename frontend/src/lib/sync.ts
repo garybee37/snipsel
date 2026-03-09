@@ -32,7 +32,14 @@ export async function processSyncQueue() {
                     body: bodyStr,
                 });
 
-                // If this was a creation endpoint that returns an item, map its ID
+                // If this was a collection creation endpoint, map its ID
+                if (op.method === 'POST' && res?.collection?.id && op.endpoint === '/api/collections') {
+                    if (op.body && (op.body as any)._tempId) {
+                        idMap[(op.body as any)._tempId] = res.collection.id;
+                    }
+                }
+
+                // If this was a snipsel creation endpoint, map its ID
                 if (op.method === 'POST' && res?.item?.snipsel_id && op.endpoint.endsWith('/snipsels')) {
                     // We need to extract the temp ID that was originally generated.
                     // Unfortunately op doesn't store the tempId directly. 
