@@ -199,14 +199,24 @@ export type SearchResponse = {
 export type TagCount = { name: string; count: number };
 
 export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  });
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers ?? {}),
+      },
+      ...init,
+    });
+  } catch (err) {
+    throw {
+      error: {
+        code: 'network_error',
+        message: 'Keine Verbindung zum Server möglich.',
+      },
+    } as ApiError;
+  }
 
   if (res.status === 413) {
     throw {

@@ -27,6 +27,7 @@ registerRoute(
     ({ url, request }) => url.pathname.startsWith('/api/') && request.method === 'GET',
     new NetworkFirst({
         cacheName: 'snipsel-api-fallback',
+        networkTimeoutSeconds: 3,
         plugins: [
             new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 })
         ]
