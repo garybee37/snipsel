@@ -2,9 +2,36 @@
 declare let self: ServiceWorkerGlobalScope
 
 import { precacheAndRoute } from 'workbox-precaching'
+import { registerRoute } from 'workbox-routing'
+import { CacheFirst, NetworkFirst } from 'workbox-strategies'
+import { ExpirationPlugin } from 'workbox-expiration'
+import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 
 // Precache assets built by Vite
 precacheAndRoute(self.__WB_MANIFEST || [])
+
+// Cache attachment images
+registerRoute(
+    ({ url }) => url.pathname.startsWith('/api/attachments/') || url.pathname.includes('/header-image'),
+    new CacheFirst({
+        cacheName: 'snipsel-attachments',
+        plugins: [
+            new CacheableResponsePlugin({ statuses: [0, 200] }),
+            new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 })
+        ]
+    })
+)
+
+// Cache API GET requests
+registerRoute(
+    ({ url, request }) => url.pathname.startsWith('/api/') && request.method === 'GET',
+    new NetworkFirst({
+        cacheName: 'snipsel-api-fallback',
+        plugins: [
+            new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 })
+        ]
+    })
+)
 
 self.addEventListener('push', (event) => {
     console.log('[ServiceWorker] Push event received!', event);

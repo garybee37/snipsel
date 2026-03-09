@@ -198,7 +198,7 @@ export type SearchResponse = {
 
 export type TagCount = { name: string; count: number };
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     credentials: 'include',
     headers: {
@@ -237,6 +237,20 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   return {} as T;
 }
+
+import {
+  idbGetAllCollections,
+  idbGetCollection,
+  idbSaveCollection,
+  idbSaveCollections,
+  idbDeleteCollection,
+  idbEnqueueSync,
+  idbSaveCollectionItems,
+  idbGetCollectionItems,
+  idbDeleteCollectionItem,
+  idbSaveCollectionItem,
+  idbUpdateSnipselData
+} from './db';
 
 export const api = {
   getConfig: () => requestJson<{ registration_enabled: boolean }>('/api/auth/config'),
@@ -319,16 +333,49 @@ export const api = {
     }),
 
   collections: {
-    list: (includeArchived = false) =>
-      requestJson<{ collections: Collection[] }>(
-        `/api/collections${includeArchived ? '?include_archived=1' : ''}`
-      ),
-    get: (id: string) =>
-      requestJson<{ collection: Collection }>(`/api/collections/${id}`),
-    today: (day?: string) =>
-      requestJson<{ collection: Collection }>(
-        `/api/collections/today${day ? `?day=${day}` : ''}`
-      ),
+    list: async (includeArchived = false) => {
+      try {
+        if (!navigator.onLine) throw new Error('offline');
+        const res = await requestJson<{ collections: Collection[] }>(
+          `/api/collections${includeArchived ? '?include_archived=1' : ''}`
+        );
+        await idbSaveCollections(res.collections);
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code === 'passcode_required' || (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error')) throw err;
+        const cols = await idbGetAllCollections();
+        return { collections: includeArchived ? cols : cols.filter(c => !c.archived) };
+      }
+    },
+    get: async (id: string) => {
+      try {
+        if (!navigator.onLine) throw new Error('offline');
+        const res = await requestJson<{ collection: Collection }>(`/api/collections/${id}`);
+        await idbSaveCollection(res.collection);
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code === 'passcode_required' || (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error')) throw err;
+        const col = await idbGetCollection(id);
+        if (col) return { collection: col };
+        throw err;
+      }
+    },
+    today: async (day?: string) => {
+      try {
+        if (!navigator.onLine) throw new Error('offline');
+        const res = await requestJson<{ collection: Collection }>(
+          `/api/collections/today${day ? `?day=${day}` : ''}`
+        );
+        await idbSaveCollection(res.collection);
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code === 'passcode_required' || (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error')) throw err;
+        const all = await idbGetAllCollections();
+        const match = all.find(c => c.list_for_day === (day || new Date().toISOString().slice(0, 10)));
+        if (match) return { collection: match };
+        throw err;
+      }
+    },
     create: (input: {
       title: string;
       icon?: string;
@@ -340,8 +387,8 @@ export const api = {
       requestJson<{ collection: Collection }>('/api/collections', {
         method: 'POST',
         body: JSON.stringify(input),
-      }),
-    update: (
+      }).then(res => { idbSaveCollection(res.collection); return res; }),
+    update: async (
       id: string,
       input: {
         title?: string;
@@ -355,11 +402,35 @@ export const api = {
         show_completed_tasks?: boolean;
         header_image_position?: string | null;
       }
-    ) =>
-      requestJson<{ collection: Collection }>(`/api/collections/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(input),
-      }),
+    ) => {
+      if (!navigator.onLine) {
+        const col = await idbGetCollection(id);
+        if (col) {
+          const updated = { ...col, ...input };
+          await idbSaveCollection(updated);
+          await idbEnqueueSync('PATCH', `/api/collections/${id}`, input);
+          return { collection: updated };
+        }
+      }
+      try {
+        const res = await requestJson<{ collection: Collection }>(`/api/collections/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(input),
+        });
+        await idbSaveCollection(res.collection);
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error') throw err;
+        const col = await idbGetCollection(id);
+        if (col) {
+          const updated = { ...col, ...input };
+          await idbSaveCollection(updated);
+          await idbEnqueueSync('PATCH', `/api/collections/${id}`, input);
+          return { collection: updated };
+        }
+        throw err;
+      }
+    },
 
     uploadHeaderImage: async (id: string, file: File, onProgress?: (percent: number) => void) => {
       return new Promise<{ collection: Collection }>((resolve, reject) => {
@@ -411,10 +482,49 @@ export const api = {
       });
     },
 
-    favorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'POST' }),
-    unfavorite: (id: string) => requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'DELETE' }),
-    delete: (id: string) =>
-      requestJson<{ ok: true }>(`/api/collections/${id}`, { method: 'DELETE' }),
+    favorite: async (id: string) => {
+      try {
+        if (!navigator.onLine) throw new Error('offline');
+        const res = await requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'POST' });
+        const col = await idbGetCollection(id);
+        if (col) { col.is_favorite = true; await idbSaveCollection(col); }
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error') throw err;
+        const col = await idbGetCollection(id);
+        if (col) { col.is_favorite = true; await idbSaveCollection(col); }
+        await idbEnqueueSync('POST', `/api/collections/${id}/favorite`);
+        return { ok: true };
+      }
+    },
+    unfavorite: async (id: string) => {
+      try {
+        if (!navigator.onLine) throw new Error('offline');
+        const res = await requestJson<{ ok: true }>(`/api/collections/${id}/favorite`, { method: 'DELETE' });
+        const col = await idbGetCollection(id);
+        if (col) { col.is_favorite = false; await idbSaveCollection(col); }
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error') throw err;
+        const col = await idbGetCollection(id);
+        if (col) { col.is_favorite = false; await idbSaveCollection(col); }
+        await idbEnqueueSync('DELETE', `/api/collections/${id}/favorite`);
+        return { ok: true };
+      }
+    },
+    delete: async (id: string) => {
+      try {
+        if (!navigator.onLine) throw new Error('offline');
+        const res = await requestJson<{ ok: true }>(`/api/collections/${id}`, { method: 'DELETE' });
+        await idbDeleteCollection(id);
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error') throw err;
+        await idbDeleteCollection(id);
+        await idbEnqueueSync('DELETE', `/api/collections/${id}`);
+        return { ok: true };
+      }
+    },
     autocomplete: (q: string) =>
       requestJson<{ collections: Array<{ id: string; title: string; icon: string }> }>(
         `/api/collections/autocomplete?q=${encodeURIComponent(q)}`
@@ -447,13 +557,25 @@ export const api = {
   },
 
   snipsels: {
-    list: (collectionId: string) =>
-      requestJson<{ items: CollectionItem[] }>(
-        `/api/collections/${collectionId}/snipsels`
-      ),
+    list: async (collectionId: string) => {
+      try {
+        if (!navigator.onLine) throw new Error('offline');
+        const res = await requestJson<{ items: CollectionItem[] }>(
+          `/api/collections/${collectionId}/snipsels`
+        );
+        await idbSaveCollectionItems(res.items);
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code === 'passcode_required' || (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error')) throw err;
+        const items = await idbGetCollectionItems(collectionId);
+        return { items };
+      }
+    },
     get: (snipselId: string) =>
+      // We don't cache individual snipsels yet, but usually `list` caches them inside `CollectionItem`.
+      // For now, `get` can just fail if offline, as it's rarely used directly offline.
       requestJson<{ snipsel: Snipsel }>(`/api/snipsels/${snipselId}`),
-    create: (
+    create: async (
       collectionId: string,
       input: {
         type?: string;
@@ -463,15 +585,52 @@ export const api = {
         geo_accuracy_m?: number;
         indent?: number;
       }
-    ) =>
-      requestJson<{ item: CollectionItem }>(
+    ) => {
+      if (!navigator.onLine) {
+        // Optimistic create
+        const tempId = crypto.randomUUID();
+        const snipsel: Snipsel = {
+          id: tempId,
+          type: input.type || 'text',
+          content_markdown: input.content_markdown || null,
+          task_done: false,
+          done_at: null,
+          done_by_id: null,
+          external_url: null,
+          external_label: null,
+          internal_target_snipsel_id: null,
+          geo_lat: input.geo_lat,
+          geo_lng: input.geo_lng,
+          geo_accuracy_m: input.geo_accuracy_m,
+          created_at: new Date().toISOString(),
+          modified_at: new Date().toISOString(),
+          attachments: [],
+          tags: [],
+          mentions: [],
+          reactions: []
+        };
+        const items = await idbGetCollectionItems(collectionId);
+        const position = items.length > 0 ? items[items.length - 1].position + 100 : 100;
+        const item: CollectionItem = {
+          collection_id: collectionId,
+          snipsel_id: tempId,
+          position,
+          indent: input.indent || 0,
+          snipsel
+        };
+        await idbSaveCollectionItem(item);
+        await idbEnqueueSync('POST', `/api/collections/${collectionId}/snipsels`, input);
+        // Note: Real ID will be different, UI will reload when online
+        return { item };
+      }
+      const res = await requestJson<{ item: CollectionItem }>(
         `/api/collections/${collectionId}/snipsels`,
-        {
-          method: 'POST',
-          body: JSON.stringify(input),
-        }
-      ),
-    update: (
+        { method: 'POST', body: JSON.stringify(input) }
+      );
+      await idbSaveCollectionItem(res.item);
+      return res;
+    },
+    update: async (
       snipselId: string,
       input: {
         type?: string;
@@ -483,16 +642,48 @@ export const api = {
         reminder_at?: string | null;
         reminder_rrule?: string | null;
       }
-    ) =>
-      requestJson<{ snipsel: Snipsel }>(`/api/snipsels/${snipselId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(input),
-      }),
-    delete: (collectionId: string, snipselId: string) =>
-      requestJson<{ ok: true }>(
-        `/api/collections/${collectionId}/snipsels/${snipselId}`,
-        { method: 'DELETE' }
-      ),
+    ) => {
+      if (!navigator.onLine) {
+        await idbUpdateSnipselData(snipselId, input);
+        await idbEnqueueSync('PATCH', `/api/snipsels/${snipselId}`, input);
+        // We lack the full returned snipsel, but we can assume it's updated. 
+        // We throw a dummy success since UI only replaces the snipsel.
+        return { snipsel: { id: snipselId, ...input } as unknown as Snipsel };
+      }
+      try {
+        const res = await requestJson<{ snipsel: Snipsel }>(`/api/snipsels/${snipselId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(input),
+        });
+        await idbUpdateSnipselData(snipselId, res.snipsel);
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error') throw err;
+        await idbUpdateSnipselData(snipselId, input);
+        await idbEnqueueSync('PATCH', `/api/snipsels/${snipselId}`, input);
+        return { snipsel: { id: snipselId, ...input } as unknown as Snipsel };
+      }
+    },
+    delete: async (collectionId: string, snipselId: string) => {
+      if (!navigator.onLine) {
+        await idbDeleteCollectionItem(collectionId, snipselId);
+        await idbEnqueueSync('DELETE', `/api/collections/${collectionId}/snipsels/${snipselId}`);
+        return { ok: true as const };
+      }
+      try {
+        const res = await requestJson<{ ok: true }>(
+          `/api/collections/${collectionId}/snipsels/${snipselId}`,
+          { method: 'DELETE' }
+        );
+        await idbDeleteCollectionItem(collectionId, snipselId);
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error') throw err;
+        await idbDeleteCollectionItem(collectionId, snipselId);
+        await idbEnqueueSync('DELETE', `/api/collections/${collectionId}/snipsels/${snipselId}`);
+        return { ok: true as const };
+      }
+    },
     copy: (collectionId: string, snipselId: string) =>
       requestJson<{ item: CollectionItem }>(
         `/api/collections/${collectionId}/snipsels/${snipselId}/copy`,
@@ -503,22 +694,47 @@ export const api = {
         `/api/collections/${collectionId}/snipsels/${snipselId}/reference`,
         { method: 'POST', body: JSON.stringify({ indent }) }
       ),
-    reorder: (
+    reorder: async (
       collectionId: string,
       items: Array<{ snipsel_id: string; position: number; indent: number }>
-    ) =>
-      requestJson<{ ok: true }>(
-        `/api/collections/${collectionId}/snipsels/reorder`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({ items }),
+    ) => {
+      if (!navigator.onLine) {
+        // Optimistic reorder
+        const existing = await idbGetCollectionItems(collectionId);
+        for (const i of items) {
+          const m = existing.find(e => e.snipsel_id === i.snipsel_id);
+          if (m) {
+            m.position = i.position;
+            m.indent = i.indent;
+            await idbSaveCollectionItem(m);
+          }
         }
-      ),
-    toggleReaction: (snipselId: string, emoji: string) =>
-      requestJson<{ message: string; active: boolean }>(`/api/snipsels/${snipselId}/reactions`, {
+        await idbEnqueueSync('PATCH', `/api/collections/${collectionId}/snipsels/reorder`, { items });
+        return { ok: true as const };
+      }
+      try {
+        const res = await requestJson<{ ok: true }>(
+          `/api/collections/${collectionId}/snipsels/reorder`,
+          { method: 'PATCH', body: JSON.stringify({ items }) }
+        );
+        // Re-saving is complex but the following reload/sync will handle it, or we just rely on later fetches
+        return res;
+      } catch (err: any) {
+        if (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error') throw err;
+        await idbEnqueueSync('PATCH', `/api/collections/${collectionId}/snipsels/reorder`, { items });
+        return { ok: true as const };
+      }
+    },
+    toggleReaction: async (snipselId: string, emoji: string) => {
+      if (!navigator.onLine) {
+        await idbEnqueueSync('POST', `/api/snipsels/${snipselId}/reactions`, { emoji });
+        return { message: 'Qeueud offline', active: true };
+      }
+      return requestJson<{ message: string; active: boolean }>(`/api/snipsels/${snipselId}/reactions`, {
         method: 'POST',
         body: JSON.stringify({ emoji }),
-      }),
+      });
+    },
   },
 
   notifications: {
@@ -531,6 +747,9 @@ export const api = {
 
   attachments: {
     upload: async (snipselId: string, file: File, onProgress?: (percent: number) => void) => {
+      if (!navigator.onLine) {
+        return Promise.reject({ error: { code: 'offline', message: 'You cannot upload attachments while offline.' } } as ApiError);
+      }
       return new Promise<{ attachment: Attachment }>((resolve, reject) => {
         const form = new FormData();
         form.append('file', file);
@@ -580,13 +799,23 @@ export const api = {
       });
     },
     delete: async (attachmentId: string) => {
-      const res = await fetch(`/api/attachments/${attachmentId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      const data = (await res.json()) as { ok: true } | ApiError;
-      if (!res.ok) throw data;
-      return data as { ok: true };
+      if (!navigator.onLine) {
+        await idbEnqueueSync('DELETE', `/api/attachments/${attachmentId}`);
+        return { ok: true as const };
+      }
+      try {
+        const res = await fetch(`/api/attachments/${attachmentId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        const data = (await res.json()) as { ok: true } | ApiError;
+        if (!res.ok) throw data;
+        return data as { ok: true };
+      } catch (err: any) {
+        if (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error') throw err;
+        await idbEnqueueSync('DELETE', `/api/attachments/${attachmentId}`);
+        return { ok: true as const };
+      }
     },
     downloadUrl: (attachmentId: string) => `/api/attachments/${attachmentId}`,
     thumbnailUrl: (attachmentId: string) => `/api/attachments/${attachmentId}/thumbnail`,
