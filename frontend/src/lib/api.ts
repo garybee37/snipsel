@@ -559,20 +559,30 @@ export const api = {
   },
 
   snipsels: {
-    list: async (collectionId: string) => {
-      try {
-        if (!navigator.onLine) throw new Error('offline');
-        const res = await requestJson<{ items: CollectionItem[] }>(
-          `/api/collections/${collectionId}/snipsels`
-        );
-        await idbSaveCollectionItems(res.items);
-        return res;
-      } catch (err: any) {
-        if (err?.error?.code === 'passcode_required' || (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error')) throw err;
-        const items = await idbGetCollectionItems(collectionId);
-        return { items };
-      }
-    },
+    list: (() => {
+      const listCache: Record<string, Promise<{ items: CollectionItem[] }> | undefined> = {};
+      return async (collectionId: string) => {
+        if (listCache[collectionId]) return listCache[collectionId];
+        const promise = (async () => {
+          try {
+            if (!navigator.onLine) throw new Error('offline');
+            const res = await requestJson<{ items: CollectionItem[] }>(
+              `/api/collections/${collectionId}/snipsels`
+            );
+            await idbSaveCollectionItems(res.items);
+            return res;
+          } catch (err: any) {
+            if (err?.error?.code === 'passcode_required' || (err?.error?.code && err.error.code !== 'network_error' && err.error.code !== 'unknown_error')) throw err;
+            const items = await idbGetCollectionItems(collectionId);
+            return { items };
+          } finally {
+            delete listCache[collectionId];
+          }
+        })();
+        listCache[collectionId] = promise;
+        return promise;
+      };
+    })(),
     get: (snipselId: string) =>
       // We don't cache individual snipsels yet, but usually `list` caches them inside `CollectionItem`.
       // For now, `get` can just fail if offline, as it's rarely used directly offline.
