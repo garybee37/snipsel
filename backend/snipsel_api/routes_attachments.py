@@ -367,6 +367,19 @@ def delete_collection_header_attachments(collection_id: str):
         db.session.delete(att)
     db.session.flush()
 
+def delete_attachment_file(att: Attachment) -> None:
+    """Deletes the physical files associated with an attachment, given the Attachment object."""
+    file_path = _resolve_attachment_path(att)
+    thumb_path = _resolve_thumbnail_path(att, regenerate=False)
+
+    for p in [thumb_path, file_path]:
+        if not p:
+            continue
+        try:
+            p.unlink(missing_ok=True)
+        except OSError:
+            pass
+
 
 def _resolve_attachment_path(att: Attachment) -> Path | None:
     upload_dir = Path(current_app.config.get("SNIPSEL_UPLOAD_DIR", "./uploads"))
