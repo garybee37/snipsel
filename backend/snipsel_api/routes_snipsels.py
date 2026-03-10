@@ -872,7 +872,7 @@ def _collection_item_json(cs: CollectionSnipsel, user_id: str | None = None, ref
     }
 
 
-@snipsels_bp.get("/trash")
+@snipsels_bp.get("/snipsels/trash")
 @require_auth
 def list_trash_snipsels():
     user = current_user()
@@ -902,7 +902,7 @@ def list_trash_snipsels():
     return json_response({"snipsels": out})
 
 
-@snipsels_bp.post("/<snipsel_id>/restore")
+@snipsels_bp.post("/snipsels/<snipsel_id>/restore")
 @require_auth
 @enforce_json
 def restore_snipsel(snipsel_id: str):
