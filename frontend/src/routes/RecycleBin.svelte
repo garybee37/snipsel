@@ -56,6 +56,7 @@
   let isBusy = $state(false);
   let errorMsg = $state('');
   let showEmptyConfirm = $state(false);
+  let showDeleteConfirmId = $state<string | null>(null);
   
   let activeTab: 'collections' | 'snipsels' = $state('collections');
 
@@ -118,6 +119,29 @@
       }
     } catch (err: any) {
       errorMsg = err.error?.message || `Failed to empty ${activeTab}`;
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  async function deleteTrashItem() {
+    if (!showDeleteConfirmId) return;
+    
+    isBusy = true;
+    errorMsg = '';
+    const targetId = showDeleteConfirmId;
+    showDeleteConfirmId = null;
+    
+    try {
+      if (activeTab === 'collections') {
+        await api.collections.deleteTrashItem(targetId);
+        deletedCollections = deletedCollections.filter(c => c.id !== targetId);
+      } else {
+        await api.snipsels.deleteTrashItem(targetId);
+        deletedSnipsels = deletedSnipsels.filter(s => s.id !== targetId);
+      }
+    } catch (err: any) {
+      errorMsg = err.error?.message || `Failed to permanently delete item`;
     } finally {
       isBusy = false;
     }
@@ -225,13 +249,28 @@
                   Deleted: {formatDate((col as any).deleted_at)}
                 </div>
               </div>
-              <button
-                class="ml-3 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                onclick={() => restoreCollection(col.id)}
-                disabled={isBusy}
-              >
-                Restore
-              </button>
+              <div class="ml-3 flex items-center gap-1 shrink-0">
+                <button
+                  class="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-colors"
+                  onclick={() => restoreCollection(col.id)}
+                  disabled={isBusy}
+                  title="Restore Collection"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                </button>
+                <button
+                  class="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300 transition-colors"
+                  onclick={() => showDeleteConfirmId = col.id}
+                  disabled={isBusy}
+                  title="Permanently Delete"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           {/each}
         </div>
@@ -252,14 +291,28 @@
                   <span>Deleted: {formatDate((snip as any).deleted_at)}</span>
                 </div>
               </div>
-              <button
-                class="ml-3 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                onclick={() => restoreSnipsel(snip.id)}
-                disabled={isBusy}
-                title="Restores to Today's collection"
-              >
-                Restore
-              </button>
+              <div class="ml-3 flex items-center gap-1 shrink-0">
+                <button
+                  class="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-colors"
+                  onclick={() => restoreSnipsel(snip.id)}
+                  disabled={isBusy}
+                  title="Restores to Today's collection"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                </button>
+                <button
+                  class="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300 transition-colors"
+                  onclick={() => showDeleteConfirmId = snip.id}
+                  disabled={isBusy}
+                  title="Permanently Delete"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           {/each}
         </div>
@@ -275,5 +328,15 @@
     confirmLabel="Permanently Delete"
     onConfirm={emptyTrash}
     onCancel={() => showEmptyConfirm = false}
+  />
+{/if}
+
+{#if showDeleteConfirmId}
+  <DeleteConfirmModal
+    title={`Delete ${activeTab === 'collections' ? 'Collection' : 'Snipsel'}`}
+    message={`Are you sure you want to permanently delete this item? This action cannot be undone.`}
+    confirmLabel="Permanently Delete"
+    onConfirm={deleteTrashItem}
+    onCancel={() => showDeleteConfirmId = null}
   />
 {/if}

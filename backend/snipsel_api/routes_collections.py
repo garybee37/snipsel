@@ -1154,3 +1154,33 @@ def restore_collection(collection_id: str):
     
     db.session.commit()
     return json_response({"collection": _collection_json(c)})
+
+
+@collections_bp.delete("/trash/<collection_id>")
+@require_auth
+def permanent_delete_collection(collection_id: str):
+    user = current_user()
+    c = db.session.get(Collection, collection_id)
+    if not c or c.owner_user_id != user.id:
+        raise api_error(404, "not_found", "Collection not found")
+        
+    if c.deleted_at is None:
+        raise api_error(400, "invalid_state", "Collection is not in the trash")
+        
+    from snipsel_api.models import CollectionSnipsel, CollectionShare, CollectionFavorite, CollectionVisit, SnipselCollectionRef, Notification
+    from snipsel_api.routes_attachments import delete_collection_header_attachments
+    
+    delete_collection_header_attachments(c.id)
+    
+    # Manually clear relationships without cascade
+    db.session.execute(db.delete(CollectionSnipsel).where(CollectionSnipsel.collection_id == c.id))
+    db.session.execute(db.delete(CollectionShare).where(CollectionShare.collection_id == c.id))
+    db.session.execute(db.delete(CollectionFavorite).where(CollectionFavorite.collection_id == c.id))
+    db.session.execute(db.delete(CollectionVisit).where(CollectionVisit.collection_id == c.id))
+    db.session.execute(db.delete(SnipselCollectionRef).where(SnipselCollectionRef.collection_id == c.id))
+    db.session.execute(db.delete(Notification).where(Notification.collection_id == c.id))
+    
+    db.session.delete(c)
+    db.session.commit()
+    
+    return json_response({"ok": True, "deleted": 1})
