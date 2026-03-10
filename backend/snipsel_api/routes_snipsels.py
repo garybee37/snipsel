@@ -988,3 +988,35 @@ def restore_snipsel(snipsel_id: str):
             
     db.session.commit()
     return json_response({"snipsel": _snipsel_json(s, user.id)})
+
+
+@snipsels_bp.delete("/snipsels/trash/<snipsel_id>")
+@require_auth
+def permanent_delete_snipsel(snipsel_id: str):
+    user = current_user()
+    s = db.session.get(Snipsel, snipsel_id)
+    if not s or s.owner_user_id != user.id:
+        raise api_error(404, "not_found", "Snipsel not found")
+        
+    if s.deleted_at is None:
+        raise api_error(400, "invalid_state", "Snipsel is not in the trash")
+        
+    from snipsel_api.models import CollectionSnipsel, SnipselCollectionRef, SnipselLink, SnipselTag, SnipselMention, SnipselReaction, Notification
+    from snipsel_api.routes_attachments import delete_attachment_file
+    
+    for att in s.attachments:
+        delete_attachment_file(att)
+        
+    # Manually clear relationships without cascade
+    db.session.execute(db.delete(CollectionSnipsel).where(CollectionSnipsel.snipsel_id == s.id))
+    db.session.execute(db.delete(SnipselCollectionRef).where(SnipselCollectionRef.snipsel_id == s.id))
+    db.session.execute(db.delete(SnipselLink).where(db.or_(SnipselLink.from_snipsel_id == s.id, SnipselLink.to_snipsel_id == s.id)))
+    db.session.execute(db.delete(SnipselTag).where(SnipselTag.snipsel_id == s.id))
+    db.session.execute(db.delete(SnipselMention).where(SnipselMention.snipsel_id == s.id))
+    db.session.execute(db.delete(SnipselReaction).where(SnipselReaction.snipsel_id == s.id))
+    db.session.execute(db.delete(Notification).where(Notification.snipsel_id == s.id))
+    
+    db.session.delete(s)
+    db.session.commit()
+    
+    return json_response({"ok": True, "deleted": 1})
