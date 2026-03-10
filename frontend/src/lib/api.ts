@@ -613,6 +613,8 @@ export const api = {
     clearRecent: () => requestJson<{ ok: true }>('/api/collections/recent', { method: 'DELETE' }),
     deleteCompletedTasks: (id: string) => requestJson<{ ok: true; count: number }>(`/api/collections/${id}/snipsels/completed`, { method: 'DELETE' }),
     resetCompletedTasks: (id: string) => requestJson<{ ok: true; count: number }>(`/api/collections/${id}/snipsels/completed/reset`, { method: 'POST' }),
+    trash: () => requestJson<{ collections: Collection[] }>('/api/collections/trash'),
+    restore: (id: string) => requestJson<{ collection: Collection }>(`/api/collections/${id}/restore`, { method: 'POST' }),
   },
 
   users: {
@@ -809,6 +811,11 @@ export const api = {
         body: JSON.stringify({ emoji }),
       });
     },
+    trash: () => requestJson<{ snipsels: Snipsel[] }>('/api/snipsels/trash'),
+    restore: (id: string, collectionId?: string) => requestJson<{ snipsel: Snipsel }>(`/api/snipsels/${id}/restore`, {
+      method: 'POST',
+      body: JSON.stringify(collectionId ? { collection_id: collectionId } : {}),
+    }),
   },
 
   notifications: {

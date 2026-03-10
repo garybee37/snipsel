@@ -1076,3 +1076,46 @@ def delete_share(collection_id: str, share_id: str):
     db.session.delete(s)
     db.session.commit()
     return json_response({"ok": True})
+
+
+@collections_bp.get("/trash")
+@require_auth
+def list_trash_collections():
+    user = current_user()
+    stmt = (
+        db.select(Collection)
+        .where(
+            Collection.owner_user_id == user.id,
+            Collection.deleted_at.is_not(None)
+        )
+        .order_by(Collection.deleted_at.desc())
+    )
+    items = db.session.execute(stmt).scalars().all()
+    
+    out = []
+    for c in items:
+        j = _collection_json(c)
+        j["deleted_at"] = c.deleted_at.isoformat() + "Z" if c.deleted_at else None
+        out.append(j)
+        
+    return json_response({"collections": out})
+
+
+@collections_bp.post("/<collection_id>/restore")
+@require_auth
+def restore_collection(collection_id: str):
+    user = current_user()
+    c = db.session.get(Collection, collection_id)
+    if not c or c.owner_user_id != user.id:
+        raise api_error(404, "not_found", "Collection not found")
+        
+    if c.deleted_at is None:
+        return json_response({"collection": _collection_json(c)})
+        
+    c.deleted_at = None
+    c.deleted_by_id = None
+    c.modified_at = datetime.utcnow()
+    c.modified_by_id = user.id
+    
+    db.session.commit()
+    return json_response({"collection": _collection_json(c)})

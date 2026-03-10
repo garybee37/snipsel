@@ -908,7 +908,7 @@
     <!-- Data & Migration -->
     <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
       <div class="text-xs uppercase text-slate-500">Data & Migration</div>
-      <div class="mt-3">
+      <div class="mt-3 space-y-3">
         <button
           class="flex w-full items-center gap-4 rounded-xl border border-dashed border-slate-200 p-3 text-left transition-all hover:border-slate-300 hover:bg-slate-50/50 dark:border-white/10 dark:hover:bg-white/5"
           onclick={() => currentView.set({ type: 'importer' })}
@@ -922,6 +922,26 @@
           <div class="flex-1">
             <div class="font-medium text-slate-900 dark:text-slate-100">Import from TwoS</div>
             <div class="text-xs text-slate-500 dark:text-slate-400">Bring your lists and things into snipsel</div>
+          </div>
+          <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        
+        <button
+          class="flex w-full items-center gap-4 rounded-xl border border-slate-200 p-3 text-left transition-all hover:border-slate-300 hover:bg-slate-50/50 dark:border-white/10 dark:hover:bg-white/5"
+          onclick={() => currentView.set({ type: 'recycle-bin' })}
+          type="button"
+        >
+          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <div class="font-medium text-slate-900 dark:text-slate-100">Recycle Bin</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Restore deleted collections and snipsels</div>
           </div>
           <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

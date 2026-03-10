@@ -14,6 +14,7 @@ export type View =
   | { type: 'settings' }
   | { type: 'notifications' }
   | { type: 'importer' }
+  | { type: 'recycle-bin' }
   | { type: 'public'; token: string }
   | { type: 'snipsel'; id: string; returnTo?: string };
 

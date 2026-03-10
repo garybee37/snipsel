@@ -38,7 +38,8 @@
   import CollectionSettings from './routes/CollectionSettings.svelte';
   import TagsMentions from './routes/TagsMentions.svelte';
   import Notifications from './routes/Notifications.svelte';
-import Importer from './routes/Importer.svelte';
+  import Importer from './routes/Importer.svelte';
+  import RecycleBin from './routes/RecycleBin.svelte';
   import PasscodeModal from './lib/PasscodeModal.svelte';
   import PublicView from './routes/PublicView.svelte';
 
@@ -695,6 +696,8 @@ import Importer from './routes/Importer.svelte';
       <Importer />
     {:else if $currentView.type === 'notifications'}
       <Notifications />
+    {:else if $currentView.type === 'recycle-bin'}
+      <RecycleBin />
     {:else if $currentView.type === 'snipsel'}
       <SnipselDetail snipselId={$currentView.id} />
     {:else if $currentView.type === 'collection_settings'}

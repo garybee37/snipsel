@@ -870,3 +870,83 @@ def _collection_item_json(cs: CollectionSnipsel, user_id: str | None = None, ref
             for r in refs
         ],
     }
+
+
+@snipsels_bp.get("/trash")
+@require_auth
+def list_trash_snipsels():
+    user = current_user()
+    stmt = (
+        db.select(Snipsel)
+        .options(
+            joinedload(Snipsel.created_by),
+            joinedload(Snipsel.modified_by),
+            joinedload(Snipsel.done_by),
+            selectinload(Snipsel.reactions),
+            selectinload(Snipsel.attachments)
+        )
+        .where(
+            Snipsel.owner_user_id == user.id,
+            Snipsel.deleted_at.is_not(None)
+        )
+        .order_by(Snipsel.deleted_at.desc())
+    )
+    items = db.session.execute(stmt).scalars().unique().all()
+    
+    out = []
+    for s in items:
+        j = _snipsel_json(s, user.id)
+        j["deleted_at"] = s.deleted_at.isoformat() + "Z" if s.deleted_at else None
+        out.append(j)
+        
+    return json_response({"snipsels": out})
+
+
+@snipsels_bp.post("/<snipsel_id>/restore")
+@require_auth
+@enforce_json
+def restore_snipsel(snipsel_id: str):
+    user = current_user()
+    s = db.session.get(Snipsel, snipsel_id)
+    if not s or s.owner_user_id != user.id:
+        raise api_error(404, "not_found", "Snipsel not found")
+        
+    data = request.get_json() or {}
+    collection_id = data.get("collection_id")
+    
+    if s.deleted_at is not None:
+        s.deleted_at = None
+        s.deleted_by_id = None
+        s.modified_at = datetime.utcnow()
+        s.modified_by_id = user.id
+        
+    if collection_id:
+        if not can_write_collection(user.id, collection_id):
+            raise api_error(404, "not_found", "Target collection not found")
+            
+        # Check if it's already in the collection
+        exists = db.session.execute(
+            db.select(CollectionSnipsel).where(
+                CollectionSnipsel.collection_id == collection_id,
+                CollectionSnipsel.snipsel_id == snipsel_id,
+            )
+        ).scalars().first()
+        
+        if not exists:
+            max_pos = (
+                db.session.execute(
+                    db.select(db.func.max(CollectionSnipsel.position)).where(CollectionSnipsel.collection_id == collection_id)
+                ).scalar()
+                or 0
+            )
+            cs = CollectionSnipsel(collection_id=collection_id, snipsel_id=s.id, position=max_pos + 1, indent=0)
+            db.session.add(cs)
+            
+            db.session.execute(
+                db.update(Collection)
+                .where(Collection.id == collection_id, Collection.deleted_at.is_(None))
+                .values(modified_at=datetime.utcnow(), modified_by_id=user.id)
+            )
+            
+    db.session.commit()
+    return json_response({"snipsel": _snipsel_json(s, user.id)})
