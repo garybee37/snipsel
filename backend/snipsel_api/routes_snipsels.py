@@ -902,6 +902,44 @@ def list_trash_snipsels():
     return json_response({"snipsels": out})
 
 
+@snipsels_bp.delete("/snipsels/trash")
+@require_auth
+def empty_trash_snipsels():
+    user = current_user()
+    stmt = (
+        db.select(Snipsel)
+        .where(
+            Snipsel.owner_user_id == user.id,
+            Snipsel.deleted_at.is_not(None)
+        )
+    )
+    snipsels = db.session.execute(stmt).scalars().all()
+    
+    from snipsel_api.models import CollectionSnipsel, SnipselCollectionRef, SnipselLink, SnipselTag, SnipselMention, SnipselReaction, Notification
+    from snipsel_api.routes_attachments import delete_attachment_file
+    
+    deleted_count = 0
+    for s in snipsels:
+        for att in s.attachments:
+            delete_attachment_file(att)
+            # Attachment rows will be deleted by SQLAlchemy cascade on snipsel
+            
+        # Manually clear relationships without cascade
+        db.session.execute(db.delete(CollectionSnipsel).where(CollectionSnipsel.snipsel_id == s.id))
+        db.session.execute(db.delete(SnipselCollectionRef).where(SnipselCollectionRef.snipsel_id == s.id))
+        db.session.execute(db.delete(SnipselLink).where(db.or_(SnipselLink.from_snipsel_id == s.id, SnipselLink.to_snipsel_id == s.id)))
+        db.session.execute(db.delete(SnipselTag).where(SnipselTag.snipsel_id == s.id))
+        db.session.execute(db.delete(SnipselMention).where(SnipselMention.snipsel_id == s.id))
+        db.session.execute(db.delete(SnipselReaction).where(SnipselReaction.snipsel_id == s.id))
+        db.session.execute(db.delete(Notification).where(Notification.snipsel_id == s.id))
+        
+        db.session.delete(s)
+        deleted_count += 1
+        
+    db.session.commit()
+    return json_response({"ok": True, "deleted": deleted_count})
+
+
 @snipsels_bp.post("/snipsels/<snipsel_id>/restore")
 @require_auth
 @enforce_json

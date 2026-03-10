@@ -2,6 +2,7 @@
   import { api, type Collection, type Snipsel } from '../lib/api';
   import { currentView } from '../lib/stores';
   import { currentUser } from '../lib/session';
+  import DeleteConfirmModal from '../lib/DeleteConfirmModal.svelte';
 
   const DEFAULT_ACCENT = '#4f46e5';
   type Rgb = { r: number; g: number; b: number };
@@ -54,6 +55,7 @@
   let deletedSnipsels = $state<Snipsel[]>([]);
   let isBusy = $state(false);
   let errorMsg = $state('');
+  let showEmptyConfirm = $state(false);
   
   let activeTab: 'collections' | 'snipsels' = $state('collections');
 
@@ -102,6 +104,25 @@
     }
   }
 
+  async function emptyTrash() {
+    isBusy = true;
+    errorMsg = '';
+    showEmptyConfirm = false;
+    try {
+      if (activeTab === 'collections') {
+        await api.collections.emptyTrash();
+        deletedCollections = [];
+      } else {
+        await api.snipsels.emptyTrash();
+        deletedSnipsels = [];
+      }
+    } catch (err: any) {
+      errorMsg = err.error?.message || `Failed to empty ${activeTab}`;
+    } finally {
+      isBusy = false;
+    }
+  }
+
   function formatDate(dateString: string | null | undefined) {
     if (!dateString) return 'Unknown';
     return new Date(dateString).toLocaleString(undefined, {
@@ -142,33 +163,49 @@
     </div>
   {/if}
 
-  <div class="flex items-center gap-2">
-    <div class="flex flex-1 overflow-hidden rounded-full border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900" role="tablist">
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activeTab === 'collections'}
-        class="flex-1 px-4 py-3 text-base font-medium transition-colors {activeTab === 'collections'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
-        style={activeTab === 'collections' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-        onclick={() => activeTab = 'collections'}
-      >
-        Collections ({deletedCollections.length})
-      </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activeTab === 'snipsels'}
-        class="flex-1 border-l border-black/5 px-4 py-3 text-base font-medium transition-colors dark:border-white/5 {activeTab === 'snipsels'
-          ? 'text-slate-900'
-          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
-        style={activeTab === 'snipsels' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
-        onclick={() => activeTab = 'snipsels'}
-      >
-        Snipsels ({deletedSnipsels.length})
-      </button>
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-2 flex-1">
+      <div class="flex flex-1 overflow-hidden rounded-full border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'collections'}
+          class="flex-1 px-4 py-3 text-base font-medium transition-colors {activeTab === 'collections'
+            ? 'text-slate-900'
+            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+          style={activeTab === 'collections' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          onclick={() => activeTab = 'collections'}
+        >
+          Collections ({deletedCollections.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'snipsels'}
+          class="flex-1 border-l border-black/5 px-4 py-3 text-base font-medium transition-colors dark:border-white/5 {activeTab === 'snipsels'
+            ? 'text-slate-900'
+            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}"
+          style={activeTab === 'snipsels' ? `background-color: ${getAccentTint()}; color: ${getAccent()}` : undefined}
+          onclick={() => activeTab = 'snipsels'}
+        >
+          Snipsels ({deletedSnipsels.length})
+        </button>
+      </div>
     </div>
+    
+    {#if (activeTab === 'collections' && deletedCollections.length > 0) || (activeTab === 'snipsels' && deletedSnipsels.length > 0)}
+      <button
+        class="flex shrink-0 h-12 w-12 sm:w-auto sm:px-4 items-center justify-center gap-2 rounded-full border border-red-200 bg-white text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 dark:border-red-900/30 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-900/20"
+        onclick={() => showEmptyConfirm = true}
+        disabled={isBusy}
+        title="Empty {activeTab}"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span class="hidden sm:inline">Empty {activeTab === 'collections' ? 'Collections' : 'Snipsels'}</span>
+      </button>
+    {/if}
   </div>
 
   <div class="mt-4">
@@ -230,3 +267,13 @@
     {/if}
   </div>
 </div>
+
+{#if showEmptyConfirm}
+  <DeleteConfirmModal
+    title={`Empty ${activeTab === 'collections' ? 'Collections' : 'Snipsels'} Trash`}
+    message={`Are you sure you want to permanently delete all ${activeTab}? This action cannot be undone.`}
+    confirmLabel="Permanently Delete"
+    onConfirm={emptyTrash}
+    onCancel={() => showEmptyConfirm = false}
+  />
+{/if}

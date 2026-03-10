@@ -1101,6 +1101,41 @@ def list_trash_collections():
     return json_response({"collections": out})
 
 
+@collections_bp.delete("/trash")
+@require_auth
+def empty_trash_collections():
+    user = current_user()
+    stmt = (
+        db.select(Collection)
+        .where(
+            Collection.owner_user_id == user.id,
+            Collection.deleted_at.is_not(None)
+        )
+    )
+    cols = db.session.execute(stmt).scalars().all()
+    
+    from snipsel_api.models import CollectionSnipsel, CollectionShare, CollectionFavorite, CollectionVisit, SnipselCollectionRef, Notification
+    from snipsel_api.routes_attachments import delete_collection_header_attachments
+    
+    deleted_count = 0
+    for c in cols:
+        delete_collection_header_attachments(c.id)
+        
+        # Manually clear relationships without cascade
+        db.session.execute(db.delete(CollectionSnipsel).where(CollectionSnipsel.collection_id == c.id))
+        db.session.execute(db.delete(CollectionShare).where(CollectionShare.collection_id == c.id))
+        db.session.execute(db.delete(CollectionFavorite).where(CollectionFavorite.collection_id == c.id))
+        db.session.execute(db.delete(CollectionVisit).where(CollectionVisit.collection_id == c.id))
+        db.session.execute(db.delete(SnipselCollectionRef).where(SnipselCollectionRef.collection_id == c.id))
+        db.session.execute(db.delete(Notification).where(Notification.collection_id == c.id))
+        
+        db.session.delete(c)
+        deleted_count += 1
+        
+    db.session.commit()
+    return json_response({"ok": True, "deleted": deleted_count})
+
+
 @collections_bp.post("/<collection_id>/restore")
 @require_auth
 def restore_collection(collection_id: str):

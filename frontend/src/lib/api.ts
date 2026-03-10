@@ -614,6 +614,7 @@ export const api = {
     deleteCompletedTasks: (id: string) => requestJson<{ ok: true; count: number }>(`/api/collections/${id}/snipsels/completed`, { method: 'DELETE' }),
     resetCompletedTasks: (id: string) => requestJson<{ ok: true; count: number }>(`/api/collections/${id}/snipsels/completed/reset`, { method: 'POST' }),
     trash: () => requestJson<{ collections: Collection[] }>('/api/collections/trash'),
+    emptyTrash: () => requestJson<{ ok: true; deleted: number }>('/api/collections/trash', { method: 'DELETE' }),
     restore: (id: string) => requestJson<{ collection: Collection }>(`/api/collections/${id}/restore`, { method: 'POST' }),
   },
 
@@ -812,6 +813,7 @@ export const api = {
       });
     },
     trash: () => requestJson<{ snipsels: Snipsel[] }>('/api/snipsels/trash'),
+    emptyTrash: () => requestJson<{ ok: true; deleted: number }>('/api/snipsels/trash', { method: 'DELETE' }),
     restore: (id: string, collectionId?: string) => requestJson<{ snipsel: Snipsel }>(`/api/snipsels/${id}/restore`, {
       method: 'POST',
       body: JSON.stringify(collectionId ? { collection_id: collectionId } : {}),
