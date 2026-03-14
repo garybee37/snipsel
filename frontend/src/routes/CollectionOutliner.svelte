@@ -99,6 +99,9 @@
   let pullTriggered = $state(false);
   let pullReloading = $state(false);
 
+  let showTitlePill = $state(false);
+  let pillOffset = $state(0); // 0 to 1
+
   function offsetDate(dateStr: string, days: number): string {
     const d = new Date(dateStr + 'T12:00:00'); // noon to avoid DST issues
     d.setDate(d.getDate() + days);
@@ -1548,8 +1551,19 @@
   $effect(() => {
     const onScroll = () => {
       showScrollTop = window.scrollY > 300;
+      // Sticky pill logic: starts showing after header is scrolled past
+      // Header is approx 120px + logo header 60px = 180px
+      const threshold = 140;
+      const maxScroll = 240;
+      if (window.scrollY > threshold) {
+        showTitlePill = true;
+        pillOffset = Math.min(1, (window.scrollY - threshold) / (maxScroll - threshold));
+      } else {
+        showTitlePill = false;
+        pillOffset = 0;
+      }
     };
-    window.addEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   });
 
@@ -1648,6 +1662,22 @@
     tabindex="-1"
     aria-hidden="true"
   />
+
+  <!-- Sticky Title Pill -->
+  <div 
+    class="sticky top-[3.75rem] z-10 flex justify-center pointer-events-none transition-opacity duration-200"
+    style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({(pillOffset - 1) * 2.5}rem);"
+  >
+    <div 
+      class="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-4 py-1.5 shadow-md ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10"
+      title={$currentCollection?.title}
+    >
+      <span class="text-xl">{$currentCollection?.icon}</span>
+      <span class="max-w-[12rem] truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+        {$currentCollection?.title}
+      </span>
+    </div>
+  </div>
 
   <div class="relative">
     <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
