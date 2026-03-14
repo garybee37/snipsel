@@ -726,7 +726,14 @@
       }
     } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      saveEdit();
+      const currentId = $editingSnipselId;
+      const currentItem = currentId ? $sortedItems.find((i) => i.snipsel_id === currentId) : null;
+      
+      saveEdit().then(() => {
+        if (currentItem) {
+          createSnipselAfterPosition(currentItem.position, currentItem.indent, currentItem.snipsel.type as any);
+        }
+      });
     } else if (e.key === 'Escape') {
       e.preventDefault();
       cancelEdit();
@@ -954,7 +961,7 @@
     }
   }
 
-  async function createSnipselAfterPosition(position: number, indent: number) {
+  async function createSnipselAfterPosition(position: number, indent: number, type?: 'text' | 'image' | 'attachment' | 'task') {
     if (!$currentCollection) return;
     if (!canWrite()) return;
     isLoading.set(true);
@@ -981,7 +988,7 @@
       }
 
       const res = await api.snipsels.create($currentCollection.id, {
-        type: $currentCollection.default_snipsel_type || 'text',
+        type: type || $currentCollection.default_snipsel_type || 'text',
         indent: indent,
         ...(geo ?? {}),
       });
