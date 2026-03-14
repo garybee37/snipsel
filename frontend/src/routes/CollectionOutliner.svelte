@@ -102,7 +102,7 @@
 
   let showAiModal = $state(false);
   let aiModalContext = $state('');
-  let aiModalSnipselId = $state<string | null>(null);
+  let aiModalSelectedIds = $state<string[]>([]);
 
   let showTitlePill = $state(false);
   let pillOffset = $state(0); // 0 to 1
@@ -336,17 +336,30 @@
     }
   }
 
-  function openAiModal(item: CollectionItem) {
-    aiModalSnipselId = item.snipsel_id;
-    aiModalContext = item.snipsel.content_markdown || '';
+  function openAiModal(item?: CollectionItem) {
+    if (item) {
+      aiModalSelectedIds = [item.snipsel_id];
+      aiModalContext = item.snipsel.content_markdown || '';
+    } else if (selectedIds.size > 0) {
+      const ids = Array.from(selectedIds);
+      // Sort selection results by position to maintain order in prompt
+      const items = $sortedItems.filter(i => selectedIds.has(i.snipsel_id));
+      aiModalSelectedIds = items.map(i => i.snipsel_id);
+      aiModalContext = items.map(i => i.snipsel.content_markdown || '').join('\n\n');
+    } else {
+      return;
+    }
     showAiModal = true;
   }
 
   async function handleAiInsert(text: string) {
-    if (!aiModalSnipselId || !$currentCollection) return;
+    if (aiModalSelectedIds.length === 0 || !$currentCollection) return;
     isLoading.set(true);
     try {
-      const idx = $sortedItems.findIndex(i => i.snipsel_id === aiModalSnipselId);
+      // Find the last item in the group to insert after it
+      const lastId = aiModalSelectedIds[aiModalSelectedIds.length - 1];
+      const idx = $sortedItems.findIndex(i => i.snipsel_id === lastId);
+      
       if (idx >= 0) {
         const sourceItem = $sortedItems[idx];
         
@@ -359,7 +372,6 @@
 
         // 2. Insert into local list at the correct position
         const list = [...$sortedItems];
-        // The new item should go right after the source item
         const insertAt = idx + 1;
         const next = [...list.slice(0, insertAt), { ...res.item, indent: sourceItem.indent }, ...list.slice(insertAt)];
 
@@ -382,13 +394,27 @@
   }
 
   async function handleAiReplace(text: string) {
-    if (!aiModalSnipselId) return;
+    if (aiModalSelectedIds.length === 0) return;
+    isLoading.set(true);
     try {
-      await api.snipsels.update(aiModalSnipselId, { content_markdown: text });
+      const firstId = aiModalSelectedIds[0];
+      const otherIds = aiModalSelectedIds.slice(1);
+
+      // 1. Update the first snipsel
+      await api.snipsels.update(firstId, { content_markdown: text });
+
+      // 2. Delete the others
+      for (const id of otherIds) {
+        await api.snipsels.delete(id);
+      }
+
       await loadItems();
       showAiModal = false;
+      clearSelection();
     } catch (err) {
       console.error('AI replace failed:', err);
+    } finally {
+      isLoading.set(false);
     }
   }
 
@@ -2864,17 +2890,13 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
       </button>
 
-      {#if $currentUser?.ai_llm_url && selectedIds.size === 1}
+      {#if $currentUser?.ai_llm_url && selectedIds.size > 0}
         <button
           class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
           type="button"
           aria-label="AI Assistant"
           title="AI Assistant"
-          onclick={() => {
-            const firstId = Array.from(selectedIds)[0];
-            const item = $collectionItems.find(i => i.snipsel_id === firstId);
-            if (item) openAiModal(item);
-          }}
+          onclick={() => openAiModal()}
           disabled={!canWrite()}
         >
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
