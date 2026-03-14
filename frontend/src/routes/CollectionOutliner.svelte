@@ -1667,7 +1667,7 @@
   <div class="sticky top-[1rem] z-10 h-0 overflow-visible w-full flex justify-center pointer-events-none">
     <div 
       class="w-full flex justify-center transition-opacity duration-200"
-      style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({pillOffset * 2.8}rem);"
+      style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({pillOffset * 4.5}rem);"
     >
       <button 
         class="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-6 py-2.5 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
