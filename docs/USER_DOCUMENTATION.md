@@ -14,8 +14,10 @@ Snipsel is a personal knowledge management application that helps you organize n
 - **Search** - Find content across all collections
 - **Sharing** - Share collections with other users
 - **Passcode Protection** - Secure sensitive collections
-- **Notifications** - Stay informed about mentions and task assignments
+- **Notifications** - Stay informed about mentions and task assignments (now with content previews)
 - **Reminders** - Set date-based alerts for individual snipsels
+- **AI Assistant** - Process and generate content using a configurable LLM proxy
+- **Sticky Navigation** - Keep track of your location with the sticky collection title tab
 
 ---
 
@@ -46,6 +48,7 @@ Daily collections are automatically created for each day. They provide a quick w
 - When viewing your daily collection, you can see snipsels from other users that mention you (read-only)
 - Useful for daily standups, journal entries, or daily task lists
 - **Navigation**: You can swipe left or right on the daily collection to navigate between days quickly.
+- **Sticky Title Tab**: When scrolling down a large collection, a "lasche" (tab) with the collection title slides out from behind the header. Clicking it scrolls you back to the top instantly.
 
 ![Screenshot: Daily Collection in Calendar View - PLACEHOLDER]
 
@@ -98,6 +101,7 @@ A snipsel is an individual item within a collection. It's the basic unit of cont
 ### Editing Snipsel Content
 
 - Click on any snipsel to edit it
+- **Real-time Indentation**: Indentation changes made with **Tab** or **Shift+Tab** are now visible immediately while editing.
 - Supports Markdown formatting (Bold, Italic, Lists, **Blockquotes** using `>`, etc.)
 - Tags and mentions are automatically extracted and linked
 
@@ -217,7 +221,7 @@ Mention other users with `@username` to:
 4. For other content: "User mentioned you in a snipsel"
 
 > [!TIP]
-> Push notifications for tasks and mentions now include the first line of the actual content, giving you instant context without opening the app.
+> Push notifications for tasks and mentions now include a text preview of the actual content, giving you instant context without opening the app.
 
 ### Viewing Mentions
 
@@ -323,6 +327,9 @@ Protect sensitive collections with a passcode:
 3. **Share** - A collection was shared with you
 4. **Reminder** - A snipsel reminder time has been reached
 
+> [!NOTE]
+> All notifications (Mentions, Tasks, Reminders) now include a preview of the snipsel text to provide immediate context.
+
 ### Viewing Notifications
 
 - Click the bell icon in the header
@@ -375,6 +382,34 @@ Passkeys allow you to log in securely without a password using your device's bui
 
 ---
 
+## AI Assistant
+
+Snipsel includes a powerful AI assistant that you can configure with your own OpenAI-compatible LLM endpoint (like OpenAI, Groq, or a local Ollama instance).
+
+### Configuration
+
+1. Go to your **Settings**.
+2. Fill in the **AI Integration** section:
+   - **LLM API URL**: The endpoint URL (e.g., `https://api.openai.com/v1/chat/completions`).
+   - **Model Name**: The model identifier (e.g., `gpt-4o` or `llama3`).
+   - **API Key**: Your secret key for the service.
+3. Click **Save AI Settings**.
+
+### Using the Assistant
+
+Once configured, an **AI Assistant** icon (a cube) appears in the snipsel toolbox when a single snipsel is selected.
+
+1. Select a snipsel.
+2. Click the **AI Assistant** button.
+3. Enter a prompt describing what you want the AI to do (e.g., "Summarize this", "Fix grammar", "Translate to French").
+4. After the response is generated, you can:
+   - **Insert**: Adds the response as a new snipsel directly below the original one.
+   - **Replace**: Replaces the content of the selected snipsel with the AI response.
+   - **Copy**: Copies the response to your clipboard.
+   - **New Prompt**: Start over with a different instruction.
+
+---
+
 ## Settings
 
 ### Personal Settings
@@ -398,9 +433,9 @@ Per-collection settings (accessed via collection menu):
 ## Keyboard Shortcuts
 
 - **Enter** after last snipsel: Create new snipsel
-- **Tab**: Increase indent
-- **Shift+Tab**: Decrease indent
-- **Ctrl+Enter**: Save snipsel (when editing)
+- **Tab**: Increase indent (now visible immediately)
+- **Shift+Tab**: Decrease indent (now visible immediately)
+- **Ctrl+Enter**: Save current snipsel and create a new one below with the same indentation and type.
 
 ---
 
