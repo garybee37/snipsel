@@ -417,9 +417,11 @@ def update_snipsel(snipsel_id: str):
             s.done_at = datetime.utcnow()
             s.done_by_id = user.id
             if not old_done and user.id != s.created_by_id and s.created_by_id:
+                task_preview = _get_task_preview(s.content_markdown or "")
+                msg = f"{user.username} completed a task you created: {task_preview}" if task_preview else f"{user.username} completed a task you created."
                 n = Notification(
                     user_id=s.created_by_id,
-                    message=f"{user.username} completed a task you created.",
+                    message=msg,
                     snipsel_id=s.id
                 )
                 db.session.add(n)
@@ -755,14 +757,7 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel, newly_became_task: bo
                     author = db.session.get(User, user_id)
                     author_name = author.username if author else "Someone"
                     if snipsel.type == "task":
-                        task_lines = (snipsel.content_markdown or "").splitlines()
-                        task_first = task_lines[0].strip() if task_lines else ""
-                        # Remove @mention tokens (e.g. @daniel) so they don't appear redundantly
-                        task_first = re.sub(r"@\w+", "", task_first).strip()
-                        if len(task_first) > 80:
-                            task_first = task_first[:80] + "..."
-                        elif len(task_lines) > 1:
-                            task_first = task_first + "..."
+                        task_first = _get_task_preview(snipsel.content_markdown or "")
                         msg = f"{author_name} assigned a task to you: {task_first}" if task_first else f"{author_name} assigned a task to you."
                     else:
                         msg = f"{author_name} mentioned you in a snipsel."
@@ -796,6 +791,20 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel, newly_became_task: bo
         ).scalars().first()
         if matched:
             db.session.add(SnipselCollectionRef(snipsel_id=snipsel.id, collection_id=matched.id))
+
+def _get_task_preview(content_markdown: str) -> str:
+    if not content_markdown:
+        return ""
+    lines = content_markdown.splitlines()
+    first_line = lines[0].strip() if lines else ""
+    # Remove @mention tokens (e.g. @daniel) so they don't appear redundantly
+    first_line = re.sub(r"@\w+\s*", "", first_line).strip()
+    if len(first_line) > 80:
+        first_line = first_line[:80] + "..."
+    elif len(lines) > 1:
+        first_line = first_line + "..."
+    return first_line
+
 
 def _sync_backlinks(*, user_id: str, snipsel: Snipsel) -> None:
     db.session.execute(db.delete(SnipselLink).where(SnipselLink.from_snipsel_id == snipsel.id))
