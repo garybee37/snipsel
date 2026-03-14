@@ -40,7 +40,14 @@
 </script>
 
 <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-  <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick={onClose}></div>
+  <div 
+    class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" 
+    onclick={onClose}
+    onkeydown={(e) => e.key === 'Escape' && onClose()}
+    role="button"
+    tabindex="-1"
+    aria-label="Close modal"
+  ></div>
   
   <div class="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/20 bg-white/90 shadow-2xl ring-1 ring-black/5 backdrop-blur-md transition-all dark:border-white/10 dark:bg-slate-900/90">
     <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-white/5">
@@ -52,7 +59,11 @@
         </svg>
         AI Assistant
       </h3>
-      <button class="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5" onclick={onClose}>
+      <button 
+        class="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5" 
+        onclick={onClose}
+        aria-label="Close"
+      >
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
