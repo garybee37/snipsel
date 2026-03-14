@@ -2064,8 +2064,8 @@
           class="group relative pr-10 {anchorHighlightId === item.snipsel_id ? 'ring-2 rounded-lg' : ''}"
           style={
             anchorHighlightId === item.snipsel_id
-              ? `padding-left: calc(3.25rem + ${item.indent * 1.25}rem); --tw-ring-color: ${getHeaderColor()}`
-              : `padding-left: calc(3.25rem + ${item.indent * 1.25}rem)`
+              ? `padding-left: calc(3.25rem + ${(item.snipsel_id === $editingSnipselId ? editIndent : item.indent) * 1.25}rem); --tw-ring-color: ${getHeaderColor()}`
+              : `padding-left: calc(3.25rem + ${(item.snipsel_id === $editingSnipselId ? editIndent : item.indent) * 1.25}rem)`
           }
         >
           {#if item.snipsel_id === $editingSnipselId}
