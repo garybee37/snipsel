@@ -1663,22 +1663,24 @@
     aria-hidden="true"
   />
 
-  <!-- Sticky Title Pill -->
-  <div 
-    class="sticky top-[1rem] z-10 w-full flex justify-center pointer-events-none transition-opacity duration-200"
-    style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({pillOffset * 2.8}rem);"
-  >
-    <button 
-      class="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-6 py-2.5 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-      onclick={scrollToTop}
-      type="button"
-      title="Scroll to top"
+  <!-- Sticky Title Pill Wrapper (h-0 prevents displacement) -->
+  <div class="h-0 overflow-visible relative">
+    <div 
+      class="sticky top-[1rem] z-10 w-full flex justify-center pointer-events-none transition-opacity duration-200"
+      style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({pillOffset * 2.8}rem);"
     >
-      <span class="text-xl">{$currentCollection?.icon}</span>
-      <span class="max-w-[20rem] truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-        {$currentCollection?.title}
-      </span>
-    </button>
+      <button 
+        class="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-6 py-2.5 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        onclick={scrollToTop}
+        type="button"
+        title="Scroll to top"
+      >
+        <span class="text-xl">{$currentCollection?.icon}</span>
+        <span class="max-w-[20rem] truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+          {$currentCollection?.title}
+        </span>
+      </button>
+    </div>
   </div>
 
   <div class="relative">
