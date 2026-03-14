@@ -1,8 +1,8 @@
 # 📓 Snipsel
 
-**Your personal, self-hosted notes & tasks app — mobile-first, beautifully simple.**
+**Your personal, self-hosted, AI-powered notes & tasks app — mobile-first, beautifully simple.**
 
-Snipsel is an open-source PWA for capturing ideas, notes, tasks, bookmarks, and media — all in one place. No subscriptions, no cloud lock-in, runs on your own server in minutes.
+Snipsel is an open-source PWA for capturing ideas, notes, tasks, bookmarks, and media — all in one place. Enhanced with a **user-configurable AI assistant**, it helps you manage your knowledge without cloud lock-in. Runs on your own server in minutes.
 
 <p align="center">
   <img src="docs/screenshot_collections.png" width="180" alt="Collections list" />
@@ -38,6 +38,7 @@ Most note apps are either too simple (just plain text) or too heavy (Notion, Obs
 | **Collection sharing** | ✅ | ✅ (2) | ✅ (3) | ✅ |
 | **Daily journal / carry-over** | ✅ | ❌ (4) | ⚠️ (5) | ❌ (4) |
 | **Passkey login** | ✅ | ✅ (2) | ❌ | ❌ |
+| **AI Assistant (LLM Proxy)** | ✅ | ❌ | ❌ | ❌ |
 | **Push notifications** | ✅ | ❌ | ✅ | ✅ |
 | **Self-hosted (Container)** | ✅ | ✅ | ✅ | ✅ |
 | **Import from Twos** | ✅ | ❌ | ❌ | ❌ |
@@ -62,23 +63,11 @@ Organize everything in **collections** — from grocery lists to project notes. 
 - 🖼️ **Image** — attach and view photos
 - 📁 **File attachment** — store any file
 
+### 🤖 AI Assistant (Vision-ready)
+Process your notes with a built-in AI assistant. Configure your own OpenAI-compatible endpoint (OpenAI, Groq, Ollama) and use it to summarize, translate, or transform snipsels with custom prompts. Supports **vision models** for image analysis and text extraction from attachments.
+
 ### 📅 Daily Journal
 A built-in **daily collection** auto-created for each day. Open tasks from the past 30 days are automatically **carried over** so nothing falls through the cracks.
-
-### ⏰ Reminders & Recurrence
-Set one-off or recurring reminders on any snipsel using the powerful **RRule recurrence** builder — daily, weekly, monthly, yearly, or fully custom intervals.
-
-### 🔔 Push Notifications
-Native browser push notifications keep you on top of reminders — even when Snipsel isn't open.
-
-### 🤝 Sharing & Collaboration
-Share any collection with other users in **read or write** mode. React to snipsels with emoji, @mention collaborators, and stay in the loop with an in-app notification feed.
-
-### 🏷️ Tags & Mentions
-Tag your snipsels with `#hashtags` and `@mention` people. Browse everything by tag or mention for instant filtering.
-
-### 🤖 AI Integration
-Process your notes with a built-in AI assistant. Configure your own OpenAI-compatible endpoint (OpenAI, Groq, Ollama) and use it to summarize, translate, or transform snipsels with custom prompts.
 
 ### 🔒 Security-first
 - **Passkeys** (WebAuthn / FIDO2) — log in with Face ID, Touch ID, or a hardware key
