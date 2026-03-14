@@ -92,17 +92,22 @@ def create_app() -> Flask:
 
     # Ensure public user exists
     with app.app_context():
-        from snipsel_api.models import User
-        if not db.session.get(User, "public"):
-            public_user = User(
-                id="public",
-                username="public",
-                email="public@snipsel.local",
-                password_hash="disabled",
-                is_active=True
-            )
-            db.session.add(public_user)
-            db.session.commit()
+        try:
+            from snipsel_api.models import User
+            if not db.session.get(User, "public"):
+                public_user = User(
+                    id="public",
+                    username="public",
+                    email="public@snipsel.local",
+                    password_hash="disabled",
+                    is_active=True
+                )
+                db.session.add(public_user)
+                db.session.commit()
+        except Exception as e:
+            # Database might not be migrated yet, ignore errors here
+            app.logger.warning(f"Could not ensure public user exists: {e}")
+            db.session.rollback()
 
     _ = models
 
