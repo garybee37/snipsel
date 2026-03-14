@@ -1664,22 +1664,22 @@
   />
 
   <!-- Sticky Title Pill -->
-  <button 
-    class="sticky top-[3.75rem] z-10 flex justify-center pointer-events-none transition-opacity duration-200"
-    style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({(pillOffset * 0.75 - 1) * 4}rem);"
-    onclick={scrollToTop}
-    type="button"
+  <div 
+    class="sticky top-[3.4rem] z-10 w-full flex justify-center pointer-events-none transition-opacity duration-200"
+    style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({(pillOffset * 0.8 - 1) * 4}rem);"
   >
-    <div 
-      class="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-5 py-3 shadow-md ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+    <button 
+      class="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-6 py-2.5 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+      onclick={scrollToTop}
+      type="button"
       title="Scroll to top"
     >
       <span class="text-xl">{$currentCollection?.icon}</span>
       <span class="max-w-[20rem] truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
         {$currentCollection?.title}
       </span>
-    </div>
-  </button>
+    </button>
+  </div>
 
   <div class="relative">
     <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
