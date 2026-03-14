@@ -77,6 +77,9 @@ Share any collection with other users in **read or write** mode. React to snipse
 ### 🏷️ Tags & Mentions
 Tag your snipsels with `#hashtags` and `@mention` people. Browse everything by tag or mention for instant filtering.
 
+### 🤖 AI Integration
+Process your notes with a built-in AI assistant. Configure your own OpenAI-compatible endpoint (OpenAI, Groq, Ollama) and use it to summarize, translate, or transform snipsels with custom prompts.
+
 ### 🔒 Security-first
 - **Passkeys** (WebAuthn / FIDO2) — log in with Face ID, Touch ID, or a hardware key
 - **TOTP 2FA** — standard authenticator app support
