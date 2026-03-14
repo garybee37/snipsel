@@ -344,20 +344,40 @@
 
   async function handleAiInsert(text: string) {
     if (!aiModalSnipselId || !$currentCollection) return;
+    isLoading.set(true);
     try {
       const idx = $sortedItems.findIndex(i => i.snipsel_id === aiModalSnipselId);
       if (idx >= 0) {
-        const item = $sortedItems[idx];
-        await api.snipsels.create($currentCollection.id, {
+        const sourceItem = $sortedItems[idx];
+        
+        // 1. Create the snipsel
+        const res = await api.snipsels.create($currentCollection.id, {
           content_markdown: text,
-          indent: item.indent,
+          indent: sourceItem.indent,
           type: 'text'
         });
-        await loadItems();
+
+        // 2. Insert into local list at the correct position
+        const list = [...$sortedItems];
+        // The new item should go right after the source item
+        const insertAt = idx + 1;
+        const next = [...list.slice(0, insertAt), { ...res.item, indent: sourceItem.indent }, ...list.slice(insertAt)];
+
+        // 3. Reorder everything
+        const reordered = next.map((i, index) => ({ ...i, position: index + 1 }));
+        collectionItems.set(reordered);
+        itemsMutationSeq += 1;
+
+        // 4. Persist reorder
+        const payload = reordered.map((i) => ({ snipsel_id: i.snipsel_id, position: i.position, indent: i.indent }));
+        await api.snipsels.reorder($currentCollection.id, payload);
       }
       showAiModal = false;
+      clearSelection();
     } catch (err) {
       console.error('AI insert failed:', err);
+    } finally {
+      isLoading.set(false);
     }
   }
 
