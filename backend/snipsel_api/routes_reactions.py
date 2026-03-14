@@ -56,13 +56,15 @@ def toggle_reaction(snipsel_id):
         
         # Create notification for creator if it's someone else reacting
         if snipsel.created_by_id != user.id:
-            msg = f"{user.username} reacted with {emoji} to your snipsel: \"{snipsel.content_markdown[:50] if snipsel.content_markdown else '...'}\""
-            n = models.Notification(
-                user_id=snipsel.created_by_id,
-                message=msg,
-                snipsel_id=snipsel_id
-            )
-            db.session.add(n)
+            from snipsel_api.routes_snipsels import _is_snipsel_muted
+            if not _is_snipsel_muted(snipsel_id):
+                msg = f"{user.username} reacted with {emoji} to your snipsel: \"{snipsel.content_markdown[:50] if snipsel.content_markdown else '...'}\""
+                n = models.Notification(
+                    user_id=snipsel.created_by_id,
+                    message=msg,
+                    snipsel_id=snipsel_id
+                )
+                db.session.add(n)
 
         db.session.commit()
         logger.info(f"User {user.username} added reaction {emoji} to snipsel {snipsel_id}")

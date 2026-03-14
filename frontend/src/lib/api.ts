@@ -47,6 +47,7 @@ export type Collection = {
   is_template: boolean;
   is_passcode_protected: boolean;
   show_completed_tasks: boolean;
+  mute_notifications: boolean;
   default_snipsel_type: string | null;
   archived: boolean;
   list_for_day: string | null;
@@ -406,6 +407,7 @@ export const api = {
       header_color?: string | null;
       default_snipsel_type?: string | null;
       show_completed_tasks?: boolean;
+      mute_notifications?: boolean;
     }) => {
       if (!navigator.onLine) {
         const tempId = crypto.randomUUID();
@@ -418,6 +420,7 @@ export const api = {
           is_template: false,
           is_passcode_protected: false,
           show_completed_tasks: input.show_completed_tasks ?? true,
+          mute_notifications: input.mute_notifications ?? false,
           default_snipsel_type: input.default_snipsel_type || null,
           archived: false,
           list_for_day: null,
@@ -448,6 +451,7 @@ export const api = {
         default_snipsel_type?: string | null;
         is_passcode_protected?: boolean;
         show_completed_tasks?: boolean;
+        mute_notifications?: boolean;
         header_image_position?: string | null;
         header_image_x_position?: string | null;
         header_image_zoom?: number | null;

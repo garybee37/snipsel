@@ -607,6 +607,7 @@ def create_collection():
         header_color=header_color,
         default_snipsel_type=default_snipsel_type,
         show_completed_tasks=show_completed_tasks,
+        mute_notifications=data.get("mute_notifications") if "mute_notifications" in data else False,
         created_by_id=user.id,
         modified_by_id=user.id,
     )
@@ -708,6 +709,8 @@ def update_collection(collection_id: str):
         c.default_snipsel_type = (data.get("default_snipsel_type") or "").strip() or None
     if "show_completed_tasks" in data:
         c.show_completed_tasks = bool(data.get("show_completed_tasks"))
+    if "mute_notifications" in data:
+        c.mute_notifications = bool(data.get("mute_notifications"))
 
     c.modified_by_id = user.id
     db.session.commit()
@@ -914,6 +917,7 @@ def _collection_json(c: Collection) -> dict:
         "archived": c.archived_at is not None,
         "is_passcode_protected": bool(c.is_passcode_protected),
         "show_completed_tasks": bool(c.show_completed_tasks),
+        "mute_notifications": bool(c.mute_notifications),
         "list_for_day": c.list_for_day.isoformat() if c.list_for_day else None,
         "created_at": c.created_at.isoformat() + "Z",
         "modified_at": c.modified_at.isoformat() + "Z",

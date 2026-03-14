@@ -419,12 +419,13 @@ def update_snipsel(snipsel_id: str):
             if not old_done and user.id != s.created_by_id and s.created_by_id:
                 task_preview = _get_task_preview(s.content_markdown or "")
                 msg = f"{user.username} completed a task you created: {task_preview}" if task_preview else f"{user.username} completed a task you created."
-                n = Notification(
-                    user_id=s.created_by_id,
-                    message=msg,
-                    snipsel_id=s.id
-                )
-                db.session.add(n)
+                if not _is_snipsel_muted(s.id):
+                    n = Notification(
+                        user_id=s.created_by_id,
+                        message=msg,
+                        snipsel_id=s.id
+                    )
+                    db.session.add(n)
 
             # Handle recurrence: Create a copy if it has an rrule
             if not old_done and s.reminder_rrule and s.reminder_at:
@@ -761,12 +762,13 @@ def _sync_tags_mentions(*, user_id: str, snipsel: Snipsel, newly_became_task: bo
                         msg = f"{author_name} assigned a task to you: {task_first}" if task_first else f"{author_name} assigned a task to you."
                     else:
                         msg = f"{author_name} mentioned you in a snipsel."
-                    n = Notification(
-                        user_id=mentioned_user.id,
-                        message=msg,
-                        snipsel_id=snipsel.id
-                    )
-                    db.session.add(n)
+                    if not _is_snipsel_muted(snipsel.id):
+                        n = Notification(
+                            user_id=mentioned_user.id,
+                            message=msg,
+                            snipsel_id=snipsel.id
+                        )
+                        db.session.add(n)
 
     # Sync collection refs ([[Collection Title]] wiki-links)
     ref_titles = extract_collection_refs(text)
@@ -818,6 +820,37 @@ def _sync_backlinks(*, user_id: str, snipsel: Snipsel) -> None:
         return
 
     db.session.add(SnipselLink(from_snipsel_id=snipsel.id, to_snipsel_id=target_id))
+
+
+def _is_snipsel_muted(snipsel_id: str) -> bool:
+    """Returns True if the snipsel is in at least one collection and ALL such collections have mute_notifications=True."""
+    # Find all collections this snipsel is in
+    collection_ids = (
+        db.session.execute(
+            db.select(CollectionSnipsel.collection_id)
+            .where(CollectionSnipsel.snipsel_id == snipsel_id)
+        )
+        .scalars()
+        .all()
+    )
+    if not collection_ids:
+        return False
+
+    # Check if any collection has notifications enabled
+    not_muted_count = (
+        db.session.execute(
+            db.select(db.func.count())
+            .select_from(Collection)
+            .where(
+                Collection.id.in_(collection_ids),
+                Collection.deleted_at.is_(None),
+                Collection.mute_notifications == False
+            )
+        ).scalar()
+        or 0
+    )
+    # If there is at least one collection that is NOT muted, then it's not muted overall.
+    return not_muted_count == 0
 
 
 def _snipsel_json(s: Snipsel, user_id: str | None = None) -> dict:
