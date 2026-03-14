@@ -1667,10 +1667,10 @@
   <div class="sticky top-[1rem] z-10 h-0 overflow-visible w-full flex justify-center pointer-events-none">
     <div 
       class="w-full flex justify-center transition-opacity duration-200"
-      style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({pillOffset * 5.5}rem);"
+      style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({pillOffset * 3.8}rem);"
     >
       <button 
-        class="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-6 py-5 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        class="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-6 pt-24 pb-4 shadow-lg ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         onclick={scrollToTop}
         type="button"
         title="Scroll to top"
