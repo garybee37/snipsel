@@ -509,7 +509,6 @@ def _maybe_carry_over_open_tasks(user, today_collection: Collection, day: date) 
                 old_collection_id = cs.collection_id
                 cs.collection_id = today_collection.id
                 cs.position = max_pos
-                cs.indent = 0
                 moved_count += 1
                 logger.debug("%s  Moved snipsel %s from collection %s → %s (pos=%d) | '%s'",
                              log_prefix, cs.snipsel_id, old_collection_id, today_collection.id,
