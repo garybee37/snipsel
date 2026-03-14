@@ -19,6 +19,9 @@ export type User = {
   otp_enabled?: boolean;
   passkeys_count?: number;
   max_upload_bytes?: number;
+  ai_llm_url?: string | null;
+  ai_model_name?: string | null;
+  ai_api_key_set?: boolean;
 };
 
 export type UserStats = {
@@ -337,11 +340,22 @@ export const api = {
     email?: string;
     password?: string;
     current_password?: string;
+    ai_llm_url?: string | null;
+    ai_model_name?: string | null;
+    ai_api_key?: string | null;
   }) =>
     requestJson<{ user: User }>('/api/auth/me', {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),
+  
+  ai: {
+    generate: (input: { prompt: string; context?: string }) =>
+      requestJson<{ text: string }>('/api/ai/generate', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+  },
 
   collections: {
     list: async (includeArchived = false) => {

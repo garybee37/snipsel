@@ -9,6 +9,7 @@
   import DeezerCard from '../lib/DeezerCard.svelte';
   import YouTubeCard from '../lib/YouTubeCard.svelte';
   import VideoModal from '../lib/VideoModal.svelte';
+  import AiModal from '../lib/AiModal.svelte';
 
   import {
     collectionItems,
@@ -98,6 +99,10 @@
   let pullActive = $state(false);
   let pullTriggered = $state(false);
   let pullReloading = $state(false);
+
+  let showAiModal = $state(false);
+  let aiModalContext = $state('');
+  let aiModalSnipselId = $state<string | null>(null);
 
   let showTitlePill = $state(false);
   let pillOffset = $state(0); // 0 to 1
@@ -328,6 +333,42 @@
       activeReactionPickerId = null;
     } catch (err) {
       console.error('Failed to toggle reaction:', err);
+    }
+  }
+
+  function openAiModal(item: CollectionItem) {
+    aiModalSnipselId = item.snipsel_id;
+    aiModalContext = item.snipsel.content_markdown || '';
+    showAiModal = true;
+  }
+
+  async function handleAiInsert(text: string) {
+    if (!aiModalSnipselId || !$currentCollection) return;
+    try {
+      const idx = $sortedItems.findIndex(i => i.snipsel_id === aiModalSnipselId);
+      if (idx >= 0) {
+        const item = $sortedItems[idx];
+        await api.snipsels.create($currentCollection.id, {
+          content_markdown: text,
+          indent: item.indent,
+          type: 'text'
+        });
+        await loadItems();
+      }
+      showAiModal = false;
+    } catch (err) {
+      console.error('AI insert failed:', err);
+    }
+  }
+
+  async function handleAiReplace(text: string) {
+    if (!aiModalSnipselId) return;
+    try {
+      await api.snipsels.update(aiModalSnipselId, { content_markdown: text });
+      await loadItems();
+      showAiModal = false;
+    } catch (err) {
+      console.error('AI replace failed:', err);
     }
   }
 
@@ -2803,6 +2844,25 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
       </button>
 
+      {#if $currentUser?.ai_llm_url && selectedIds.size === 1}
+        <button
+          class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
+          type="button"
+          aria-label="AI Assistant"
+          title="AI Assistant"
+          onclick={() => {
+            const firstId = Array.from(selectedIds)[0];
+            const item = $collectionItems.find(i => i.snipsel_id === firstId);
+            if (item) openAiModal(item);
+          }}
+          disabled={!canWrite()}
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+          </svg>
+        </button>
+      {/if}
+
       <button
         class="grid h-11 w-11 place-items-center rounded-md bg-black/5 text-lg hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
         type="button"
@@ -2983,6 +3043,14 @@
   <VideoModal
     attachmentId={modalVideo.id}
     filename={modalVideo.filename}
-    onClose={closeVideoModal}
-  />
+    />
+{/if}
+
+{#if showAiModal}
+<AiModal
+  context={aiModalContext}
+  onClose={() => showAiModal = false}
+  onInsert={handleAiInsert}
+  onReplace={handleAiReplace}
+/>
 {/if}

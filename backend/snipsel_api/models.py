@@ -57,6 +57,10 @@ class User(db.Model):
     otp_secret: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     otp_enabled: Mapped[bool] = mapped_column(default=False, nullable=False)
 
+    ai_llm_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ai_model_name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    ai_api_key: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
 
 class Collection(db.Model):
     __tablename__ = "collections"

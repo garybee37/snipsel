@@ -44,6 +44,10 @@
   let accountUpdateError = $state('');
   let accountUpdateSuccess = $state('');
   let showAccountForm = $state(false);
+  
+  let aiLlmUrl = $state('');
+  let aiModelName = $state('');
+  let aiApiKey = $state('');
 
 
   async function startOtpSetup() {
@@ -301,6 +305,21 @@
     }
   }
 
+  async function saveAiSettings() {
+    isBusy = true;
+    try {
+      const res = await api.updateMe({
+        ai_llm_url: aiLlmUrl.trim() || null,
+        ai_model_name: aiModelName.trim() || null,
+        ai_api_key: aiApiKey.trim() || null,
+      });
+      currentUser.set(res.user);
+      aiApiKey = ''; 
+    } finally {
+      isBusy = false;
+    }
+  }
+
   async function sendTestPush() {
     isBusy = true;
     try {
@@ -315,6 +334,8 @@
   $effect(() => {
     defaultHeaderColor = $currentUser?.default_collection_header_color ?? DEFAULT_ACCENT;
     dayTemplateId = $currentUser?.day_collection_template_id ?? '';
+    aiLlmUrl = $currentUser?.ai_llm_url ?? '';
+    aiModelName = $currentUser?.ai_model_name ?? '';
   });
 
   $effect(() => {
@@ -607,6 +628,56 @@
           </button>
         </div>
       {/if}
+    </div>
+
+    <!-- AI Integration -->
+    <div class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:ring-white/10">
+      <div class="text-xs uppercase text-slate-500">AI Integration</div>
+      <div class="mt-3 space-y-4">
+        <div>
+          <label for="ai-url" class="block text-sm font-medium text-slate-700 dark:text-slate-300">LLM API URL (OpenAI compatible)</label>
+          <input
+            id="ai-url"
+            type="text"
+            class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-white/10 dark:bg-slate-800"
+            bind:value={aiLlmUrl}
+            placeholder="https://api.openai.com/v1/chat/completions"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="ai-model" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Model Name</label>
+            <input
+              id="ai-model"
+              type="text"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-white/10 dark:bg-slate-800"
+              bind:value={aiModelName}
+              placeholder="gpt-3.5-turbo"
+            />
+          </div>
+          <div>
+            <label for="ai-key" class="block text-sm font-medium text-slate-700 dark:text-slate-300">API Key {($currentUser?.ai_api_key_set) ? '(Set)' : ''}</label>
+            <input
+              id="ai-key"
+              type="password"
+              class="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-white/10 dark:bg-slate-800"
+              bind:value={aiApiKey}
+              placeholder="sk-..."
+            />
+          </div>
+        </div>
+        <div class="flex justify-end pt-2">
+          <button
+            class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:bg-slate-800 dark:hover:bg-slate-700"
+            style={`color: ${getAccent()}`}
+            type="button"
+            onclick={saveAiSettings}
+            disabled={isBusy}
+          >
+            Save AI Settings
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Security -->

@@ -501,6 +501,13 @@ def update_me():
                 raise api_error(400, "invalid_input", "template not found")
             user.day_collection_template_id = tpl.id
 
+    if "ai_llm_url" in data:
+        user.ai_llm_url = (data.get("ai_llm_url") or "").strip() or None
+    if "ai_model_name" in data:
+        user.ai_model_name = (data.get("ai_model_name") or "").strip() or None
+    if "ai_api_key" in data:
+        user.ai_api_key = (data.get("ai_api_key") or "").strip() or None
+
     if "email" in data or "password" in data:
         current_password = data.get("current_password") or ""
         if not current_password or not check_password_hash(user.password_hash, current_password):
@@ -652,5 +659,8 @@ def _user_json(user: User) -> dict:
         "otp_enabled": user.otp_enabled,
         "passkeys_count": passkeys_count,
         "max_upload_bytes": Settings.from_env().max_upload_bytes,
+        "ai_llm_url": user.ai_llm_url,
+        "ai_model_name": user.ai_model_name,
+        "ai_api_key_set": user.ai_api_key is not None,
         "created_at": user.created_at.isoformat() + "Z",
     }
