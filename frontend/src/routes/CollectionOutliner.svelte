@@ -1663,10 +1663,10 @@
     aria-hidden="true"
   />
 
-  <!-- Sticky Title Pill Wrapper (h-0 prevents displacement) -->
-  <div class="h-0 overflow-visible relative">
+  <!-- Sticky Title Pill Wrapper (h-0 prevents displacement, sticky top-[1rem] keeps it at viewport top) -->
+  <div class="sticky top-[1rem] z-10 h-0 overflow-visible w-full flex justify-center pointer-events-none">
     <div 
-      class="sticky top-[1rem] z-10 w-full flex justify-center pointer-events-none transition-opacity duration-200"
+      class="w-full flex justify-center transition-opacity duration-200"
       style="opacity: {showTitlePill ? 1 : 0}; transform: translateY({pillOffset * 2.8}rem);"
     >
       <button 
