@@ -103,6 +103,7 @@
   let showAiModal = $state(false);
   let aiModalContext = $state('');
   let aiModalSelectedIds = $state<string[]>([]);
+  let aiModalSelectedAttachments = $state<string[]>([]);
 
   let showTitlePill = $state(false);
   let pillOffset = $state(0); // 0 to 1
@@ -340,12 +341,13 @@
     if (item) {
       aiModalSelectedIds = [item.snipsel_id];
       aiModalContext = item.snipsel.content_markdown || '';
+      aiModalSelectedAttachments = (item.snipsel.attachments || []).map(a => a.id);
     } else if (selectedIds.size > 0) {
-      const ids = Array.from(selectedIds);
       // Sort selection results by position to maintain order in prompt
       const items = $sortedItems.filter(i => selectedIds.has(i.snipsel_id));
       aiModalSelectedIds = items.map(i => i.snipsel_id);
       aiModalContext = items.map(i => i.snipsel.content_markdown || '').join('\n\n');
+      aiModalSelectedAttachments = items.flatMap(i => (i.snipsel.attachments || []).map(a => a.id));
     } else {
       return;
     }
@@ -3095,6 +3097,7 @@
 {#if showAiModal}
 <AiModal
   context={aiModalContext}
+  attachmentIds={aiModalSelectedAttachments}
   onClose={() => showAiModal = false}
   onInsert={handleAiInsert}
   onReplace={handleAiReplace}

@@ -350,7 +350,7 @@ export const api = {
     }),
   
   ai: {
-    generate: (input: { prompt: string; context?: string }) =>
+    generate: (input: { prompt: string; context?: string; attachment_ids?: string[] }) =>
       requestJson<{ text: string }>('/api/ai/generate', {
         method: 'POST',
         body: JSON.stringify(input),

@@ -4,12 +4,13 @@
 
   interface Props {
     context: string;
+    attachmentIds?: string[];
     onClose: () => void;
     onInsert: (text: string) => void;
     onReplace: (text: string) => void;
   }
 
-  let { context, onClose, onInsert, onReplace }: Props = $props();
+  let { context, attachmentIds = [], onClose, onInsert, onReplace }: Props = $props();
 
   let prompt = $state('');
   let response = $state('');
@@ -21,7 +22,7 @@
     isGenerating = true;
     error = '';
     try {
-      const res = await api.ai.generate({ prompt, context });
+      const res = await api.ai.generate({ prompt, context, attachment_ids: attachmentIds });
       response = res.text;
     } catch (e: any) {
       error = e.error?.message || 'AI request failed. Please check your settings.';
